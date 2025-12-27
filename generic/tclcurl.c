@@ -24,6 +24,24 @@
 #include <unistd.h>
 #endif
 
+#include <limits.h>  /* for INT_MAX etc. */
+#include <stddef.h>  /* for size_t */
+
+/* size_t -> Tcl_Size */
+static inline int SizeT2TclSize(size_t in, Tcl_Size *out) {
+    if (in > (size_t)TCL_SIZE_MAX) return 0;  /* overflow for Tcl_Size */
+    *out = (Tcl_Size)in;
+    return 1;
+}
+
+/* Tcl_Size -> size_t */
+static inline int TclSize2SizeT(Tcl_Size in, size_t *out) {
+    if (in < 0) return 0;  /* negative not representable as size_t */
+    *out = (size_t)in;
+    return 1;
+}
+
+
 /*
  *----------------------------------------------------------------------
  *
@@ -465,7 +483,6 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
 
     int            exitCode;
     CURL           *curlHandle=curlData->curl;
-    int            i,j,k;
 
     Tcl_Obj        *resultObjPtr;
     Tcl_Obj        *tmpObjPtr;
@@ -477,23 +494,21 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
     int             charLength;
     long            longNumber=0;
     int             intNumber;
-    char           *tmpStr;
+    char           *tmpStr = NULL;
     unsigned char  *tmpUStr;
 
-    Tcl_Obj                 **httpPostData;
     Tcl_Obj                 **protocols;
     int                       curlTableIndex,formaddError,formArrayIndex;
     struct formArrayStruct   *newFormArray;
     struct curl_forms        *formArray;
-    int                       curlformBufferSize;
+    Tcl_Size                  curlformBufferSize;
     size_t                    contentslen;
 
     unsigned long int         protocolMask;
 
     switch(tableIndex) {
         case 0:
-            if (SetoptChar(interp,curlHandle,CURLOPT_URL,
-                    tableIndex,objv)) {
+            if (SetoptChar(interp,curlHandle,CURLOPT_URL,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
@@ -772,41 +787,54 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             return TCL_OK;
             break;
         case 37:
-            if (Tcl_ListObjGetElements(interp,objv,&k,&httpPostData)
-                    ==TCL_ERROR) {
+        {
+            Tcl_Size    i,j;
+            Tcl_Size    post_data_numel;
+            Tcl_Obj     **httpPostData;
+
+            if (Tcl_ListObjGetElements(interp,objv,&post_data_numel,&httpPostData) == TCL_ERROR) {
                 return TCL_ERROR;
             }
             formaddError=0;
             newFormArray=(struct formArrayStruct *)Tcl_Alloc(sizeof(struct formArrayStruct));
-            formArray=(struct curl_forms *)Tcl_Alloc(k*(sizeof(struct curl_forms)));
+            formArray=(struct curl_forms *)Tcl_Alloc(post_data_numel*(sizeof(struct curl_forms)));
             formArrayIndex=0;
 
             newFormArray->next=curlData->formArray;
             newFormArray->formArray=formArray;
             newFormArray->formHeaderList=NULL;
 
-            for(i=0,j=0;i<k;i+=2,j+=1) {
+            for(i=0,j=0;i<post_data_numel;i+=2,j+=1) {
                 if (Tcl_GetIndexFromObj(interp,httpPostData[i],curlFormTable,
                         "CURLFORM option",TCL_EXACT,&curlTableIndex)==TCL_ERROR) {
                     formaddError=1;
                     break;
                 }
                 switch(curlTableIndex) {
-                    case 0:
+                    case NAME_HTTP_OPT:
 /*                        fprintf(stdout,"Section name: %s\n",Tcl_GetString(httpPostData[i+1]));*/
                         formArray[formArrayIndex].option = CURLFORM_COPYNAME;
                         formArray[formArrayIndex].value  = curlstrdup(Tcl_GetString(httpPostData[i+1]));
                         break;
-                    case 1:
+                    case CONTENTS_HTTP_OPT:
+                    {
 /*                        fprintf(stdout,"Section contents: %s\n",Tcl_GetString(httpPostData[i+1]));*/
                         tmpStr=Tcl_GetStringFromObj(httpPostData[i+1],&curlformBufferSize);
                         formArray[formArrayIndex].option = CURLFORM_COPYCONTENTS;
 
                         formArray[formArrayIndex].value = Tcl_Alloc((curlformBufferSize > 0) ? curlformBufferSize : 1);
+
+
                         if (curlformBufferSize > 0) {
-                                memcpy((char *)formArray[formArrayIndex].value,tmpStr,curlformBufferSize);
+                            size_t buffer_size;
+
+                            if (TclSize2SizeT(curlformBufferSize,&buffer_size) == 0) {
+                                curlErrorSetOpt(interp,configTable,tableIndex,"Inconsistent buffer size");
+                                return TCL_ERROR;
+                            }
+                            memcpy((char *)formArray[formArrayIndex].value,tmpStr,buffer_size);
                         } else {
-                                memset((char *)formArray[formArrayIndex].value,0,1);
+                            memset((char *)formArray[formArrayIndex].value,0,1);
                         }
 
                         formArrayIndex++;
@@ -814,17 +842,18 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
                         contentslen=curlformBufferSize++;
                         formArray[formArrayIndex].value  = (char *)contentslen;
                         break;
-                    case 2:
+                    }
+                    case FILE_HTTP_OPT:
 /*                        fprintf(stdout,"File name %d: %s\n",formArrayIndex,Tcl_GetString(httpPostData[i+1]));*/
                         formArray[formArrayIndex].option = CURLFORM_FILE;
                         formArray[formArrayIndex].value  = curlstrdup(Tcl_GetString(httpPostData[i+1]));
                         break;
-                    case 3:
+                    case CONTENTTYPE_HTTP_OPT:
 /*                        fprintf(stdout,"Data type: %s\n",Tcl_GetString(httpPostData[i+1]));*/
                         formArray[formArrayIndex].option = CURLFORM_CONTENTTYPE;
                         formArray[formArrayIndex].value  = curlstrdup(Tcl_GetString(httpPostData[i+1]));
                         break;
-                    case 4:
+                    case CONTENTHEADER_HTTP_OPT:
 /*                        fprintf(stdout,"ContentHeader: %s\n",Tcl_GetString(httpPostData[i+1]));*/
                         formArray[formArrayIndex].option = CURLFORM_CONTENTHEADER;
                         if(SetoptsList(interp,&newFormArray->formHeaderList,httpPostData[i+1])) {
@@ -834,20 +863,19 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
                         }
                         formArray[formArrayIndex].value  = (char *)newFormArray->formHeaderList;
                         break;
-                    case 5:
+                    case FILENAME_HTTP_OPT:
 /*                        fprintf(stdout,"FileName: %s\n",Tcl_GetString(httpPostData[i+1])); */
                         formArray[formArrayIndex].option = CURLFORM_FILENAME;
                         formArray[formArrayIndex].value  = curlstrdup(Tcl_GetString(httpPostData[i+1]));
                         break;
-                    case 6:
+                    case BUFFERNAME_HTTP_OPT:
 /*                        fprintf(stdout,"BufferName: %s\n",Tcl_GetString(httpPostData[i+1])); */
                         formArray[formArrayIndex].option = CURLFORM_BUFFER;
                         formArray[formArrayIndex].value  = curlstrdup(Tcl_GetString(httpPostData[i+1]));
                         break;
-                    case 7:
+                    case BUFFER_HTTP_OPT:
 /*                        fprintf(stdout,"Buffer: %s\n",Tcl_GetString(httpPostData[i+1])); */
-                        tmpUStr=Tcl_GetByteArrayFromObj
-                                (httpPostData[i+1],&curlformBufferSize);
+                        tmpUStr=Tcl_GetByteArrayFromObj(httpPostData[i+1],&curlformBufferSize);
                         formArray[formArrayIndex].option = CURLFORM_BUFFERPTR;
                         formArray[formArrayIndex].value  = (char *)
                                 memcpy(Tcl_Alloc(curlformBufferSize), tmpUStr, curlformBufferSize);
@@ -856,8 +884,8 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
                         contentslen=curlformBufferSize;
                         formArray[formArrayIndex].value  = (char *)contentslen;
                         break;
-                    case 8:
-/*                        fprintf(stdout,"FileName: %s\n",Tcl_GetString(httpPostData[i+1])); */
+                    case FILECONTENT_HTTP_OPT:
+/*                        fprintf(stdout,"FileContent: %s\n",Tcl_GetString(httpPostData[i+1])); */
                         formArray[formArrayIndex].option = CURLFORM_FILECONTENT;
                         formArray[formArrayIndex].value  = curlstrdup(Tcl_GetString(httpPostData[i+1]));
                         break;
@@ -883,6 +911,7 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             }
             return TCL_OK;
             break;
+        }
         case 38:
             if (SetoptChar(interp,curlHandle,CURLOPT_SSLCERT,tableIndex,objv)) {
                 return TCL_ERROR;
@@ -1940,6 +1969,8 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             break;
         case 154:
         case 155:
+        {
+            Tcl_Size i,j;
             if (Tcl_ListObjGetElements(interp,objv,&j,&protocols)==TCL_ERROR) {
                 return 1;
             }
@@ -2046,6 +2077,7 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             }
             Tcl_DecrRefCount(tmpObjPtr);
             break;
+        }
         case 156:
             if (Tcl_GetIndexFromObj(interp, objv, ftpsslccc,
                 "Clear Command Channel option ",TCL_EXACT,&intNumber)==TCL_ERROR) {
@@ -2437,7 +2469,7 @@ int
 SetoptBlob(Tcl_Interp *interp,CURL *curlHandle,
         CURLoption opt,int tableIndex,Tcl_Obj *tclObj) {
     struct curl_blob   optionBlob;
-    int                len;
+    Tcl_Size           len;
 
     optionBlob.data = Tcl_GetByteArrayFromObj(tclObj,&len);
     if (optionBlob.data) {
@@ -2510,9 +2542,8 @@ SetoptSHandle(Tcl_Interp *interp,CURL *curlHandle,
  *----------------------------------------------------------------------
  */
 int
-SetoptsList(Tcl_Interp *interp,struct curl_slist **slistPtr,
-        Tcl_Obj *const objv) {
-    int         i,headerNumber;
+SetoptsList(Tcl_Interp *interp,struct curl_slist **slistPtr,Tcl_Obj *CONST objv) {
+    Tcl_Size      i,headerNumber;
     Tcl_Obj     **headers;
 
     if (slistPtr!=NULL) {
@@ -2756,7 +2787,7 @@ curlWriteProcInvoke(void *ptr,size_t size,size_t nmemb,FILE *curlDataPtr) {
     int                 code;
     int                 cmd_list_size;
     const char        **argvPtr;
-    int                 argcPtr;
+    Tcl_Size            argcPtr;
     Tcl_Obj**           objList;
     int                 i;
 
@@ -2819,7 +2850,7 @@ curlReadProcInvoke(void *ptr,size_t size,size_t nmemb,FILE *curlDataPtr) {
     Tcl_Obj             *tclProcPtr;
     Tcl_Obj             *readDataPtr;
     unsigned char       *readBytes;
-    int                  sizeRead;
+    Tcl_Size             sizeRead;
 
     if (curlData->cancelTransVarName) {
         if (curlData->cancelTrans) {

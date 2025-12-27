@@ -20,8 +20,26 @@
 
 #include <curl/curl.h>
 #include <curl/easy.h>
+
+/*
+ *  Tcl8/Tcl9 compatibility definitions
+ */
+
 #include <tcl.h>
 #include <tclDecls.h>
+#ifndef CONST
+#  define CONST const
+#endif
+#ifndef CONST84
+#  define CONST84 const
+#endif
+#ifndef CONST86
+#  define CONST86 const
+#endif
+#ifndef CONST84_RETURN
+#  define CONST84_RETURN const
+#endif
+
 #include <stdio.h>
 #include <string.h>
 
@@ -32,8 +50,17 @@
 extern "C" {
 #endif
 
+#ifndef TCL_SIZE_MAX
+# define Tcl_GetSizeIntFromObj Tcl_GetIntFromObj
+# define TCL_SIZE_MAX      INT_MAX
+# ifndef Tcl_Size
+    typedef int Tcl_Size;
+# endif
+# define TCL_SIZE_MODIFIER ""
+#endif
+
 /*
- * Windows needs to know which symbols to export.  Unix does not.
+ * Windows needs to know which symbols to export. Unix does not.
  * BUILD_tclcurl should be undefined for Unix.
  * Actually I don't use this, but it was in TEA so I keep in case
  * I ever understand what it is for.
@@ -293,12 +320,17 @@ const static char    *getInfoTable[]={
     (char *)NULL
 };
 
-const static char   *curlFormTable[]={
+CONST static char   *curlFormTable[] = {
     "name",  "contents", "file", "contenttype", "contentheader", "filename",
     "bufferName", "buffer", "filecontent", (char *)NULL
 };
 
-const static char   *httpVersionTable[] = {
+enum curlFormIndices {
+    NAME_HTTP_OPT,  CONTENTS_HTTP_OPT, FILE_HTTP_OPT, CONTENTTYPE_HTTP_OPT, CONTENTHEADER_HTTP_OPT, FILENAME_HTTP_OPT,
+    BUFFERNAME_HTTP_OPT, BUFFER_HTTP_OPT, FILECONTENT_HTTP_OPT
+};
+
+CONST static char   *httpVersionTable[] = {
     "none",  /* CURL_HTTP_VERSION_NONE */
     "1.0",  /* CURL_HTTP_VERSION_1_0 */
     "1.1",  /* CURL_HTTP_VERSION_1_1 */
