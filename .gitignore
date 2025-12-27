@@ -1,0 +1,9 @@
+Makefile
+config.log
+config.status
+libTclCurl*.so
+libtcl9TclCurl*.so
+multi.o
+pkgIndex.tcl
+tclcurl.o
+
