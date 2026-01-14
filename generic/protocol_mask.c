@@ -1,0 +1,150 @@
+/*
+ *
+ */
+
+
+/*
+ *  Tcl8/Tcl9 compatibility definitions
+ */
+
+#include <curl/curl.h>
+#include <curl/easy.h>
+#include "tclcompat.h"
+
+enum ProtocolNamesIndices {
+    TCLCURL_PROTO_HTTP,
+    TCLCURL_PROTO_HTTPS,
+    TCLCURL_PROTO_FTP,
+    TCLCURL_PROTO_FTPS,
+    TCLCURL_PROTO_SCP,
+    TCLCURL_PROTO_SFTP,
+    TCLCURL_PROTO_TELNET,
+    TCLCURL_PROTO_LDAP,
+    TCLCURL_PROTO_LDAPS,
+    TCLCURL_PROTO_DICT,
+    TCLCURL_PROTO_FILE,
+    TCLCURL_PROTO_TFTP,
+    TCLCURL_PROTO_IMAP,
+    TCLCURL_PROTO_IMAPS,
+    TCLCURL_PROTO_POP3,
+    TCLCURL_PROTO_POP3S,
+    TCLCURL_PROTO_SMTP,
+    TCLCURL_PROTO_SMTPS,
+    TCLCURL_PROTO_RTSP,
+    TCLCURL_PROTO_RTMP,
+    TCLCURL_PROTO_RTMPT,
+    TCLCURL_PROTO_RTMPE,
+    TCLCURL_PROTO_RTMPTE,
+    TCLCURL_PROTO_RTMPS,
+    TCLCURL_PROTO_RTMPTS,
+    TCLCURL_PROTO_GOPHER,
+    TCLCURL_PROTO_ALL
+};
+
+const static char *protocolNames[] = {
+    "http",   "https",  "ftp",  "ftps", "scp",   "sftp",  "telnet", "ldap",
+    "ldaps",  "dict",   "file", "tftp", "imap",  "imaps", "pop3",   "pop3s", 
+    "smtp",   "smtps",  "rtsp", "rtmp", "rtmpt", "rtmpe", "rtmpte", "rtmps",
+    "rtmpts", "gopher", "all",  (char*)NULL
+};
+
+unsigned long int 
+TclCurl_BuildProtocolMask(Tcl_Interp* interp, Tcl_Obj** protocols,Tcl_Size protocols_c)
+{
+    unsigned long int protocolMask;
+    int         curlTableIndex;
+    Tcl_Size    i;
+
+    for (i = 0,protocolMask = 0; i < protocols_c; i++) {
+        if (Tcl_GetIndexFromObj(interp,protocols[i],protocolNames,
+               "protocol",TCL_EXACT,&curlTableIndex)==TCL_ERROR) {
+           return TCL_ERROR;
+        }
+
+        switch(curlTableIndex) {
+            case TCLCURL_PROTO_HTTP:              /* http     1 */
+                protocolMask|=CURLPROTO_HTTP;
+                break;
+            case TCLCURL_PROTO_HTTPS:             /* https    2 */
+                protocolMask|=CURLPROTO_HTTPS;
+                break;
+            case TCLCURL_PROTO_FTP:               /* ftp      4 */
+                protocolMask|=CURLPROTO_FTP;
+                break;
+            case TCLCURL_PROTO_FTPS:              /* ftps     8 */
+                protocolMask|=CURLPROTO_FTPS;
+                break;
+            case TCLCURL_PROTO_SCP:               /* scp     16 */
+                protocolMask|=CURLPROTO_SCP;
+                break;
+            case TCLCURL_PROTO_SFTP:              /* sftp    32 */
+                protocolMask|=CURLPROTO_SFTP;
+                break;
+            case TCLCURL_PROTO_TELNET:            /* telnet  64 */
+                protocolMask|=CURLPROTO_TELNET;
+                break;
+            case TCLCURL_PROTO_LDAP:              /* ldap   128 */
+                protocolMask|=CURLPROTO_LDAP;
+                break;
+            case TCLCURL_PROTO_LDAPS:             /* ldaps  256 */
+                protocolMask|=CURLPROTO_LDAPS;
+                break;
+            case TCLCURL_PROTO_DICT:              /* dict   512 */
+                protocolMask|=CURLPROTO_DICT;
+                break;
+            case TCLCURL_PROTO_FILE:              /* file  1024 */
+                protocolMask|=CURLPROTO_FILE;
+                break;
+            case TCLCURL_PROTO_TFTP:              /* tftp  2048 */
+                protocolMask|=CURLPROTO_TFTP;
+                break;
+            case TCLCURL_PROTO_IMAP:              /* imap  4096 */
+                protocolMask|=CURLPROTO_IMAP;
+                break;
+            case TCLCURL_PROTO_IMAPS:             /* imaps */
+                protocolMask|=CURLPROTO_IMAPS;
+                break;
+            case TCLCURL_PROTO_POP3:              /* pop3 */
+                protocolMask|=CURLPROTO_POP3;
+                break;
+            case TCLCURL_PROTO_POP3S:             /* pop3s */
+                protocolMask|=CURLPROTO_POP3S;
+                break;
+            case TCLCURL_PROTO_SMTP:              /* smtp */
+                protocolMask|=CURLPROTO_SMTP;
+                break;
+            case TCLCURL_PROTO_SMTPS:             /* smtps */
+                protocolMask|=CURLPROTO_SMTPS;
+                break;
+            case TCLCURL_PROTO_RTSP:              /* rtsp */
+                protocolMask|=CURLPROTO_RTSP;
+                break;
+            case TCLCURL_PROTO_RTMP:              /* rtmp */
+                protocolMask|=CURLPROTO_RTMP;
+                break;
+            case TCLCURL_PROTO_RTMPT:             /* rtmpt */
+                protocolMask|=CURLPROTO_RTMPT;
+                break;
+            case TCLCURL_PROTO_RTMPE:             /* rtmpe */
+                protocolMask|=CURLPROTO_RTMPE;
+                break;
+            case TCLCURL_PROTO_RTMPTE:            /* rtmpte */
+                protocolMask|=CURLPROTO_RTMPTE;
+                break;
+            case TCLCURL_PROTO_RTMPS:             /* rtmps */
+                protocolMask|=CURLPROTO_RTMPS;
+                break;
+            case TCLCURL_PROTO_RTMPTS:            /* rtmpts */
+                protocolMask|=CURLPROTO_RTMPTS;
+                break;
+            case TCLCURL_PROTO_GOPHER:            /* gopher */
+                protocolMask|=CURLPROTO_GOPHER;
+                break;
+            case TCLCURL_PROTO_ALL:               /* all   FFFF */
+                protocolMask|=CURLPROTO_ALL;
+        }
+    }
+
+    return protocolMask;
+}
+
