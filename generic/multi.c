@@ -850,17 +850,17 @@ curlEventSetup(ClientData clientData, int flags) {
 
 void
 curlEventCheck(ClientData clientData, int flags) {
-    struct curlMultiObjData    *curlMultiData=(struct curlMultiObjData *)clientData;
+    struct curlMultiObjData    *curlMultiData = (struct curlMultiObjData *)clientData;
     struct curlEvent           *curlEventPtr;
     int                         selectCode;
 
-    selectCode=curlMultiGetActiveTransfers(curlMultiData);
+    selectCode = curlMultiGetActiveTransfers(curlMultiData);
 
-    if (curlMultiData->runningTransfers==0) {
+    if (curlMultiData->runningTransfers == 0) {
         Tcl_DeleteEventSource((Tcl_EventSetupProc *)curlEventSetup, 
                 (Tcl_EventCheckProc *)curlEventCheck, (ClientData *)curlMultiData);
     } else {
-        if (selectCode>=0) {
+        if (selectCode >= 0) {
             curlEventPtr=(struct curlEvent *)Tcl_Alloc(sizeof(struct curlEvent));
             curlEventPtr->proc=curlEventProc;
             curlEventPtr->curlMultiData=curlMultiData;
@@ -882,13 +882,14 @@ curlEventCheck(ClientData clientData, int flags) {
 
 int
 curlEventProc(Tcl_Event *evPtr,int flags) {
-    struct curlMultiObjData   *curlMultiData
-            =(struct curlMultiObjData *)((struct curlEvent *)evPtr)->curlMultiData;
-    CURLMcode                  errorCode;
+    struct curlMultiObjData   *curlMultiData;
+    //CURLMcode                errorCode;
     Tcl_Obj                   *tclCommandObjPtr;
     char                       tclCommand[300];
 
-    errorCode=curl_multi_perform(curlMultiData->mcurl,&curlMultiData->runningTransfers);
+    curlMultiData = (struct curlMultiObjData *)((struct curlEvent *)evPtr)->curlMultiData;
+    //errorCode=curl_multi_perform(curlMultiData->mcurl,&curlMultiData->runningTransfers);
+    curl_multi_perform(curlMultiData->mcurl,&curlMultiData->runningTransfers);
     if (curlMultiData->runningTransfers==0) {
         if (curlMultiData->postCommand!=NULL) {
             snprintf(tclCommand,299,"%s",curlMultiData->postCommand);

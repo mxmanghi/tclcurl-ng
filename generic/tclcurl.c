@@ -224,7 +224,7 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 Tcl_WrongNumArgs(interp,2,objv,"option value");
                 return TCL_ERROR;
             }
-            if (curlSetOptsTransfer(interp,curlData,objc,objv)==TCL_ERROR) {
+            if (curlSetOptsTransfer(interp,curlData,objc,objv) == TCL_ERROR) {
                 return TCL_ERROR;
             }
             break;
@@ -234,14 +234,14 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 return TCL_ERROR;
             }
             if (curlPerform(interp,curlHandle,curlData)) {
-                if (curlData->errorBuffer!=NULL) {
-                    if (curlData->errorBufferKey==NULL) {
+                if (curlData->errorBuffer != NULL) {
+                    if (curlData->errorBufferKey == NULL) {
                         Tcl_SetVar(interp,curlData->errorBufferName,
-                                curlData->errorBuffer,0);
+                                          curlData->errorBuffer,0);
                     } else {
                         Tcl_SetVar2(interp,curlData->errorBufferName,
-                                curlData->errorBufferKey,
-                                curlData->errorBuffer,0);
+                                           curlData->errorBufferKey,
+                                           curlData->errorBuffer,0);
                     }
                 }
                 return TCL_ERROR;
@@ -253,7 +253,7 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 return TCL_ERROR;
             }
             if (Tcl_GetIndexFromObj(interp,objv[2],getInfoTable,
-                    "getinfo option",TCL_EXACT,&tableIndex)==TCL_ERROR) {
+                                    "getinfo option",TCL_EXACT,&tableIndex) == TCL_ERROR) {
                 return TCL_ERROR;
             }
             if (curlGetInfo(interp,curlHandle,tableIndex)) {
@@ -497,22 +497,20 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
     char           *tmpStr = NULL;
     unsigned char  *tmpUStr;
 
-    Tcl_Obj                 **protocols;
-    int                       curlTableIndex,formaddError,formArrayIndex;
+    int                       formaddError,formArrayIndex;
     struct formArrayStruct   *newFormArray;
     struct curl_forms        *formArray;
     Tcl_Size                  curlformBufferSize;
     size_t                    contentslen;
 
-    unsigned long int         protocolMask;
 
     switch(tableIndex) {
-        case 0:
+        case TCLCURLOPT_URL:
             if (SetoptChar(interp,curlHandle,CURLOPT_URL,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
-        case 1:
+        case TCLCURLOPT_FILE:
             Tcl_Free(curlData->outFile);
             curlData->outFile=curlstrdup(Tcl_GetString(objv));
             if (curlData->outFlag) {
@@ -530,7 +528,7 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             }
             curl_easy_setopt(curlHandle,CURLOPT_WRITEFUNCTION,NULL);
             break;
-        case 2:
+        case TCLCURLOPT_READDATA:
             Tcl_Free(curlData->inFile);
             curlData->inFile=curlstrdup(Tcl_GetString(objv));
             if (curlData->inFlag) {
@@ -548,33 +546,32 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             }
             curl_easy_setopt(curlHandle,CURLOPT_READFUNCTION,NULL);
             break;
-        case 3:
-            if (SetoptChar(interp,curlHandle,
-                    CURLOPT_USERAGENT,tableIndex,objv)) {
+        case TCLCURLOPT_USERAGENT:
+            if (SetoptChar(interp,curlHandle,CURLOPT_USERAGENT,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
-        case 4:
+        case TCLCURLOPT_REFERER:
             if (SetoptChar(interp,curlHandle,CURLOPT_REFERER,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
-        case 5:
+        case TCLCURLOPT_VERBOSE:
             if (SetoptInt(interp,curlHandle,CURLOPT_VERBOSE,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
-        case 6:
+        case TCLCURLOPT_HEADER:
             if (SetoptInt(interp,curlHandle,CURLOPT_HEADER,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
-        case 7:
+        case TCLCURLOPT_NOBODY:
             if (SetoptInt(interp,curlHandle,CURLOPT_NOBODY,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
-        case 8:
+        case TCLCURLOPT_PROXY:
             if (SetoptChar(interp,curlHandle,CURLOPT_PROXY,tableIndex,objv)) {
                 return TCL_ERROR;
             }
@@ -648,6 +645,9 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             }
             break;
         case 20:
+        {
+            int curlTableIndex;
+
             if (Tcl_GetIndexFromObj(interp, objv, netrcTable,
                     "netrc option",TCL_EXACT,&curlTableIndex)==TCL_ERROR) {
                 return TCL_ERROR;
@@ -657,9 +657,9 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
                 return 1;
             }
             break;
+        }
         case 21:
-            if (SetoptInt(interp,curlHandle,CURLOPT_FOLLOWLOCATION,tableIndex,
-                    objv)) {
+            if (SetoptInt(interp,curlHandle,CURLOPT_FOLLOWLOCATION,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
@@ -671,7 +671,7 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             Tcl_GetIntFromObj(interp,objv,&curlData->transferText);
             break;
         case 23:
-            if (SetoptInt(interp,curlHandle,CURLOPT_PUT,tableIndex,objv)) {
+            if (SetoptInt(interp,curlHandle,CURLOPT_UPLOAD,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
@@ -786,11 +786,12 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             }
             return TCL_OK;
             break;
-        case 37:
+        case TCLCURLOPT_HTTPPOST:
         {
             Tcl_Size    i,j;
             Tcl_Size    post_data_numel;
             Tcl_Obj     **httpPostData;
+            int         curlTableIndex;
 
             if (Tcl_ListObjGetElements(interp,objv,&post_data_numel,&httpPostData) == TCL_ERROR) {
                 return TCL_ERROR;
@@ -804,13 +805,13 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             newFormArray->formArray=formArray;
             newFormArray->formHeaderList=NULL;
 
-            for(i=0,j=0;i<post_data_numel;i+=2,j+=1) {
+            for (i=0,j=0;i<post_data_numel;i+=2,j+=1) {
                 if (Tcl_GetIndexFromObj(interp,httpPostData[i],curlFormTable,
                         "CURLFORM option",TCL_EXACT,&curlTableIndex)==TCL_ERROR) {
                     formaddError=1;
                     break;
                 }
-                switch(curlTableIndex) {
+                switch (curlTableIndex) {
                     case NAME_HTTP_OPT:
 /*                        fprintf(stdout,"Section name: %s\n",Tcl_GetString(httpPostData[i+1]));*/
                         formArray[formArrayIndex].option = CURLFORM_COPYNAME;
@@ -1536,6 +1537,9 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             }
             break;
         case 96:
+        {
+            int curlTableIndex;
+
             if (Tcl_GetIndexFromObj(interp, objv, ipresolve,
                 "ip version",TCL_EXACT,&curlTableIndex)==TCL_ERROR) {
                 return TCL_ERROR;
@@ -1560,6 +1564,7 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             }
             Tcl_DecrRefCount(tmpObjPtr);
             break;
+        }
         case 97:
             if (SetoptLong(interp,curlHandle,CURLOPT_MAXFILESIZE,
                         tableIndex,objv)) {
@@ -1956,117 +1961,32 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             }
             break;
         case 152:
-            if (SetoptChar(interp,curlHandle,CURLOPT_SOCKS5_GSSAPI_SERVICE,
-                    tableIndex,objv)) {
+            if (SetoptChar(interp,curlHandle,CURLOPT_SOCKS5_GSSAPI_SERVICE,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
         case 153:
-            if (SetoptLong(interp,curlHandle,CURLOPT_SOCKS5_GSSAPI_NEC,
-                        tableIndex,objv)) {
+            if (SetoptLong(interp,curlHandle,CURLOPT_SOCKS5_GSSAPI_NEC,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
         case 154:
         case 155:
         {
-            Tcl_Size i,j;
-            if (Tcl_ListObjGetElements(interp,objv,&j,&protocols)==TCL_ERROR) {
-                return 1;
+            unsigned long int protocolMask;
+            Tcl_Obj**         protocols;
+            Tcl_Size          protocols_c;
+            long              longNumber = 0;
+
+            if (Tcl_ListObjGetElements(interp,objv,&protocols_c,&protocols) == TCL_ERROR) {
+                return TCL_ERROR;
             }
 
-            for (i=0,protocolMask=0;i<j;i++) {
-                tmpStr=curlstrdup(Tcl_GetString(protocols[i]));
-                if (Tcl_GetIndexFromObj(interp,protocols[i],protocolNames,
-                       "protocol",TCL_EXACT,&curlTableIndex)==TCL_ERROR) {
-                   return TCL_ERROR;
-                }
-                switch(curlTableIndex) {
-                    case 0:             /* http     1 */
-                        protocolMask|=CURLPROTO_HTTP;
-                        break;
-                    case 1:             /* https    2 */
-                        protocolMask|=CURLPROTO_HTTPS;
-                        break;
-                    case 2:             /* ftp      4 */
-                        protocolMask|=CURLPROTO_FTP;
-                        break;
-                    case 3:             /* ftps     8 */
-                        protocolMask|=CURLPROTO_FTPS;
-                        break;
-                    case 4:             /* scp     16 */
-                        protocolMask|=CURLPROTO_SCP;
-                        break;
-                    case 5:             /* sftp    32 */
-                        protocolMask|=CURLPROTO_SFTP;
-                        break;
-                    case 6:             /* telnet  64 */
-                        protocolMask|=CURLPROTO_TELNET;
-                        break;
-                    case 7:             /* ldap   128 */
-                        protocolMask|=CURLPROTO_LDAP;
-                        break;
-                    case 8:             /* ldaps  256 */
-                        protocolMask|=CURLPROTO_LDAPS;
-                        break;
-                    case 9:             /* dict   512 */
-                        protocolMask|=CURLPROTO_DICT;
-                        break;
-                    case 10:            /* file  1024 */
-                        protocolMask|=CURLPROTO_FILE;
-                        break;
-                    case 11:            /* tftp  2048 */
-                        protocolMask|=CURLPROTO_TFTP;
-                        break;
-                    case 12:            /* imap  4096 */
-                        protocolMask|=CURLPROTO_IMAP;
-                        break;
-                    case 13:            /* imaps */
-                        protocolMask|=CURLPROTO_IMAPS;
-                        break;
-                    case 14:            /* pop3 */
-                        protocolMask|=CURLPROTO_POP3;
-                        break;
-                    case 15:            /* pop3s */
-                        protocolMask|=CURLPROTO_POP3S;
-                        break;
-                    case 16:            /* smtp */
-                        protocolMask|=CURLPROTO_SMTP;
-                        break;
-                    case 17:            /* smtps */
-                        protocolMask|=CURLPROTO_SMTPS;
-                        break;
-                    case 18:            /* rtsp */
-                        protocolMask|=CURLPROTO_RTSP;
-                        break;
-                    case 19:            /* rtmp */
-                        protocolMask|=CURLPROTO_RTMP;
-                        break;
-                    case 20:            /* rtmpt */
-                        protocolMask|=CURLPROTO_RTMPT;
-                        break;
-                    case 21:            /* rtmpe */
-                        protocolMask|=CURLPROTO_RTMPE;
-                        break;
-                    case 22:            /* rtmpte */
-                        protocolMask|=CURLPROTO_RTMPTE;
-                        break;
-                    case 23:            /* rtmps */
-                        protocolMask|=CURLPROTO_RTMPS;
-                        break;
-                    case 24:            /* rtmpts */
-                        protocolMask|=CURLPROTO_RTMPTS;
-                        break;
-                    case 25:            /* gopher */
-                        protocolMask|=CURLPROTO_GOPHER;
-                        break;
-                    case 26:            /* all   FFFF */
-                        protocolMask|=CURLPROTO_ALL;
-                }
-            }
+            protocolMask = TclCurl_BuildProtocolMask(interp,protocols,protocols_c);
+
             tmpObjPtr=Tcl_NewLongObj(protocolMask);
             Tcl_IncrRefCount(tmpObjPtr);
-            if (tableIndex==154) {
+            if (tableIndex == 154) {
                 longNumber=CURLOPT_PROTOCOLS;
             } else {
                 longNumber=CURLOPT_REDIR_PROTOCOLS;
@@ -2079,33 +1999,24 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             break;
         }
         case 156:
-            if (Tcl_GetIndexFromObj(interp, objv, ftpsslccc,
-                "Clear Command Channel option ",TCL_EXACT,&intNumber)==TCL_ERROR) {
-                return TCL_ERROR;
-            }
-            switch(intNumber) {
-                case 0:
-                    longNumber=CURLFTPSSL_CCC_NONE;
-                    break;
-                case 1:
-                    longNumber=CURLFTPSSL_CCC_PASSIVE;
-                    break;
-                case 2:
-                    longNumber=CURLFTPSSL_CCC_ACTIVE;
-                    break;
-            }
-            tmpObjPtr=Tcl_NewLongObj(longNumber);
+        {
+            /* Select the Curl defined option value for the specified clear channel setting */
+
+            long longNumber = TclCurl_FTPClearCommandChannelOpt(interp,objv);
+
+            if (longNumber < 0) { return TCL_ERROR; }
+
+            tmpObjPtr = Tcl_NewLongObj(longNumber);
             Tcl_IncrRefCount(tmpObjPtr);
-            if (SetoptLong(interp,curlHandle,CURLOPT_FTP_SSL_CCC,
-                        tableIndex,tmpObjPtr)) {
+            if (SetoptLong(interp,curlHandle,CURLOPT_FTP_SSL_CCC,tableIndex,tmpObjPtr)) {
                 Tcl_DecrRefCount(tmpObjPtr);
                 return TCL_ERROR;
             }
             Tcl_DecrRefCount(tmpObjPtr);
             break;
+        }
         case 157:
-            if (SetoptChar(interp,curlHandle,CURLOPT_SSH_KNOWNHOSTS,
-                    tableIndex,objv)) {
+            if (SetoptChar(interp,curlHandle,CURLOPT_SSH_KNOWNHOSTS,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
@@ -4277,7 +4188,7 @@ curlSetPostData(Tcl_Interp *interp,struct curlObjData *curlDataPtr) {
  */
 void
 curlResetPostData(struct curlObjData *curlDataPtr) {
-    struct formArrayStruct       *tmpPtr;
+    struct formArrayStruct *tmpPtr;
 
     if (curlDataPtr->postListFirst) {
         curl_formfree(curlDataPtr->postListFirst);
@@ -4297,6 +4208,7 @@ curlResetPostData(struct curlObjData *curlDataPtr) {
         }
     }
 }
+
 /*----------------------------------------------------------------------
  *
  * curlResetFormArray --
@@ -4310,7 +4222,7 @@ curlResetPostData(struct curlObjData *curlDataPtr) {
  */
 void
 curlResetFormArray(struct curl_forms *formArray) {
-    int        i;
+    int i;
 
     for (i=0;formArray[i].option!=CURLFORM_END;i++) {
         switch (formArray[i].option) {

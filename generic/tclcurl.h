@@ -164,6 +164,186 @@ const static char *commandTable[] = {
     (char *) NULL
 };
 
+enum curlOptionsIndices
+{
+    TCLCURLOPT_URL = 0,
+    TCLCURLOPT_FILE,
+    TCLCURLOPT_READDATA,
+    TCLCURLOPT_USERAGENT,
+    TCLCURLOPT_REFERER,
+    TCLCURLOPT_VERBOSE,
+    TCLCURLOPT_HEADER,
+    TCLCURLOPT_NOBODY,
+    TCLCURLOPT_PROXY,
+    TCLCURLOPT_PROXYPORT,
+    TCLCURLOPT_HTTPPROXYTUNNEL,
+    TCLCURLOPT_FAILONERROR,
+    TCLCURLOPT_TIMEOUT,
+    TCLCURLOPT_LOW_SPEED_LIMIT,
+    TCLCURLOPT_LOW_SPEED_TIME,
+    TCLCURLOPT_RESUME_FROM,
+    TCLCURLOPT_INFILESIZE,
+    TCLCURLOPT_UPLOAD,
+    TCLCURLOPT_FTPLISTONLY,
+    TCLCURLOPT_FTPAPPEND,
+    TCLCURLOPT_NETRC,
+    TCLCURLOPT_FOLLOWLOCATION,
+    TCLCURLOPT_TRANSFERTEXT,
+    TCLCURLOPT_PUT,
+    TCLCURLOPT_MUTE,
+    TCLCURLOPT_USERPWD,
+    TCLCURLOPT_PROXYUSERPWD,
+    TCLCURLOPT_RANGE,
+    TCLCURLOPT_ERRORBUFFER,
+    TCLCURLOPT_HTTPGET,
+    TCLCURLOPT_POST,
+    TCLCURLOPT_POSTFIELDS,
+    TCLCURLOPT_POSTFIELDSIZE_LARGE,
+    TCLCURLOPT_FTPPORT,
+    TCLCURLOPT_COOKIE,
+    TCLCURLOPT_COOKIEFILE,
+    TCLCURLOPT_HTTPHEADER,
+    TCLCURLOPT_HTTPPOST,
+    TCLCURLOPT_SSLCERT,
+    TCLCURLOPT_SSLCERTPASSWD,
+    TCLCURLOPT_SSLVERSION,
+    TCLCURLOPT_CRLF,
+    TCLCURLOPT_QUOTE,
+    TCLCURLOPT_POSTQUOTE,
+    TCLCURLOPT_WRITEHEADER,
+    TCLCURLOPT_TIMECONDITION,
+    TCLCURLOPT_TIMEVALUE,
+    TCLCURLOPT_CUSTOMREQUEST,
+    TCLCURLOPT_STDERR,
+    TCLCURLOPT_INTERFACE,
+    TCLCURLOPT_KRB4LEVEL,
+    TCLCURLOPT_SSL_VERIFYPEER,
+    TCLCURLOPT_CAINFO,
+    TCLCURLOPT_FILETIME,
+    TCLCURLOPT_MAXREDIRS,
+    TCLCURLOPT_MAXCONNECTS,
+    TCLCURLOPT_CLOSEPOLICY,
+    TCLCURLOPT_RANDOM_FILE,
+    TCLCURLOPT_EGDSOCKET,
+    TCLCURLOPT_CONNECTTIMEOUT,
+    TCLCURLOPT_NOPROGRESS,
+    TCLCURLOPT_HEADERVAR,
+    TCLCURLOPT_BODYVAR,
+    TCLCURLOPT_PROGRESSPROC,
+    TCLCURLOPT_CANCELTRANSVARNAME,
+    TCLCURLOPT_WRITEPROC,
+    TCLCURLOPT_READPROC,
+    TCLCURLOPT_SSL_VERIFYHOST,
+    TCLCURLOPT_COOKIEJAR,
+    TCLCURLOPT_SSL_CIPHER_LIST,
+    TCLCURLOPT_HTTP_VERSION,
+    TCLCURLOPT_FTP_USE_EPSV,
+    TCLCURLOPT_SSLCERTTYPE,
+    TCLCURLOPT_SSLKEY,
+    TCLCURLOPT_SSLKEYTYPE,
+    TCLCURLOPT_SSLKEYPASSWD,
+    TCLCURLOPT_SSL_ENGINE,
+    TCLCURLOPT_SSL_ENGINEDEFAULT,
+    TCLCURLOPT_PREQUOTE,
+    TCLCURLOPT_DEBUGPROC,
+    TCLCURLOPT_DNS_CACHE_TIMEOUT,
+    TCLCURLOPT_DNS_USE_GLOBAL_CACHE,
+    TCLCURLOPT_COOKIESESSION,
+    TCLCURLOPT_CAPATH,
+    TCLCURLOPT_BUFFERSIZE,
+    TCLCURLOPT_NOSIGNAL,
+    TCLCURLOPT_ENCODING,
+    TCLCURLOPT_PROXYTYPE,
+    TCLCURLOPT_HTTP200ALIASES,
+    TCLCURLOPT_UNRESTRICTED_AUTH,
+    TCLCURLOPT_FTP_USE_EPRT,
+    TCLCURLOPT_NOSUCHOPTION,
+    TCLCURLOPT_HTTPAUTH,
+    TCLCURLOPT_FTP_CREATE_MISSING_DIRS,
+    TCLCURLOPT_PROXYAUTH,
+    TCLCURLOPT_FTP_RESPONSE_TIMEOUT,
+    TCLCURLOPT_IPRESOLVE,
+    TCLCURLOPT_MAXFILESIZE,
+    TCLCURLOPT_NETRC_FILE,
+    TCLCURLOPT_FTP_SSL,
+    TCLCURLOPT_SHARE,
+    TCLCURLOPT_PORT,
+    TCLCURLOPT_TCP_NODELAY,
+    TCLCURLOPT_AUTOREFERER,
+    TCLCURLOPT_SOURCE_HOST,
+    TCLCURLOPT_SOURCE_USERPWD,
+    TCLCURLOPT_SOURCE_PATH,
+    TCLCURLOPT_SOURCE_PORT,
+    TCLCURLOPT_PASV_HOST,
+    TCLCURLOPT_SOURCE_PREQUOTE,
+    TCLCURLOPT_SOURCE_POSTQUOTE,
+    TCLCURLOPT_FTPSSLAUTH,
+    TCLCURLOPT_SOURCE_URL,
+    TCLCURLOPT_SOURCE_QUOTE,
+    TCLCURLOPT_FTP_ACCOUNT,
+    TCLCURLOPT_IGNORE_CONTENT_LENGTH,
+    TCLCURLOPT_COOKIELIST,
+    TCLCURLOPT_FTP_SKIP_PASV_IP,
+    TCLCURLOPT_FTP_FILEMETHOD,
+    TCLCURLOPT_LOCALPORT,
+    TCLCURLOPT_LOCALPORTRANGE,
+    TCLCURLOPT_MAX_SEND_SPEED_LARGE,
+    TCLCURLOPT_MAX_RECV_SPEED_LARGE,
+    TCLCURLOPT_FTP_ALTERNATIVE_TO_USER,
+    TCLCURLOPT_SSL_SESSIONID_CACHE,
+    TCLCURLOPT_SSH_AUTH_TYPES,
+    TCLCURLOPT_SSH_PUBLIC_KEYFILE,
+    TCLCURLOPT_SSH_PRIVATE_KEYFILE,
+    TCLCURLOPT_TIMEOUT_MS,
+    TCLCURLOPT_CONNECTTIMEOUT_MS,
+    TCLCURLOPT_HTTP_CONTENT_DECODING,
+    TCLCURLOPT_HTTP_TRANSFER_DECODING,
+    TCLCURLOPT_KRBLEVEL,
+    TCLCURLOPT_NEW_FILE_PERMS,
+    TCLCURLOPT_NEW_DIRECTORY_PERMS,
+    TCLCURLOPT_KEYPASSWD,
+    TCLCURLOPT_APPEND,
+    TCLCURLOPT_DIRLISTONLY,
+    TCLCURLOPT_USE_SSL,
+    TCLCURLOPT_POST301,
+    TCLCURLOPT_SSH_HOST_PUBLIC_KEY_MD5,
+    TCLCURLOPT_PROXY_TRANSFER_MODE,
+    TCLCURLOPT_CRLFILE,
+    TCLCURLOPT_ISSUERCERT,
+    TCLCURLOPT_ADDRESS_SCOPE,
+    TCLCURLOPT_CERTINFO,
+    TCLCURLOPT_POSTREDIR,
+    TCLCURLOPT_USERNAME,
+    TCLCURLOPT_PASSWORD,
+    TCLCURLOPT_PROXYUSERNAME,
+    TCLCURLOPT_PROXYPASSWORD,
+    TCLCURLOPT_TFTP_BLKSIZE,
+    TCLCURLOPT_SOCKS5_GSSAPI_SERVICE,
+    TCLCURLOPT_SOCKS5_GSSAPI_NEC,
+    TCLCURLOPT_PROTOCOLS,
+    TCLCURLOPT_REDIR_PROTOCOLS,
+    TCLCURLOPT_FTP_SSL_CCC,
+    TCLCURLOPT_SSH_KNOWNHOSTS,
+    TCLCURLOPT_SSH_KEYFUNCTION,
+    TCLCURLOPT_MAIL_FROM,
+    TCLCURLOPT_MAIL_RCPT,
+    TCLCURLOPT_FTP_USE_PRET,
+    TCLCURLOPT_WILDCARDMATCH,
+    TCLCURLOPT_CHUNK_BGN_PROC,
+    TCLCURLOPT_CHUNK_BGN_VAR,
+    TCLCURLOPT_CHUNK_END_PROC,
+    TCLCURLOPT_FNMATCH_PROC,
+    TCLCURLOPT_RESOLVE,
+    TCLCURLOPT_TLSAUTH_USERNAME,
+    TCLCURLOPT_TLSAUTH_PASSWORD,
+    TCLCURLOPT_TLSAUTH_TYPE,
+    TCLCURLOPT_TRANSFER_ENCODING,
+    TCLCURLOPT_GSSAPI_DELEGATION,
+    TCLCURLOPT_NOPROXY,
+    TCLCURLOPT_TELNETOPTIONS,
+    TCLCURLOPT_CAINFO_BLOB
+};
+
 const static char *optionTable[] = {
     "CURLOPT_URL",           "CURLOPT_FILE",            "CURLOPT_READDATA",
     "CURLOPT_USERAGENT",     "CURLOPT_REFERER",         "CURLOPT_VERBOSE",
@@ -331,11 +511,11 @@ enum curlFormIndices {
 };
 
 CONST static char   *httpVersionTable[] = {
-    "none",  /* CURL_HTTP_VERSION_NONE */
-    "1.0",  /* CURL_HTTP_VERSION_1_0 */
-    "1.1",  /* CURL_HTTP_VERSION_1_1 */
-    "2.0",  /* CURL_HTTP_VERSION_2_0 */
-    "2TLS",  /* CURL_HTTP_VERSION_2TLS */
+    "none",     /* CURL_HTTP_VERSION_NONE */
+    "1.0",      /* CURL_HTTP_VERSION_1_0  */
+    "1.1",      /* CURL_HTTP_VERSION_1_1  */
+    "2.0",      /* CURL_HTTP_VERSION_2_0  */
+    "2TLS",     /* CURL_HTTP_VERSION_2TLS */
     "2_PRIOR_KNOWLEDGE",  /* CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE */
     (char *)NULL
 };
@@ -359,7 +539,7 @@ const static char *proxyTypeTable[] = {
 };
 
 const static char *httpAuthMethods[] = {
-    "basic", "digest", "digestie", "gssnegotiate", "ntlm", "any", "anysafe", "ntlmwb",(char *)NULL
+    "basic", "digest", "digestie", "gssnegotiate", "ntlm", "any", "anysafe", "ntlmwb", (char *)NULL
 };
 
 const static char *ipresolve[] = {
@@ -382,9 +562,6 @@ const static char *ftpsslauth[] = {
     "default", "ssl", "tls", (char *)NULL
 };
 
-const static char *ftpsslccc[] = {
-    "none", "passive", "active", (char *)NULL
-};
 
 const static char *sslversion[] = {
     "default", "tlsv1", "sslv2", "sslv3", "tlsv1_0", "tlsv1_1", "tlsv1_2", "tlsv1_3",
@@ -401,13 +578,6 @@ const static char *sshauthtypes[] = {
 
 const static char *postredir[] = {
     "301", "302", "all", (char *)NULL
-};
-
-const static char *protocolNames[] = {
-    "http", "https", "ftp", "ftps", "scp", "sftp", "telnet", "ldap",
-    "ldaps","dict",  "file","tftp", "all", "imap", "imaps", "pop3",
-    "pop3s", "smtp", "smtps", "rtsp", "rtmp", "rtmpt", "rtmpe", 
-    "rtmpte", "rtmps", "rtmpts", "gopher", (char*)NULL
 };
 
 const static char *tlsauth[] = {
@@ -427,41 +597,25 @@ int Tclcurl_MultiInit (Tcl_Interp *interp);
 EXTERN int Tclcurl_Init(Tcl_Interp *interp);
 
 Tcl_Obj* curlCreateObjCmd(Tcl_Interp *interp,struct curlObjData  *curlData);
-int curlInitObjCmd(ClientData clientData, Tcl_Interp *interp, int objc,
-        Tcl_Obj *const objv[]);
-int curlObjCmd(ClientData clientData, Tcl_Interp *interp, int objc,
-        Tcl_Obj *const objv[]);
+int curlInitObjCmd(ClientData clientData, Tcl_Interp *interp, int objc,Tcl_Obj *const objv[]);
+int curlObjCmd(ClientData clientData, Tcl_Interp *interp, int objc,Tcl_Obj *const objv[]);
 int curlDeleteCmd(ClientData clientData);
 
 int curlPerform(Tcl_Interp *interp,CURL *curlHandle,struct curlObjData *curlData);
 
-int curlSetOptsTransfer(Tcl_Interp *interp, struct curlObjData *curlData,int objc,
-        Tcl_Obj *const objv[]);
-
-int curlConfigTransfer(Tcl_Interp *interp, struct curlObjData *curlData,int objc,
-        Tcl_Obj *const objv[]);
-
-
-int curlDupHandle(Tcl_Interp *interp, struct curlObjData *curlData,int objc,
-        Tcl_Obj *const objv[]);
-
+int curlSetOptsTransfer(Tcl_Interp *interp, struct curlObjData *curlData,int objc,Tcl_Obj *const objv[]);
+int curlConfigTransfer(Tcl_Interp *interp, struct curlObjData *curlData,int objc,Tcl_Obj *const objv[]);
+int curlDupHandle(Tcl_Interp *interp, struct curlObjData *curlData,int objc,Tcl_Obj *const objv[]);
 int curlResetHandle(Tcl_Interp *interp, struct curlObjData *curlData);
 
-int curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv,int tableIndex);
+int curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,Tcl_Obj *const objv,int tableIndex);
 
-int SetoptInt(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,
-            Tcl_Obj *tclObj);
-int SetoptLong(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,
-            Tcl_Obj *tclObj);
-int SetoptCurlOffT(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,
-            Tcl_Obj *tclObj);
-int SetoptChar(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
-            int tableIndex,Tcl_Obj *tclObj);
-int SetoptBlob(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
-            int tableIndex,Tcl_Obj *tclObj);
-int SetoptSHandle(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
-        int tableIndex,Tcl_Obj *tclObj);
+int SetoptInt(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
+int SetoptLong(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
+int SetoptCurlOffT(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
+int SetoptChar(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
+int SetoptBlob(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
+int SetoptSHandle(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
 int SetoptsList(Tcl_Interp *interp,struct curl_slist **slistPtr,Tcl_Obj *const objv);
 
 CURLcode curlGetInfo(Tcl_Interp *interp,CURL *curlHandle,int tableIndex);
@@ -469,13 +623,10 @@ CURLcode curlGetInfo(Tcl_Interp *interp,CURL *curlHandle,int tableIndex);
 void curlFreeSpace(struct curlObjData *curlData);
 
 void curlErrorSetOpt(Tcl_Interp *interp,const char **configTable, int option,const char *parPtr);
-
 size_t curlHeaderReader(void *ptr,size_t size,size_t nmemb,FILE *stream);
-
 size_t curlBodyReader(void *ptr,size_t size,size_t nmemb,FILE *curlDataPtr);
 
-int curlProgressCallback(void *clientp,double dltotal,double dlnow,
-        double ultotal,double ulnow);
+int curlProgressCallback(void *clientp,double dltotal,double dlnow,double ultotal,double ulnow);
 
 size_t curlWriteProcInvoke(void *ptr,size_t size,size_t nmemb,FILE *curlDataPtr);
 size_t curlReadProcInvoke(void *ptr,size_t size,size_t nmemb,FILE *curlDataPtr);
@@ -526,7 +677,6 @@ void curlSetBodyVarName(Tcl_Interp *interp,struct curlObjData *curlDataPtr);
 
 char *curlstrdup (char *old);
 
-
 Tcl_Obj* curlCreateShareObjCmd (Tcl_Interp *interp,struct shcurlObjData  *shcurlData);
 int curlShareInitObjCmd (ClientData clientData, Tcl_Interp *interp,
         int objc,Tcl_Obj *const objv[]);
@@ -554,6 +704,12 @@ int curlShareStringError (ClientData clientData, Tcl_Interp *interp,
         int objc,Tcl_Obj *const objv[]);
 int curlMultiStringError (ClientData clientData, Tcl_Interp *interp,
         int objc,Tcl_Obj *const objv[]);
+
+/* */
+
+unsigned long int TclCurl_BuildProtocolMask(Tcl_Interp* interp, Tcl_Obj** protocols,int protocols_c);
+long              TclCurl_FTPClearCommandChannelOpt(Tcl_Interp* interp,Tcl_Obj* opt_o);
+
 
 #ifdef  __cplusplus
 }
