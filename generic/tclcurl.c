@@ -1578,24 +1578,10 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             break;
         case 99:
         case 138:
-            if (Tcl_GetIndexFromObj(interp, objv, ftpssl,
-                "ftps method ",TCL_EXACT,&intNumber)==TCL_ERROR) {
-                return TCL_ERROR;
-            }
-            switch(intNumber) {
-                case 0:
-                    longNumber=CURLUSESSL_NONE;
-                    break;
-                case 1:
-                    longNumber=CURLUSESSL_TRY;
-                    break;
-                case 2:
-                    longNumber=CURLUSESSL_CONTROL;
-                    break;
-                case 3:
-                    longNumber=CURLUSESSL_ALL;
-                    break;
-            }
+        {
+            long longNumber = TclCurl_FTPSSLMethod(interp,objv);
+            if (longNumber == -1) { return TCL_ERROR; }
+
             tmpObjPtr=Tcl_NewLongObj(longNumber);
             Tcl_IncrRefCount(tmpObjPtr);
             if (SetoptLong(interp,curlHandle,CURLOPT_USE_SSL,
@@ -1605,6 +1591,7 @@ curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             }
             Tcl_DecrRefCount(tmpObjPtr);
             break;
+        }
         case 100:
             if (SetoptSHandle(interp,curlHandle,CURLOPT_SHARE,
                     tableIndex,objv)) {

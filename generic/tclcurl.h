@@ -546,9 +546,6 @@ const static char *ipresolve[] = {
     "whatever", "v4", "v6", (char *)NULL
 };
 
-const static char *ftpssl[] = {
-    "nope", "try", "control", "all", (char *)NULL
-};
 
 const static char *shareCmd[] = {
     "share", "unshare", "cleanup", (char *)NULL
@@ -709,7 +706,7 @@ int curlMultiStringError (ClientData clientData, Tcl_Interp *interp,
 
 unsigned long int TclCurl_BuildProtocolMask(Tcl_Interp* interp, Tcl_Obj** protocols,int protocols_c);
 long              TclCurl_FTPClearCommandChannelOpt(Tcl_Interp* interp,Tcl_Obj* opt_o);
-
+long              TclCurl_FTPSSLMethod(Tcl_Interp* interp,Tcl_Obj* ssl_method_o);
 
 #ifdef  __cplusplus
 }

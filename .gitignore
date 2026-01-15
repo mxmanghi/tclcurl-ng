@@ -7,3 +7,4 @@ multi.o
 pkgIndex.tcl
 tclcurl.o
 tags
+*.swp

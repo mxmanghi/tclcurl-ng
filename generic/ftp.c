@@ -11,6 +11,10 @@ const static char *ftpsslccc[] = {
     "none", "passive", "active", (char *)NULL
 };
 
+const static char *ftpssl[] = {
+    "nope", "try", "control", "all", (char *)NULL
+};
+
 long  TclCurl_FTPClearCommandChannelOpt(Tcl_Interp* interp,Tcl_Obj* opt_o)
 {
     int intNumber;
@@ -33,4 +37,31 @@ long  TclCurl_FTPClearCommandChannelOpt(Tcl_Interp* interp,Tcl_Obj* opt_o)
 
     return -1;
 }
+
+long TclCurl_FTPSSLMethod(Tcl_Interp* interp,Tcl_Obj* ssl_method_o)
+{
+    int intNumber;
+ 
+    if (Tcl_GetIndexFromObj(interp, ssl_method_o, ftpssl,
+        "ftps method ",TCL_EXACT,&intNumber)==TCL_ERROR) {
+        return -1;
+    }
+    switch(intNumber) {
+        case 0:
+            return CURLUSESSL_NONE;
+        case 1:
+            return CURLUSESSL_TRY;
+        case 2:
+            return CURLUSESSL_CONTROL;
+        case 3:
+            return CURLUSESSL_ALL;
+    }
+
+    /* It's not supposed to ever get here */
+
+    return -1;
+}
+
+
+
 
