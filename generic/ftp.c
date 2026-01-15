@@ -6,7 +6,6 @@
 #include <curl/easy.h>
 #include "tclcompat.h"
 
-
 const static char *ftpsslccc[] = {
     "none", "passive", "active", (char *)NULL
 };

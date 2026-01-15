@@ -11,8 +11,8 @@
  *
  */
 
-#ifndef tclcurl_h
-#define tclcurl_h
+#ifndef __tclcurl_h__
+#define __tclcurl_h__
 
 #if (defined(WIN32) || defined(_WIN32))
 #define CURL_STATICLIB 1
@@ -20,25 +20,6 @@
 
 #include <curl/curl.h>
 #include <curl/easy.h>
-
-/*
- *  Tcl8/Tcl9 compatibility definitions
- */
-
-#include <tcl.h>
-#include <tclDecls.h>
-#ifndef CONST
-#  define CONST const
-#endif
-#ifndef CONST84
-#  define CONST84 const
-#endif
-#ifndef CONST86
-#  define CONST86 const
-#endif
-#ifndef CONST84_RETURN
-#  define CONST84_RETURN const
-#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -50,14 +31,8 @@
 extern "C" {
 #endif
 
-#ifndef TCL_SIZE_MAX
-# define Tcl_GetSizeIntFromObj Tcl_GetIntFromObj
-# define TCL_SIZE_MAX      INT_MAX
-# ifndef Tcl_Size
-    typedef int Tcl_Size;
-# endif
-# define TCL_SIZE_MODIFIER ""
-#endif
+#include "config.h"
+#include "tclcompat.h"
 
 /*
  * Windows needs to know which symbols to export. Unix does not.
@@ -71,7 +46,7 @@ extern "C" {
 #define TCL_STORAGE_CLASS DLLEXPORT
 #endif
 
-#define TclCurlVersion "7.22.0"
+#define TclCurlVersion PACKAGE_VERSION
 
 /*
  * This struct will contain the data of a transfer if the user wants

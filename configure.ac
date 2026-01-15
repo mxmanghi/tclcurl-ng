@@ -27,9 +27,10 @@ AC_INIT([TclCurl], [7.23.0])
 # as well as PKG_LIB_FILE and PKG_STUB_LIB_FILE.
 #--------------------------------------------------------------------
 
-TEA_INIT([3.7])
+TEA_INIT([3.9])
 
 AC_CONFIG_AUX_DIR(tclconfig)
+AC_CONFIG_HEADERS([config.h])
 
 #--------------------------------------------------------------------
 # Load the tclConfig.sh file
@@ -71,7 +72,7 @@ TEA_SETUP_COMPILER
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([tclcurl.c multi.c])
+TEA_ADD_SOURCES([tclcurl.c ftp.c protocol_mask.c multi.c])
 TCLCURL_SCRIPTS=tclcurl.tcl
 AC_SUBST(TCLCURL_SCRIPTS)
 
@@ -254,4 +255,4 @@ TEA_PROG_TCLSH
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-AC_OUTPUT([Makefile pkgIndex.tcl])
+AC_OUTPUT()
