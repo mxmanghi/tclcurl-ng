@@ -19,7 +19,7 @@ dnl	to configure the system for the local environment.
 # so you can encode the package version directly into the source files.
 #-----------------------------------------------------------------------
 
-AC_INIT([TclCurl], [7.23.0])
+AC_INIT([TclCurl],[7.23.0])
 
 #--------------------------------------------------------------------
 # Call TEA_INIT as the first TEA_ macro to set up initial vars.
@@ -72,7 +72,7 @@ TEA_SETUP_COMPILER
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([tclcurl.c ftp.c protocol_mask.c multi.c])
+TEA_ADD_SOURCES([tclcurl.c curl_setopts.c ftp.c protocol_mask.c multi.c])
 TCLCURL_SCRIPTS=tclcurl.tcl
 AC_SUBST(TCLCURL_SCRIPTS)
 
@@ -255,4 +255,6 @@ TEA_PROG_TCLSH
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-AC_OUTPUT()
+AC_CONFIG_FILES([Makefile pkgIndex.tcl])
+AC_OUTPUT
+
