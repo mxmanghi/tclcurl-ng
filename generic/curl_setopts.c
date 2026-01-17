@@ -1,4 +1,321 @@
 /*
+ * curl_setopts.c
+ *
+ *
+ */
+
+#include "tclcurl.h"
+#include "curl_setopts.h"
+
+/* size_t -> Tcl_Size */
+static inline int SizeT2TclSize(size_t in, Tcl_Size *out) {
+    if (in > (size_t)TCL_SIZE_MAX) return 0;  /* overflow for Tcl_Size */
+    *out = (Tcl_Size)in;
+    return 1;
+}
+
+/* Tcl_Size -> size_t */
+static inline int TclSize2SizeT(Tcl_Size in, size_t *out) {
+    if (in < 0) return 0;  /* negative not representable as size_t */
+    *out = (size_t)in;
+    return 1;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * curlSetOptsTransfer --
+ *
+ *  This procedure is invoked when the user invokes the 'setopt'
+ *  command, it is used to set the 'curl' options 
+ *
+ *  Parameter:
+ *    interp: Pointer to the interpreter we are using.
+ *    curlHandle: the curl handle for which the option is set.
+ *    objc and objv: The usual in Tcl.
+ *
+ * Results:
+ *  A standard Tcl result.
+ *----------------------------------------------------------------------
+ */
+int
+curlSetOptsTransfer(Tcl_Interp *interp, struct curlObjData *curlData,
+        int objc, Tcl_Obj *const objv[]) {
+
+    int            tableIndex;
+
+    if (Tcl_GetIndexFromObj(interp, objv[2], optionTable, "option", 
+            TCL_EXACT, &tableIndex)==TCL_ERROR) {
+        return TCL_ERROR;
+    }
+
+    return  TclCurl_SetOpts(interp,curlData,objv[3],tableIndex);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * curlConfigTransfer --
+ *
+ *  This procedure is invoked by the user command 'configure', it reads 
+ *  the options passed by the user to configure a transfer, and passes
+ *  then, one by one to 'curlSetOpts'.
+ *
+ *  Parameter:
+ *      interp: Pointer to the interpreter we are using.
+ *      curlHandle: the curl handle for which the option is set.
+ *      objc and objv: The usual in Tcl.
+ *
+ * Results:
+ *  A standard Tcl result.
+ *----------------------------------------------------------------------
+ */
+int
+curlConfigTransfer(Tcl_Interp *interp, struct curlObjData *curlData,
+        int objc, Tcl_Obj *const objv[]) {
+
+    int              tableIndex;
+    int              i,j;
+    Tcl_Obj         *resultPtr;
+
+    for(i=2,j=3;i<objc;i=i+2,j=j+2) {
+        if (Tcl_GetIndexFromObj(interp, objv[i], configTable, "option", 
+                TCL_EXACT, &tableIndex)==TCL_ERROR) {
+            return TCL_ERROR;
+        }
+        if (i==objc-1) {
+            resultPtr=Tcl_ObjPrintf("Empty value for %s",configTable[tableIndex]);
+            Tcl_SetObjResult(interp,resultPtr);            
+            return TCL_ERROR;
+        }
+        if (TclCurl_SetOpts(interp,curlData,objv[j],tableIndex)==TCL_ERROR) {
+            return TCL_ERROR;
+        }
+    }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SetoptInt --
+ *
+ *   Sets the curl options that require an int
+ *
+ * Parameters:
+ *   interp: The interpreter we are working with.
+ *   curlHandle: and the curl handle
+ *   opt: the option to set
+ *   tclObj: The Tcl with the value for the option.
+ *
+ * Results:
+ *  0 if all went well.
+ *  1 in case of error.
+ *
+ *----------------------------------------------------------------------
+ */
+int
+SetoptInt(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
+        int tableIndex,Tcl_Obj *tclObj) {
+    int        intNumber;
+
+    if (Tcl_GetIntFromObj(interp,tclObj,&intNumber)) {
+        curlErrorSetOpt(interp,configTable,tableIndex,Tcl_GetString(tclObj));
+        return 1;
+    }
+    if (curl_easy_setopt(curlHandle,opt,intNumber)) {
+        curlErrorSetOpt(interp,configTable,tableIndex,Tcl_GetString(tclObj));
+        return 1;
+    }
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SetoptLong --
+ *
+ *  Set the curl options that require a long
+ *
+ * Parameters:
+ *  interp: The interpreter we are working with.
+ *  curlHandle: and the curl handle
+ *  opt: the option to set
+ *  tclObj: The Tcl with the value for the option.
+ *
+ * Results:
+ *  0 if all went well.
+ *  1 in case of error.
+ *
+ *----------------------------------------------------------------------
+ */
+int
+SetoptLong(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
+        int tableIndex,Tcl_Obj *tclObj) {
+    long         longNumber;
+
+    if (Tcl_GetLongFromObj(interp,tclObj,&longNumber)) {
+        curlErrorSetOpt(interp,configTable,tableIndex,Tcl_GetString(tclObj));
+        return 1;
+    }
+    if (curl_easy_setopt(curlHandle,opt,longNumber)) {
+        curlErrorSetOpt(interp,configTable,tableIndex,Tcl_GetString(tclObj));
+        return 1;
+    }
+
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * curlSetoptCurlOffT --
+ *
+ *  Set the curl options that require a curl_off_t
+ *
+ * Parameters:
+ *  interp: The interpreter we are working with.
+ *  curlHandle: and the curl handle
+ *  opt: the option to set
+ *  tclObj: The Tcl with the value for the option.
+ *
+ * Results:
+ *  0 if all went well.
+ *  1 in case of error.
+ *
+ *----------------------------------------------------------------------
+ */
+int
+SetoptCurlOffT(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
+        int tableIndex,Tcl_Obj *tclObj) {
+    Tcl_WideInt wideNumber;
+
+    if (Tcl_GetWideIntFromObj(interp,tclObj,&wideNumber)) {
+        curlErrorSetOpt(interp,configTable,tableIndex,Tcl_GetString(tclObj));
+        return 1;
+    }
+
+    if (curl_easy_setopt(curlHandle,opt,(curl_off_t)wideNumber)) {
+        curlErrorSetOpt(interp,configTable,tableIndex,Tcl_GetString(tclObj));
+        return 1;
+    }
+
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SetoptChar --
+ *
+ *  Set the curl options that require a string
+ *
+ * Parameters:
+ *  interp: The interpreter we are working with.
+ *  curlHandle: and the curl handle
+ *  opt: the option to set
+ *  tclObj: The Tcl with the value for the option.
+ *
+ * Results:
+ *  0 if all went well.
+ *  1 in case of error.
+ *
+ *----------------------------------------------------------------------
+ */
+int
+SetoptChar(Tcl_Interp *interp,CURL *curlHandle,
+        CURLoption opt,int tableIndex,Tcl_Obj *tclObj) {
+    char    *optionPtr;
+
+    optionPtr=curlstrdup(Tcl_GetString(tclObj));
+    if (curl_easy_setopt(curlHandle,opt,optionPtr)) {
+        curlErrorSetOpt(interp,configTable,tableIndex,optionPtr);
+        Tcl_Free(optionPtr);
+        return 1;
+    }
+    Tcl_Free(optionPtr);
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SetoptBlob --
+ *
+ *	Set the curl options that require a blob
+ *
+ * Parameters:
+ *	interp: The interpreter we are working with.
+ *	curlHandle: and the curl handle
+ *	opt: the option to set
+ *	tclObj: The Tcl with the value for the option.
+ *
+ * Results:
+ *	0 if all went well.
+ *	1 in case of error.
+ *
+ *----------------------------------------------------------------------
+ */
+int
+SetoptBlob(Tcl_Interp *interp,CURL *curlHandle,
+        CURLoption opt,int tableIndex,Tcl_Obj *tclObj) {
+    struct curl_blob   optionBlob;
+    Tcl_Size           len;
+
+    optionBlob.data = Tcl_GetByteArrayFromObj(tclObj,&len);
+    if (optionBlob.data) {
+        optionBlob.len = len;
+        optionBlob.flags = CURL_BLOB_COPY;
+        if (curl_easy_setopt(curlHandle,opt,&optionBlob)) {
+            curlErrorSetOpt(interp,configTable,tableIndex,"...");
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SetoptSHandle --
+ *
+ *  Set the curl options that require a share handle (there is only
+ *  one but you never know.
+ *
+ * Parameters:
+ *  interp: The interpreter we are working with.
+ *  curlHandle: the curl handle
+ *  opt: the option to set
+ *  tclObj: The Tcl with the value for the option.
+ *
+ * Results:
+ *  0 if all went well.
+ *  1 in case of error.
+ *
+ *----------------------------------------------------------------------
+ */
+int
+SetoptSHandle(Tcl_Interp *interp,CURL *curlHandle,
+        CURLoption opt,int tableIndex,Tcl_Obj *tclObj) {
+
+    char                    *shandleName;
+    Tcl_CmdInfo             *infoPtr=(Tcl_CmdInfo *)Tcl_Alloc(sizeof(Tcl_CmdInfo));
+    struct shcurlObjData    *shandleDataPtr;
+
+    shandleName=Tcl_GetString(tclObj);
+    if (0==Tcl_GetCommandInfo(interp,shandleName,infoPtr)) {
+        return 1;
+    }
+    shandleDataPtr=(struct shcurlObjData *)(infoPtr->objClientData);
+    Tcl_Free((char *)infoPtr);
+    if (curl_easy_setopt(curlHandle,opt,shandleDataPtr->shandle)) {
+        curlErrorSetOpt(interp,configTable,tableIndex,shandleName);
+        return 1;
+    }
+    return 0;
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * curlSetOpts --
@@ -15,9 +332,6 @@
  *  A standard Tcl result.
  *----------------------------------------------------------------------
  */
-
-#include "tclcurl.h"
-#include "curlopts.h"
 
 int
 TclCurl_SetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
@@ -287,7 +601,7 @@ TclCurl_SetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
                 return TCL_ERROR;
             }
             break;
-        case TCLCURLOPT_COPYPOSTFIELDS:
+        case TCLCURLOPT_POSTFIELDS:
             if (SetoptChar(interp,curlHandle,CURLOPT_COPYPOSTFIELDS,tableIndex,objv)) {
                 return TCL_ERROR;
             }
@@ -1688,8 +2002,7 @@ TclCurl_SetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             Tcl_DecrRefCount(tmpObjPtr);
             break;
         case 171:
-            if (SetoptLong(interp,curlHandle,CURLOPT_TRANSFER_ENCODING,
-                        tableIndex,objv)) {
+            if (SetoptLong(interp,curlHandle,CURLOPT_TRANSFER_ENCODING,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
