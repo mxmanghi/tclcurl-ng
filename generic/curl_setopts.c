@@ -335,17 +335,14 @@ SetoptSHandle(Tcl_Interp *interp,CURL *curlHandle,
 
 int
 TclCurl_SetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
-                Tcl_Obj *const objv,int tableIndex) {
-
+                Tcl_Obj *const objv,int tableIndex)
+{
     int            exitCode;
     CURL           *curlHandle=curlData->curl;
 
     Tcl_Obj        *resultObjPtr;
     Tcl_Obj        *tmpObjPtr;
 
-    Tcl_RegExp      regExp;
-
-    int             charLength;
     long            longNumber=0;
     int             intNumber;
     unsigned char  *tmpUStr;
@@ -450,46 +447,39 @@ TclCurl_SetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             }
             break;
         case 13:
-            if (SetoptLong(interp,curlHandle,CURLOPT_LOW_SPEED_LIMIT,tableIndex,
-                        objv)) {
+            if (SetoptLong(interp,curlHandle,CURLOPT_LOW_SPEED_LIMIT,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
         case 14:
-            if (SetoptLong(interp,curlHandle,CURLOPT_LOW_SPEED_TIME,tableIndex,
-                        objv)) {
+            if (SetoptLong(interp,curlHandle,CURLOPT_LOW_SPEED_TIME,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
         case 15:
-            if (SetoptLong(interp,curlHandle,CURLOPT_RESUME_FROM,tableIndex,
-                        objv)) {
+            if (SetoptLong(interp,curlHandle,CURLOPT_RESUME_FROM,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
         case 16:
-            if (SetoptLong(interp,curlHandle,CURLOPT_INFILESIZE,tableIndex,
-                        objv)) {
+            if (SetoptLong(interp,curlHandle,CURLOPT_INFILESIZE,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
         case 17:
-            if (SetoptInt(interp,curlHandle,CURLOPT_UPLOAD,tableIndex,
-                    objv)) {
+            if (SetoptInt(interp,curlHandle,CURLOPT_UPLOAD,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
         case 137:
         case 18:
-            if (SetoptInt(interp,curlHandle,CURLOPT_DIRLISTONLY,tableIndex,
-                    objv)) {
+            if (SetoptInt(interp,curlHandle,CURLOPT_DIRLISTONLY,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
         case 136:
         case 19:
-            if (SetoptInt(interp,curlHandle,CURLOPT_APPEND,tableIndex,
-                    objv)) {
+            if (SetoptInt(interp,curlHandle,CURLOPT_APPEND,tableIndex,objv)) {
                 return TCL_ERROR;
             }
             break;
@@ -543,52 +533,7 @@ TclCurl_SetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
             break;
         case TCLCURLOPT_ERRORBUFFER:
         {
-            const char     *startPtr;
-            const char     *endPtr;
-            char           *tmpStr = NULL;
-
-            tmpStr   = curlstrdup(Tcl_GetString(objv));
-            regExp   = Tcl_RegExpCompile(interp,"(.*)(?:\\()(.*)(?:\\))");
-            exitCode = Tcl_RegExpExec(interp,regExp,tmpStr,tmpStr);
-
-            switch (exitCode) {
-                case -1:
-                    Tcl_Free((char *)tmpStr);
-                    return TCL_ERROR;
-                    break;
-                case 0:
-                    if (*tmpStr!=0) {
-                        curlData->errorBufferName=curlstrdup(tmpStr);
-                    } else {
-                        curlData->errorBuffer=NULL;
-                    }
-                    curlData->errorBufferKey=NULL;
-                    break;
-                case 1:
-                    Tcl_RegExpRange(regExp,1,&startPtr,&endPtr);
-                    charLength=endPtr-startPtr;
-                    curlData->errorBufferName=Tcl_Alloc(charLength+1);
-                    strncpy(curlData->errorBufferName,startPtr,charLength);
-                    curlData->errorBufferName[charLength]=0;
-                    Tcl_RegExpRange(regExp,2,&startPtr,&endPtr);
-                    charLength=endPtr-startPtr;
-                    curlData->errorBufferKey=Tcl_Alloc(charLength+1);
-                    strncpy(curlData->errorBufferKey,startPtr,charLength);
-                    curlData->errorBufferKey[charLength]=0;
-                    break;
-            }
-            Tcl_Free((char *)tmpStr);
-            if (curlData->errorBufferName!=NULL) {
-                curlData->errorBuffer=Tcl_Alloc(CURL_ERROR_SIZE);
-                if (curl_easy_setopt(curlHandle,CURLOPT_ERRORBUFFER,
-                        curlData->errorBuffer)) {
-                    Tcl_Free((char *)curlData->errorBuffer);
-                    curlData->errorBuffer=NULL;
-                    return TCL_ERROR;
-                }
-            } else {
-                Tcl_Free(curlData->errorBuffer);
-            }
+            if (TclCurl_ErrorBuffer(interp,curlData,objv) == TCL_ERROR) { return TCL_ERROR; }
             break;
         }
         case TCLCURLOPT_HTTPGET:

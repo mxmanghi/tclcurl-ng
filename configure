@@ -5442,7 +5442,7 @@ printf "%s\n" "#define AC_APPLE_UNIVERSAL_BUILD 1" >>confdefs.h
 #-----------------------------------------------------------------------
 
 
-    vars="tclcurl.c curl_setopts.c ftp.c protocol_mask.c multi.c"
+    vars="tclcurl.c curl_setopts.c ftp.c curl_utils.c multi.c"
     for i in $vars; do
 	case $i in
 	    \$*)
@@ -10606,6 +10606,5 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: unrecognized options: $ac_unrecognized_opts" >&5
 printf "%s\n" "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
-
 
 

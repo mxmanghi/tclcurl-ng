@@ -1,14 +1,12 @@
 /*
- *
+ * tclcurl_utils.c
  */
 
 
-/*
- *  Tcl8/Tcl9 compatibility definitions
- */
 
 #include <curl/curl.h>
 #include <curl/easy.h>
+#include "tclcurl.h"
 #include "tclcompat.h"
 
 enum ProtocolNamesIndices {
@@ -148,3 +146,62 @@ TclCurl_BuildProtocolMask(Tcl_Interp* interp, Tcl_Obj** protocols,Tcl_Size proto
     return protocolMask;
 }
 
+int
+TclCurl_ErrorBuffer(Tcl_Interp *interp, struct curlObjData* curlData,Tcl_Obj *const tcl_o)
+{
+    int             exitCode;
+    const char     *startPtr;
+    const char     *endPtr;
+    char           *tmpStr = NULL;
+    Tcl_RegExp      regExp;
+    CURL           *curlHandle=curlData->curl;
+
+    tmpStr   = curlstrdup(Tcl_GetString(tcl_o));
+    regExp   = Tcl_RegExpCompile(interp,"(.*)(?:\\()(.*)(?:\\))");
+    exitCode = Tcl_RegExpExec(interp,regExp,tmpStr,tmpStr);
+
+    switch (exitCode) {
+        case -1:
+            Tcl_Free((char *)tmpStr);
+            return TCL_ERROR;
+        case 0:
+            if (*tmpStr!=0) {
+                curlData->errorBufferName=curlstrdup(tmpStr);
+            } else {
+                curlData->errorBuffer=NULL;
+            }
+            curlData->errorBufferKey=NULL;
+            break;
+        case 1:
+        {
+            int charLength;
+
+            Tcl_RegExpRange(regExp,1,&startPtr,&endPtr);
+            charLength = endPtr-startPtr;
+            curlData->errorBufferName = Tcl_Alloc(charLength+1);
+            strncpy(curlData->errorBufferName,startPtr,charLength);
+            curlData->errorBufferName[charLength] = 0;
+            Tcl_RegExpRange(regExp,2,&startPtr,&endPtr);
+            charLength = endPtr-startPtr;
+            curlData->errorBufferKey = Tcl_Alloc(charLength+1);
+            strncpy(curlData->errorBufferKey,startPtr,charLength);
+            curlData->errorBufferKey[charLength] = 0;
+            break;
+        }
+    }
+
+    Tcl_Free((char *)tmpStr);
+    if (curlData->errorBufferName!=NULL) {
+        curlData->errorBuffer=Tcl_Alloc(CURL_ERROR_SIZE);
+        if (curl_easy_setopt(curlHandle,CURLOPT_ERRORBUFFER,
+                curlData->errorBuffer)) {
+            Tcl_Free((char *)curlData->errorBuffer);
+            curlData->errorBuffer=NULL;
+            return TCL_ERROR;
+        }
+    } else {
+        Tcl_Free(curlData->errorBuffer);
+    }
+
+    return TCL_OK;
+}

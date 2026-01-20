@@ -239,10 +239,11 @@ int curlMultiStringError (ClientData clientData, Tcl_Interp *interp,
 
 /* */
 
+int               TclCurl_SetOpts(Tcl_Interp *interp, struct curlObjData *curlData,Tcl_Obj *const objv,int tableIndex);
 unsigned long int TclCurl_BuildProtocolMask(Tcl_Interp* interp, Tcl_Obj** protocols,int protocols_c);
 long              TclCurl_FTPClearCommandChannelOpt(Tcl_Interp* interp,Tcl_Obj* opt_o);
 long              TclCurl_FTPSSLMethod(Tcl_Interp* interp,Tcl_Obj* ssl_method_o);
-int               TclCurl_SetOpts(Tcl_Interp *interp, struct curlObjData *curlData,Tcl_Obj *const objv,int tableIndex);
+int               TclCurl_ErrorBuffer(Tcl_Interp *interp, struct curlObjData * const curlData,Tcl_Obj *const tcl_o);
 
 #ifdef  __cplusplus
 }

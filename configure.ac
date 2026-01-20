@@ -72,7 +72,7 @@ TEA_SETUP_COMPILER
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([tclcurl.c curl_setopts.c ftp.c protocol_mask.c multi.c])
+TEA_ADD_SOURCES([tclcurl.c curl_setopts.c ftp.c curl_utils.c multi.c])
 TCLCURL_SCRIPTS=tclcurl.tcl
 AC_SUBST(TCLCURL_SCRIPTS)
 
@@ -257,4 +257,3 @@ TEA_PROG_TCLSH
 
 AC_CONFIG_FILES([Makefile pkgIndex.tcl])
 AC_OUTPUT
-
