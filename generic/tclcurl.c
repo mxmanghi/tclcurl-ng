@@ -71,29 +71,28 @@ const static char *getInfoTable[] = {
     (char *)NULL
 };
 
-enum tclcurl_cmd_indices {
-    TCLCURL_CMD_SETOPT,
-    TCLCURL_CMD_PERFORM,
-    TCLCURL_CMD_GETINFO,
-    TCLCURL_CMD_CLEANUP,
-    TCLCURL_CMD_CONFIGURE,
-    TCLCURL_CMD_DUPHANDLE,
-    TCLCURL_CMD_RESET,
-    TCLCURL_CMD_PAUSE,
-    TCLCURL_CMD_RESUME
-};
+#define TCLCURL_COMMANDS(X) \
+    X(TCLCURL_CMD_SETOPT,"setopt")       \
+    X(TCLCURL_CMD_PERFORM,"perform")     \
+    X(TCLCURL_CMD_GETINFO,"getinfo")     \
+    X(TCLCURL_CMD_CLEANUP,"cleanup")     \
+    X(TCLCURL_CMD_CONFIGURE,"configure") \
+    X(TCLCURL_CMD_DUPHANDLE,"duphandle") \
+    X(TCLCURL_CMD_RESET,"reset")         \
+    X(TCLCURL_CMD_PAUSE,"pause")         \
+    X(TCLCURL_CMD_RESUME,"resume")
 
-const static char *commandTable[] = {
-    "setopt",
-    "perform",
-    "getinfo",
-    "cleanup",
-    "configure",
-    "duphandle",
-    "reset",
-    "pause",
-    "resume",
-    (char *) NULL
+typedef enum {
+#define X(sym,cmd) sym,
+    TCLCURL_COMMANDS(X)
+#undef X
+    TCLCURL_CMD_COUNT
+} tclcurl_cmd_id;
+
+static const char* const commandTable[TCLCURL_CMD_COUNT] = {
+#define X(sym, cmd) [sym] = cmd,
+    TCLCURL_COMMANDS(X)
+#undef X
 };
 
 
@@ -1161,6 +1160,8 @@ curlDebugProcInvoke(CURL *curlHandle, curl_infotype infoType,
  *
  *----------------------------------------------------------------------
  */
+
+
 CURLcode
 curlGetInfo(Tcl_Interp *interp,CURL *curlHandle,int tableIndex) {
     char                    *charPtr;
@@ -1359,20 +1360,16 @@ curlGetInfo(Tcl_Interp *interp,CURL *curlHandle,int tableIndex) {
             }
             resultObjPtr=Tcl_NewListObj(0,(Tcl_Obj **)NULL);
             if (longNumber&CURLAUTH_BASIC) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("basic",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj("basic",-1));
             }
             if (longNumber&CURLAUTH_DIGEST) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("digest",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj("digest",-1));
             }
             if (longNumber&CURLAUTH_GSSNEGOTIATE) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("gssnegotiate",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj("gssnegotiate",-1));
             }
             if (longNumber&CURLAUTH_NTLM) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("NTLM",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj("NTLM",-1));
             }
             Tcl_SetObjResult(interp,resultObjPtr);
             break;
