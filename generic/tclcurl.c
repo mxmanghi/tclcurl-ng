@@ -54,7 +54,7 @@ const static char *versionInfoTable[] = {
     "-protocols",  (char *)NULL
 };
 
-const static char    *getInfoTable[]={
+const static char *getInfoTable[] = {
     "effectiveurl",   "httpcode",       "responsecode",
     "filetime",       "totaltime",      "namelookuptime",
     "connecttime",    "pretransfertime","sizeupload",
@@ -69,6 +69,18 @@ const static char    *getInfoTable[]={
     "appconnecttime", "certinfo",       "conditionunmet",
     "primaryport",    "localip",        "localport",
     (char *)NULL
+};
+
+enum tclcurl_cmd_indices {
+    TCLCURL_CMD_SETOPT,
+    TCLCURL_CMD_PERFORM,
+    TCLCURL_CMD_GETINFO,
+    TCLCURL_CMD_CLEANUP,
+    TCLCURL_CMD_CONFIGURE,
+    TCLCURL_CMD_DUPHANDLE,
+    TCLCURL_CMD_RESET,
+    TCLCURL_CMD_PAUSE,
+    TCLCURL_CMD_RESUME
 };
 
 const static char *commandTable[] = {
@@ -262,7 +274,7 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
     }
 
     switch(tableIndex) {
-        case 0:
+        case TCLCURL_CMD_SETOPT:
             if (objc != 4) {
                 Tcl_WrongNumArgs(interp,2,objv,"option value");
                 return TCL_ERROR;
@@ -271,7 +283,7 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 return TCL_ERROR;
             }
             break;
-        case 1:
+        case TCLCURL_CMD_PERFORM:
             if (objc != 2) {
                 Tcl_WrongNumArgs(interp,2,objv,"");
                 return TCL_ERROR;
@@ -290,7 +302,7 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 return TCL_ERROR;
             }
             break;
-        case 2:
+        case TCLCURL_CMD_GETINFO:
             if (objc != 3) {
                 Tcl_WrongNumArgs(interp,2,objv,"option");
                 return TCL_ERROR;
@@ -303,14 +315,14 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 return TCL_ERROR;
             }
             break;
-        case 3:
+        case TCLCURL_CMD_CLEANUP:
             if (objc != 2) {
                 Tcl_WrongNumArgs(interp,2,objv,"");
                 return TCL_ERROR;
             }
-            Tcl_DeleteCommandFromToken(interp,curlData->token);
+            Tcl_DeleteCommandFromToken (interp,curlData->token);
             break;
-        case 4:
+        case TCLCURL_CMD_CONFIGURE:
             if (objc < 4 || objc % 2) {
                 Tcl_WrongNumArgs(interp,2,objv,"option value ?option value ...?");
                 return TCL_ERROR;
@@ -319,7 +331,7 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 return TCL_ERROR;
             }
             break;
-        case 5:
+        case TCLCURL_CMD_DUPHANDLE:
             if (objc != 2) {
                 Tcl_WrongNumArgs(interp,2,objv,"");
                 return TCL_ERROR;
@@ -328,7 +340,7 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 return TCL_ERROR;
             }
             break;
-        case 6:
+        case TCLCURL_CMD_RESET:
             if (objc != 2) {
                 Tcl_WrongNumArgs(interp,2,objv,"");
                 return TCL_ERROR;
@@ -337,7 +349,7 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 return TCL_ERROR;
             }
             break;
-        case 7:
+        case TCLCURL_CMD_PAUSE:
             if (objc != 2) {
                 Tcl_WrongNumArgs(interp,2,objv,"");
                 return TCL_ERROR;
@@ -346,7 +358,7 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 return TCL_ERROR;
             }
             break;
-        case 8:
+        case TCLCURL_CMD_RESUME:
             if (objc != 2) {
                 Tcl_WrongNumArgs(interp,2,objv,"");
                 return TCL_ERROR;
@@ -1224,8 +1236,7 @@ curlGetInfo(Tcl_Interp *interp,CURL *curlHandle,int tableIndex) {
             Tcl_SetObjResult(interp,resultObjPtr);
             break;
         case 8:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_SIZE_UPLOAD,
-                    &doubleNumber);
+            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_SIZE_UPLOAD,&doubleNumber);
             if (exitCode) {
                 return exitCode;
             }

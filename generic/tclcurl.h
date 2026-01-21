@@ -125,17 +125,14 @@ struct shcurlObjData {
 };
 
 #ifndef multi_h
-
 enum curlFormIndices {
-    NAME_HTTP_OPT,  CONTENTS_HTTP_OPT, FILE_HTTP_OPT, CONTENTTYPE_HTTP_OPT, CONTENTHEADER_HTTP_OPT, FILENAME_HTTP_OPT,
+    NAME_HTTP_OPT,  CONTENTS_HTTP_OPT, FILE_HTTP_OPT, 
+    CONTENTTYPE_HTTP_OPT, CONTENTHEADER_HTTP_OPT, FILENAME_HTTP_OPT,
     BUFFERNAME_HTTP_OPT, BUFFER_HTTP_OPT, FILECONTENT_HTTP_OPT
 };
 
-
 int curlseek(void *instream, curl_off_t offset, int origin);
-
 int Tclcurl_MultiInit (Tcl_Interp *interp);
-
 #endif
 
 EXTERN int Tclcurl_Init(Tcl_Interp *interp);

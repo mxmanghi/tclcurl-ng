@@ -337,7 +337,6 @@ int
 TclCurl_SetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
                 Tcl_Obj *const objv,int tableIndex)
 {
-    int            exitCode;
     CURL           *curlHandle=curlData->curl;
 
     Tcl_Obj        *resultObjPtr;
