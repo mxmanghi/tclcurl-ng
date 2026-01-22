@@ -1267,7 +1267,6 @@ TclCurl_HandleProxyType(Tcl_Interp *interp, struct curlObjData *curlData,
     CURL *curlHandle = curlData->curl;
     int proxyIndex;
 
-    (void)interp;
     (void)tableIndex;
     (void)def;
 
@@ -1329,7 +1328,6 @@ static int
 TclCurl_HandleCommand(Tcl_Interp *interp, struct curlObjData *curlData,
         Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def)
 {
-    (void)interp;
     (void)tableIndex;
     (void)def;
 
@@ -1737,7 +1735,6 @@ TclCurl_HandleSshKeyFunction(Tcl_Interp *interp, struct curlObjData *curlData,
 {
     CURL *curlHandle = curlData->curl;
 
-    (void)interp;
     (void)tableIndex;
     (void)def;
 
@@ -1778,7 +1775,6 @@ TclCurl_HandleChunkBgnProc(Tcl_Interp *interp, struct curlObjData *curlData,
 {
     CURL *curlHandle = curlData->curl;
 
-    (void)interp;
     (void)tableIndex;
     (void)def;
 
@@ -1802,7 +1798,6 @@ static int
 TclCurl_HandleChunkBgnVar(Tcl_Interp *interp, struct curlObjData *curlData,
         Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def)
 {
-    (void)interp;
     (void)tableIndex;
     (void)def;
 
