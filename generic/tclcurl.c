@@ -34,8 +34,7 @@
     TCL_DECLARE_MUTEX(sslLock)
     TCL_DECLARE_MUTEX(connectLock)
 
-    void curlShareLockFunc (CURL *handle, curl_lock_data data
-            , curl_lock_access access, void *userptr);
+    void curlShareLockFunc  (CURL *handle, curl_lock_data data, curl_lock_access access, void *userptr);
     void curlShareUnLockFunc(CURL *handle, curl_lock_data data, void *userptr);
 #endif
 #endif

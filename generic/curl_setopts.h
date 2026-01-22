@@ -6,184 +6,195 @@
 #ifndef __curl_setopts_h__
 #define __curl_setopts_h__
 
-enum curlOptionsIndices
-{
-    TCLCURLOPT_URL = 0,
-    TCLCURLOPT_FILE,
-    TCLCURLOPT_READDATA,
-    TCLCURLOPT_USERAGENT,
-    TCLCURLOPT_REFERER,
-    TCLCURLOPT_VERBOSE,
-    TCLCURLOPT_HEADER,
-    TCLCURLOPT_NOBODY,
-    TCLCURLOPT_PROXY,
-    TCLCURLOPT_PROXYPORT,
-    TCLCURLOPT_HTTPPROXYTUNNEL,
-    TCLCURLOPT_FAILONERROR,
-    TCLCURLOPT_TIMEOUT,
-    TCLCURLOPT_LOW_SPEED_LIMIT,
-    TCLCURLOPT_LOW_SPEED_TIME,
-    TCLCURLOPT_RESUME_FROM,
-    TCLCURLOPT_INFILESIZE,
-    TCLCURLOPT_UPLOAD,
-    TCLCURLOPT_FTPLISTONLY,
-    TCLCURLOPT_FTPAPPEND,
-    TCLCURLOPT_NETRC,
-    TCLCURLOPT_FOLLOWLOCATION,
-    TCLCURLOPT_TRANSFERTEXT,
-    TCLCURLOPT_PUT,
-    TCLCURLOPT_MUTE,
-    TCLCURLOPT_USERPWD,
-    TCLCURLOPT_PROXYUSERPWD,
-    TCLCURLOPT_RANGE,
-    TCLCURLOPT_ERRORBUFFER,
-    TCLCURLOPT_HTTPGET,
-    TCLCURLOPT_POST,
-    TCLCURLOPT_POSTFIELDS,
-    TCLCURLOPT_POSTFIELDSIZE_LARGE,
-    TCLCURLOPT_FTPPORT,
-    TCLCURLOPT_COOKIE,
-    TCLCURLOPT_COOKIEFILE,
-    TCLCURLOPT_HTTPHEADER,
-    TCLCURLOPT_HTTPPOST,
-    TCLCURLOPT_SSLCERT,
-    TCLCURLOPT_SSLCERTPASSWD,
-    TCLCURLOPT_SSLVERSION,
-    TCLCURLOPT_CRLF,
-    TCLCURLOPT_QUOTE,
-    TCLCURLOPT_POSTQUOTE,
-    TCLCURLOPT_WRITEHEADER,
-    TCLCURLOPT_TIMECONDITION,
-    TCLCURLOPT_TIMEVALUE,
-    TCLCURLOPT_CUSTOMREQUEST,
-    TCLCURLOPT_STDERR,
-    TCLCURLOPT_INTERFACE,
-    TCLCURLOPT_KRB4LEVEL,
-    TCLCURLOPT_SSL_VERIFYPEER,
-    TCLCURLOPT_CAINFO,
-    TCLCURLOPT_FILETIME,
-    TCLCURLOPT_MAXREDIRS,
-    TCLCURLOPT_MAXCONNECTS,
-    TCLCURLOPT_CLOSEPOLICY,
-    TCLCURLOPT_RANDOM_FILE,
-    TCLCURLOPT_EGDSOCKET,
-    TCLCURLOPT_CONNECTTIMEOUT,
-    TCLCURLOPT_NOPROGRESS,
-    TCLCURLOPT_HEADERVAR,
-    TCLCURLOPT_BODYVAR,
-    TCLCURLOPT_PROGRESSPROC,
-    TCLCURLOPT_CANCELTRANSVARNAME,
-    TCLCURLOPT_WRITEPROC,
-    TCLCURLOPT_READPROC,
-    TCLCURLOPT_SSL_VERIFYHOST,
-    TCLCURLOPT_COOKIEJAR,
-    TCLCURLOPT_SSL_CIPHER_LIST,
-    TCLCURLOPT_HTTP_VERSION,
-    TCLCURLOPT_FTP_USE_EPSV,
-    TCLCURLOPT_SSLCERTTYPE,
-    TCLCURLOPT_SSLKEY,
-    TCLCURLOPT_SSLKEYTYPE,
-    TCLCURLOPT_SSLKEYPASSWD,
-    TCLCURLOPT_SSL_ENGINE,
-    TCLCURLOPT_SSL_ENGINEDEFAULT,
-    TCLCURLOPT_PREQUOTE,
-    TCLCURLOPT_DEBUGPROC,
-    TCLCURLOPT_DNS_CACHE_TIMEOUT,
-    TCLCURLOPT_DNS_USE_GLOBAL_CACHE,
-    TCLCURLOPT_COOKIESESSION,
-    TCLCURLOPT_CAPATH,
-    TCLCURLOPT_BUFFERSIZE,
-    TCLCURLOPT_NOSIGNAL,
-    TCLCURLOPT_ENCODING,
-    TCLCURLOPT_PROXYTYPE,
-    TCLCURLOPT_HTTP200ALIASES,
-    TCLCURLOPT_UNRESTRICTED_AUTH,
-    TCLCURLOPT_FTP_USE_EPRT,
-    TCLCURLOPT_NOSUCHOPTION,
-    TCLCURLOPT_HTTPAUTH,
-    TCLCURLOPT_FTP_CREATE_MISSING_DIRS,
-    TCLCURLOPT_PROXYAUTH,
-    TCLCURLOPT_FTP_RESPONSE_TIMEOUT,
-    TCLCURLOPT_IPRESOLVE,
-    TCLCURLOPT_MAXFILESIZE,
-    TCLCURLOPT_NETRC_FILE,
-    TCLCURLOPT_FTP_SSL,
-    TCLCURLOPT_SHARE,
-    TCLCURLOPT_PORT,
-    TCLCURLOPT_TCP_NODELAY,
-    TCLCURLOPT_AUTOREFERER,
-    TCLCURLOPT_SOURCE_HOST,
-    TCLCURLOPT_SOURCE_USERPWD,
-    TCLCURLOPT_SOURCE_PATH,
-    TCLCURLOPT_SOURCE_PORT,
-    TCLCURLOPT_PASV_HOST,
-    TCLCURLOPT_SOURCE_PREQUOTE,
-    TCLCURLOPT_SOURCE_POSTQUOTE,
-    TCLCURLOPT_FTPSSLAUTH,
-    TCLCURLOPT_SOURCE_URL,
-    TCLCURLOPT_SOURCE_QUOTE,
-    TCLCURLOPT_FTP_ACCOUNT,
-    TCLCURLOPT_IGNORE_CONTENT_LENGTH,
-    TCLCURLOPT_COOKIELIST,
-    TCLCURLOPT_FTP_SKIP_PASV_IP,
-    TCLCURLOPT_FTP_FILEMETHOD,
-    TCLCURLOPT_LOCALPORT,
-    TCLCURLOPT_LOCALPORTRANGE,
-    TCLCURLOPT_MAX_SEND_SPEED_LARGE,
-    TCLCURLOPT_MAX_RECV_SPEED_LARGE,
-    TCLCURLOPT_FTP_ALTERNATIVE_TO_USER,
-    TCLCURLOPT_SSL_SESSIONID_CACHE,
-    TCLCURLOPT_SSH_AUTH_TYPES,
-    TCLCURLOPT_SSH_PUBLIC_KEYFILE,
-    TCLCURLOPT_SSH_PRIVATE_KEYFILE,
-    TCLCURLOPT_TIMEOUT_MS,
-    TCLCURLOPT_CONNECTTIMEOUT_MS,
-    TCLCURLOPT_HTTP_CONTENT_DECODING,
-    TCLCURLOPT_HTTP_TRANSFER_DECODING,
-    TCLCURLOPT_KRBLEVEL,
-    TCLCURLOPT_NEW_FILE_PERMS,
-    TCLCURLOPT_NEW_DIRECTORY_PERMS,
-    TCLCURLOPT_KEYPASSWD,
-    TCLCURLOPT_APPEND,
-    TCLCURLOPT_DIRLISTONLY,
-    TCLCURLOPT_USE_SSL,
-    TCLCURLOPT_POST301,
-    TCLCURLOPT_SSH_HOST_PUBLIC_KEY_MD5,
-    TCLCURLOPT_PROXY_TRANSFER_MODE,
-    TCLCURLOPT_CRLFILE,
-    TCLCURLOPT_ISSUERCERT,
-    TCLCURLOPT_ADDRESS_SCOPE,
-    TCLCURLOPT_CERTINFO,
-    TCLCURLOPT_POSTREDIR,
-    TCLCURLOPT_USERNAME,
-    TCLCURLOPT_PASSWORD,
-    TCLCURLOPT_PROXYUSERNAME,
-    TCLCURLOPT_PROXYPASSWORD,
-    TCLCURLOPT_TFTP_BLKSIZE,
-    TCLCURLOPT_SOCKS5_GSSAPI_SERVICE,
-    TCLCURLOPT_SOCKS5_GSSAPI_NEC,
-    TCLCURLOPT_PROTOCOLS,
-    TCLCURLOPT_REDIR_PROTOCOLS,
-    TCLCURLOPT_FTP_SSL_CCC,
-    TCLCURLOPT_SSH_KNOWNHOSTS,
-    TCLCURLOPT_SSH_KEYFUNCTION,
-    TCLCURLOPT_MAIL_FROM,
-    TCLCURLOPT_MAIL_RCPT,
-    TCLCURLOPT_FTP_USE_PRET,
-    TCLCURLOPT_WILDCARDMATCH,
-    TCLCURLOPT_CHUNK_BGN_PROC,
-    TCLCURLOPT_CHUNK_BGN_VAR,
-    TCLCURLOPT_CHUNK_END_PROC,
-    TCLCURLOPT_FNMATCH_PROC,
-    TCLCURLOPT_RESOLVE,
-    TCLCURLOPT_TLSAUTH_USERNAME,
-    TCLCURLOPT_TLSAUTH_PASSWORD,
-    TCLCURLOPT_TLSAUTH_TYPE,
-    TCLCURLOPT_TRANSFER_ENCODING,
-    TCLCURLOPT_GSSAPI_DELEGATION,
-    TCLCURLOPT_NOPROXY,
-    TCLCURLOPT_TELNETOPTIONS,
-    TCLCURLOPT_CAINFO_BLOB
+#define TCLCURL_OPTIONS(X)                                        \
+    X(TCLCURLOPT_URL,"-url")                                      \
+    X(TCLCURLOPT_FILE,"-file")                                    \
+    X(TCLCURLOPT_READDATA,"-infile")                              \
+    X(TCLCURLOPT_USERAGENT,"-useragent")                          \
+    X(TCLCURLOPT_REFERER,"-referer")                              \
+    X(TCLCURLOPT_VERBOSE,"-verbose")                              \
+    X(TCLCURLOPT_HEADER,"-header")                                \
+    X(TCLCURLOPT_NOBODY,"-nobody")                                \
+    X(TCLCURLOPT_PROXY,"-proxy")                                  \
+    X(TCLCURLOPT_PROXYPORT,"-proxyport")                          \
+    X(TCLCURLOPT_HTTPPROXYTUNNEL,"-httpproxytunnel")              \
+    X(TCLCURLOPT_FAILONERROR,"-failonerror")                      \
+    X(TCLCURLOPT_TIMEOUT,"-timeout")                              \
+    X(TCLCURLOPT_LOW_SPEED_LIMIT,"-lowspeedlimit")                \
+    X(TCLCURLOPT_LOW_SPEED_TIME,"-lowspeedtime")                  \
+    X(TCLCURLOPT_RESUME_FROM,"-resumefrom")                       \
+    X(TCLCURLOPT_INFILESIZE,"-infilesize")                        \
+    X(TCLCURLOPT_UPLOAD,"-upload")                                \
+    X(TCLCURLOPT_FTPLISTONLY,"-ftplistonly")                      \
+    X(TCLCURLOPT_FTPAPPEND,"-ftpappend")                          \
+    X(TCLCURLOPT_NETRC,"-netrc")                                  \
+    X(TCLCURLOPT_FOLLOWLOCATION,"-followlocation")                \
+    X(TCLCURLOPT_TRANSFERTEXT,"-transfertext")                    \
+    X(TCLCURLOPT_PUT,"-put")                                      \
+    X(TCLCURLOPT_MUTE,"-mute")                                    \
+    X(TCLCURLOPT_USERPWD,"-userpwd")                              \
+    X(TCLCURLOPT_PROXYUSERPWD,"-proxyuserpwd")                    \
+    X(TCLCURLOPT_RANGE,"-range")                                  \
+    X(TCLCURLOPT_ERRORBUFFER,"-errorbuffer")                      \
+    X(TCLCURLOPT_HTTPGET,"-httpget")                              \
+    X(TCLCURLOPT_POST,"-post")                                    \
+    X(TCLCURLOPT_POSTFIELDS,"-postfields")                        \
+    X(TCLCURLOPT_POSTFIELDSIZE_LARGE,"-postfieldsize")            \
+    X(TCLCURLOPT_FTPPORT,"-ftpport")                              \
+    X(TCLCURLOPT_COOKIE,"-cookie")                                \
+    X(TCLCURLOPT_COOKIEFILE,"-cookiefile")                        \
+    X(TCLCURLOPT_HTTPHEADER,"-httpheader")                        \
+    X(TCLCURLOPT_HTTPPOST,"-httppost")                            \
+    X(TCLCURLOPT_SSLCERT,"-sslcert")                              \
+    X(TCLCURLOPT_SSLCERTPASSWD,"-sslcertpasswd")                  \
+    X(TCLCURLOPT_SSLVERSION,"-sslversion")                        \
+    X(TCLCURLOPT_CRLF,"-crlf")                                    \
+    X(TCLCURLOPT_QUOTE,"-quote")                                  \
+    X(TCLCURLOPT_POSTQUOTE,"-postquote")                          \
+    X(TCLCURLOPT_WRITEHEADER,"-writeheader")                      \
+    X(TCLCURLOPT_TIMECONDITION,"-timecondition")                  \
+    X(TCLCURLOPT_TIMEVALUE,"-timevalue")                          \
+    X(TCLCURLOPT_CUSTOMREQUEST,"-customrequest")                  \
+    X(TCLCURLOPT_STDERR,"-stderr")                                \
+    X(TCLCURLOPT_INTERFACE,"-interface")                          \
+    X(TCLCURLOPT_KRB4LEVEL,"-krb4level")                          \
+    X(TCLCURLOPT_SSL_VERIFYPEER,"-sslverifypeer")                 \
+    X(TCLCURLOPT_CAINFO,"-cainfo")                                \
+    X(TCLCURLOPT_FILETIME,"-filetime")                            \
+    X(TCLCURLOPT_MAXREDIRS,"-maxredirs")                          \
+    X(TCLCURLOPT_MAXCONNECTS,"-maxconnects")                      \
+    X(TCLCURLOPT_CLOSEPOLICY,"-closepolicy")                      \
+    X(TCLCURLOPT_RANDOM_FILE,"-randomfile")                       \
+    X(TCLCURLOPT_EGDSOCKET,"-egdsocket")                          \
+    X(TCLCURLOPT_CONNECTTIMEOUT,"-connecttimeout")                \
+    X(TCLCURLOPT_NOPROGRESS,"-noprogress")                        \
+    X(TCLCURLOPT_HEADERVAR,"-headervar")                          \
+    X(TCLCURLOPT_BODYVAR,"-bodyvar")                              \
+    X(TCLCURLOPT_PROGRESSPROC,"-progressproc")                    \
+    X(TCLCURLOPT_CANCELTRANSVARNAME,"-canceltransvarname")        \
+    X(TCLCURLOPT_WRITEPROC,"-writeproc")                          \
+    X(TCLCURLOPT_READPROC,"-readproc")                            \
+    X(TCLCURLOPT_SSL_VERIFYHOST,"-sslverifyhost")                 \
+    X(TCLCURLOPT_COOKIEJAR,"-cookiejar")                          \
+    X(TCLCURLOPT_SSL_CIPHER_LIST,"-sslcipherlist")                \
+    X(TCLCURLOPT_HTTP_VERSION,"-httpversion")                     \
+    X(TCLCURLOPT_FTP_USE_EPSV,"-ftpuseepsv")                      \
+    X(TCLCURLOPT_SSLCERTTYPE,"-sslcerttype")                      \
+    X(TCLCURLOPT_SSLKEY,"-sslkey")                                \
+    X(TCLCURLOPT_SSLKEYTYPE,"-sslkeytype")                        \
+    X(TCLCURLOPT_SSLKEYPASSWD,"-sslkeypasswd")                    \
+    X(TCLCURLOPT_SSL_ENGINE,"-sslengine")                         \
+    X(TCLCURLOPT_SSL_ENGINEDEFAULT,"-sslenginedefault")           \
+    X(TCLCURLOPT_PREQUOTE,"-prequote")                            \
+    X(TCLCURLOPT_DEBUGPROC,"-debugproc")                          \
+    X(TCLCURLOPT_DNS_CACHE_TIMEOUT,"-dnscachetimeout")            \
+    X(TCLCURLOPT_DNS_USE_GLOBAL_CACHE,"-dnsuseglobalcache")       \
+    X(TCLCURLOPT_COOKIESESSION,"-cookiesession")                  \
+    X(TCLCURLOPT_CAPATH,"-capath")                                \
+    X(TCLCURLOPT_BUFFERSIZE,"-buffersize")                        \
+    X(TCLCURLOPT_NOSIGNAL,"-nosignal")                            \
+    X(TCLCURLOPT_ENCODING,"-encoding")                            \
+    X(TCLCURLOPT_PROXYTYPE,"-proxytype")                          \
+    X(TCLCURLOPT_HTTP200ALIASES,"-http200aliases")                \
+    X(TCLCURLOPT_UNRESTRICTED_AUTH,"-unrestrictedauth")           \
+    X(TCLCURLOPT_FTP_USE_EPRT,"-ftpuseeprt")                      \
+    X(TCLCURLOPT_NOSUCHOPTION,"-command")                         \
+    X(TCLCURLOPT_HTTPAUTH,"-httpauth")                            \
+    X(TCLCURLOPT_FTP_CREATE_MISSING_DIRS,"-ftpcreatemissingdirs") \
+    X(TCLCURLOPT_PROXYAUTH,"-proxyauth")                          \
+    X(TCLCURLOPT_FTP_RESPONSE_TIMEOUT,"-ftpresponsetimeout")      \
+    X(TCLCURLOPT_IPRESOLVE,"-ipresolve")                          \
+    X(TCLCURLOPT_MAXFILESIZE,"-maxfilesize")                      \
+    X(TCLCURLOPT_NETRC_FILE,"-netrcfile")                         \
+    X(TCLCURLOPT_FTP_SSL,"-ftpssl")                               \
+    X(TCLCURLOPT_SHARE,"-share")                                  \
+    X(TCLCURLOPT_PORT,"-port")                                    \
+    X(TCLCURLOPT_TCP_NODELAY,"-tcpnodelay")                       \
+    X(TCLCURLOPT_AUTOREFERER,"-autoreferer")                      \
+    X(TCLCURLOPT_SOURCE_HOST,"-sourcehost")                       \
+    X(TCLCURLOPT_SOURCE_USERPWD,"-sourceuserpwd")                 \
+    X(TCLCURLOPT_SOURCE_PATH,"-sourcepath")                       \
+    X(TCLCURLOPT_SOURCE_PORT,"-sourceport")                       \
+    X(TCLCURLOPT_PASV_HOST,"-pasvhost")                           \
+    X(TCLCURLOPT_SOURCE_PREQUOTE,"-sourceprequote")               \
+    X(TCLCURLOPT_SOURCE_POSTQUOTE,"-sourcepostquote")             \
+    X(TCLCURLOPT_FTPSSLAUTH,"-ftpsslauth")                        \
+    X(TCLCURLOPT_SOURCE_URL,"-sourceurl")                         \
+    X(TCLCURLOPT_SOURCE_QUOTE,"-sourcequote")                     \
+    X(TCLCURLOPT_FTP_ACCOUNT,"-ftpaccount")                       \
+    X(TCLCURLOPT_IGNORE_CONTENT_LENGTH,"-ignorecontentlength")    \
+    X(TCLCURLOPT_COOKIELIST,"-cookielist")                        \
+    X(TCLCURLOPT_FTP_SKIP_PASV_IP,"-ftpskippasvip")               \
+    X(TCLCURLOPT_FTP_FILEMETHOD,"-ftpfilemethod")                 \
+    X(TCLCURLOPT_LOCALPORT,"-localport")                          \
+    X(TCLCURLOPT_LOCALPORTRANGE,"-localportrange")                \
+    X(TCLCURLOPT_MAX_SEND_SPEED_LARGE,"-maxsendspeed")            \
+    X(TCLCURLOPT_MAX_RECV_SPEED_LARGE,"-maxrecvspeed")            \
+    X(TCLCURLOPT_FTP_ALTERNATIVE_TO_USER,"-ftpalternativetouser") \
+    X(TCLCURLOPT_SSL_SESSIONID_CACHE,"-sslsessionidcache")        \
+    X(TCLCURLOPT_SSH_AUTH_TYPES,"-sshauthtypes")                  \
+    X(TCLCURLOPT_SSH_PUBLIC_KEYFILE,"-sshpublickeyfile")          \
+    X(TCLCURLOPT_SSH_PRIVATE_KEYFILE,"-sshprivatekeyfile")        \
+    X(TCLCURLOPT_TIMEOUT_MS,"-timeoutms")                         \
+    X(TCLCURLOPT_CONNECTTIMEOUT_MS,"-connecttimeoutms")           \
+    X(TCLCURLOPT_HTTP_CONTENT_DECODING,"-contentdecoding")        \
+    X(TCLCURLOPT_HTTP_TRANSFER_DECODING,"-transferdecoding")      \
+    X(TCLCURLOPT_KRBLEVEL,"-krblevel")                            \
+    X(TCLCURLOPT_NEW_FILE_PERMS,"-newfileperms")                  \
+    X(TCLCURLOPT_NEW_DIRECTORY_PERMS,"-newdirectoryperms")        \
+    X(TCLCURLOPT_KEYPASSWD,"-keypasswd")                          \
+    X(TCLCURLOPT_APPEND,"-append")                                \
+    X(TCLCURLOPT_DIRLISTONLY,"-dirlistonly")                      \
+    X(TCLCURLOPT_USE_SSL,"-usessl")                               \
+    X(TCLCURLOPT_POST301,"-post301")                              \
+    X(TCLCURLOPT_SSH_HOST_PUBLIC_KEY_MD5,"-sshhostpublickeymd5")  \
+    X(TCLCURLOPT_PROXY_TRANSFER_MODE,"-proxytransfermode")        \
+    X(TCLCURLOPT_CRLFILE,"-crlfile")                              \
+    X(TCLCURLOPT_ISSUERCERT,"-issuercert")                        \
+    X(TCLCURLOPT_ADDRESS_SCOPE,"-addressscope")                   \
+    X(TCLCURLOPT_CERTINFO,"-certinfo")                            \
+    X(TCLCURLOPT_POSTREDIR,"-postredir")                          \
+    X(TCLCURLOPT_USERNAME,"-username")                            \
+    X(TCLCURLOPT_PASSWORD,"-password")                            \
+    X(TCLCURLOPT_PROXYUSERNAME,"-proxyuser")                      \
+    X(TCLCURLOPT_PROXYPASSWORD,"-proxypassword")                  \
+    X(TCLCURLOPT_TFTP_BLKSIZE,"-tftpblksize")                     \
+    X(TCLCURLOPT_SOCKS5_GSSAPI_SERVICE,"-socks5gssapiservice")    \
+    X(TCLCURLOPT_SOCKS5_GSSAPI_NEC,"-socks5gssapinec")            \
+    X(TCLCURLOPT_PROTOCOLS,"-protocols")                          \
+    X(TCLCURLOPT_REDIR_PROTOCOLS,"-redirprotocols")               \
+    X(TCLCURLOPT_FTP_SSL_CCC,"-ftpsslccc")                        \
+    X(TCLCURLOPT_SSH_KNOWNHOSTS,"-sshknownhosts")                 \
+    X(TCLCURLOPT_SSH_KEYFUNCTION,"-sshkeyproc")                   \
+    X(TCLCURLOPT_MAIL_FROM,"-mailfrom")                           \
+    X(TCLCURLOPT_MAIL_RCPT,"-mailrcpt")                           \
+    X(TCLCURLOPT_FTP_USE_PRET,"-ftpusepret")                      \
+    X(TCLCURLOPT_WILDCARDMATCH,"-wildcardmatch")                  \
+    X(TCLCURLOPT_CHUNK_BGN_PROC,"-chunkbgnproc")                  \
+    X(TCLCURLOPT_CHUNK_BGN_VAR,"-chunkbgnvar")                    \
+    X(TCLCURLOPT_CHUNK_END_PROC,"-chunkendproc")                  \
+    X(TCLCURLOPT_FNMATCH_PROC,"-fnmatchproc")                     \
+    X(TCLCURLOPT_RESOLVE,"-resolve")                              \
+    X(TCLCURLOPT_TLSAUTH_USERNAME,"-tlsauthusername")             \
+    X(TCLCURLOPT_TLSAUTH_PASSWORD,"-tlsauthpassword")             \
+    X(TCLCURLOPT_TLSAUTH_TYPE,"-tlsauthtype")                     \
+    X(TCLCURLOPT_TRANSFER_ENCODING,"-transferencoding")           \
+    X(TCLCURLOPT_GSSAPI_DELEGATION,"-gssapidelegation")           \
+    X(TCLCURLOPT_NOPROXY,"-noproxy")                              \
+    X(TCLCURLOPT_TELNETOPTIONS,"-telnetoptions")                  \
+    X(TCLCURLOPT_CAINFO_BLOB,"-cainfoblob")
+
+typedef enum {
+#define X(sym,option) sym,
+    TCLCURL_OPTIONS(X)
+#undef X
+    TCLCURL_OPTIONS_COUNT
+} tclcurl_options_indices;
+
+static const char* const configTable[TCLCURL_OPTIONS_COUNT] {
+#define X(sym,option) [sym] = option,
+    TCLCURL_OPTIONS(X)
+#undef X
 };
 
 const static char *optionTable[] = {
@@ -252,72 +263,6 @@ const static char *optionTable[] = {
     "CURLOPT_GSSAPI_DELEGATION", "CURLOPT_NOPROXY",     "CURLOPT_TELNETOPTIONS",
     "CURLOPT_CAINFO_BLOB",
     (char *)NULL
-};
-
-const static char *configTable[] = {
-    "-url",               "-file",               "-infile",
-    "-useragent",         "-referer",            "-verbose",
-    "-header",            "-nobody",             "-proxy",
-    "-proxyport",         "-httpproxytunnel",    "-failonerror",
-    "-timeout",           "-lowspeedlimit",      "-lowspeedtime",
-    "-resumefrom",        "-infilesize",         "-upload",
-    "-ftplistonly",       "-ftpappend",          "-netrc",
-    "-followlocation",    "-transfertext",       "-put",
-    "-mute",              "-userpwd",            "-proxyuserpwd",
-    "-range",             "-errorbuffer",        "-httpget",
-    "-post",              "-postfields",         "-postfieldsize",
-    "-ftpport",           "-cookie",             "-cookiefile",
-    "-httpheader",        "-httppost",           "-sslcert",
-    "-sslcertpasswd",     "-sslversion",         "-crlf",
-    "-quote",             "-postquote",          "-writeheader",
-    "-timecondition",     "-timevalue",          "-customrequest",
-    "-stderr",            "-interface",          "-krb4level",
-    "-sslverifypeer",     "-cainfo",             "-filetime",
-    "-maxredirs",         "-maxconnects",        "-closepolicy",
-    "-randomfile",        "-egdsocket",          "-connecttimeout",
-    "-noprogress",        "-headervar",          "-bodyvar",
-    "-progressproc",      "-canceltransvarname", "-writeproc",
-    "-readproc",          "-sslverifyhost",      "-cookiejar",
-    "-sslcipherlist",     "-httpversion",        "-ftpuseepsv",
-    "-sslcerttype",       "-sslkey",             "-sslkeytype",
-    "-sslkeypasswd",      "-sslengine",          "-sslenginedefault",
-    "-prequote",          "-debugproc",          "-dnscachetimeout",
-    "-dnsuseglobalcache", "-cookiesession",      "-capath",
-    "-buffersize",        "-nosignal",           "-encoding",
-    "-proxytype",         "-http200aliases",     "-unrestrictedauth",
-    "-ftpuseeprt",        "-command",            "-httpauth",
-    "-ftpcreatemissingdirs",                     "-proxyauth",
-    "-ftpresponsetimeout",                       "-ipresolve",
-    "-maxfilesize",       "-netrcfile",          "-ftpssl",
-    "-share",             "-port",               "-tcpnodelay",
-    "-autoreferer",       "-sourcehost",         "-sourceuserpwd",
-    "-sourcepath",        "-sourceport",         "-pasvhost",
-    "-sourceprequote",    "-sourcepostquote",
-    "-ftpsslauth",        "-sourceurl",          "-sourcequote",
-    "-ftpaccount",        "-ignorecontentlength",
-    "-cookielist",        "-ftpskippasvip",
-    "-ftpfilemethod",     "-localport",          "-localportrange",
-    "-maxsendspeed",                             "-maxrecvspeed",
-    "-ftpalternativetouser",                     "-sslsessionidcache",
-    "-sshauthtypes",      "-sshpublickeyfile",   "-sshprivatekeyfile",
-    "-timeoutms",         "-connecttimeoutms",   "-contentdecoding",
-    "-transferdecoding",  "-krblevel",           "-newfileperms",
-    "-newdirectoryperms", "-keypasswd",          "-append",
-    "-dirlistonly",       "-usessl",             "-post301",
-    "-sshhostpublickeymd5",                      "-proxytransfermode",
-    "-crlfile",           "-issuercert",         "-addressscope",
-    "-certinfo",          "-postredir",          "-username",
-    "-password",          "-proxyuser",          "-proxypassword",
-    "-tftpblksize",       "-socks5gssapiservice","-socks5gssapinec",
-    "-protocols",         "-redirprotocols",     "-ftpsslccc",
-    "-sshknownhosts",     "-sshkeyproc",         "-mailfrom",
-    "-mailrcpt",          "-ftpusepret",         "-wildcardmatch",
-    "-chunkbgnproc",      "-chunkbgnvar",        "-chunkendproc",
-    "-fnmatchproc",       "-resolve",            "-tlsauthusername",
-    "-tlsauthpassword",   "-tlsauthtype",        "-transferencoding",
-    "-gssapidelegation",  "-noproxy",            "-telnetoptions",
-    "-cainfoblob",
-    (char *) NULL
 };
 
 const static char *gssapidelegation[] = {
