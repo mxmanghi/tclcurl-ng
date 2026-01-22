@@ -189,6 +189,7 @@ enum curlOptionsIndices {
     TCLCURL_OPTION_LIST(TCLCURLOPT_ENUM_ENTRY)
 #undef TCLCURLOPT_ENUM_ENTRY
     TCLCURLOPT_COUNT
+
 };
 
 const static char *optionTable[] = {
