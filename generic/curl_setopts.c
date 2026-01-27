@@ -340,114 +340,66 @@ struct TclCurlOptionDef {
     const char           *errorMessage;
 };
 
-static int TclCurl_HandleSetoptChar(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleSetoptInt(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleSetoptLong(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleSetoptCurlOffT(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleSetoptSHandle(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleOutFile(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleReadData(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleNetrc(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleTransferText(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleMute(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleErrorBuffer(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleHttpHeaderList(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleSslVersion(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleQuoteList(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandlePostQuoteList(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleWriteHeader(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleTimeCondition(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleStderrFile(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleHeaderVar(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleBodyVar(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleProgressProc(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleCancelTransVarName(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleWriteProc(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleReadProc(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleHttpVersion(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandlePrequoteList(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleDebugProc(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleEncoding(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleProxyType(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleHttp200Aliases(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleCommand(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleHttpAuth(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleProxyAuth(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleIpResolve(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleFtpSsl(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleObsolete(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleFtpSslAuth(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleFtpFileMethod(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleSshAuthTypes(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandlePostRedir(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleProtocolMask(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleFtpSslCcc(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleSshKeyFunction(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleMailRcpt(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleChunkBgnProc(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleChunkBgnVar(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleChunkEndProc(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleFnmatchProc(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleResolveList(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleTlsAuthType(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleGssApiDelegation(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleTelnetOptions(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
-static int TclCurl_HandleCainfoBlob(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
+#define TCLCURL_OPT_HANDLER(handler) static int handler(Tcl_Interp *interp, \
+        struct curlObjData *curlData, Tcl_Obj *const objv, int tableIndex, \
+        const TclCurlOptionDef *def);
+
+TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptChar)
+TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptInt)
+TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptLong)
+TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptCurlOffT)
+TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptSHandle)
+TCLCURL_OPT_HANDLER(TclCurl_HandleOutFile)
+TCLCURL_OPT_HANDLER(TclCurl_HandleReadData)
+TCLCURL_OPT_HANDLER(TclCurl_HandleNetrc)
+TCLCURL_OPT_HANDLER(TclCurl_HandleTransferText)
+TCLCURL_OPT_HANDLER(TclCurl_HandleMute)
+TCLCURL_OPT_HANDLER(TclCurl_HandleErrorBuffer)
+TCLCURL_OPT_HANDLER(TclCurl_HandleHttpHeaderList)
+TCLCURL_OPT_HANDLER(TclCurl_HandleHttpPost)
+TCLCURL_OPT_HANDLER(TclCurl_HandleSslVersion)
+TCLCURL_OPT_HANDLER(TclCurl_HandleQuoteList)
+TCLCURL_OPT_HANDLER(TclCurl_HandlePostQuoteList)
+TCLCURL_OPT_HANDLER(TclCurl_HandleWriteHeader)
+TCLCURL_OPT_HANDLER(TclCurl_HandleTimeCondition)
+TCLCURL_OPT_HANDLER(TclCurl_HandleStderrFile)
+TCLCURL_OPT_HANDLER(TclCurl_HandleHeaderVar)
+TCLCURL_OPT_HANDLER(TclCurl_HandleBodyVar)
+TCLCURL_OPT_HANDLER(TclCurl_HandleProgressProc)
+TCLCURL_OPT_HANDLER(TclCurl_HandleCancelTransVarName)
+TCLCURL_OPT_HANDLER(TclCurl_HandleWriteProc)
+TCLCURL_OPT_HANDLER(TclCurl_HandleReadProc)
+TCLCURL_OPT_HANDLER(TclCurl_HandleHttpVersion)
+TCLCURL_OPT_HANDLER(TclCurl_HandlePrequoteList)
+TCLCURL_OPT_HANDLER(TclCurl_HandleDebugProc)
+TCLCURL_OPT_HANDLER(TclCurl_HandleEncoding)
+TCLCURL_OPT_HANDLER(TclCurl_HandleProxyType)
+TCLCURL_OPT_HANDLER(TclCurl_HandleHttp200Aliases)
+TCLCURL_OPT_HANDLER(TclCurl_HandleCommand)
+TCLCURL_OPT_HANDLER(TclCurl_HandleHttpAuth)
+TCLCURL_OPT_HANDLER(TclCurl_HandleProxyAuth)
+TCLCURL_OPT_HANDLER(TclCurl_HandleIpResolve)
+TCLCURL_OPT_HANDLER(TclCurl_HandleFtpSsl)
+TCLCURL_OPT_HANDLER(TclCurl_HandleObsolete)
+TCLCURL_OPT_HANDLER(TclCurl_HandleFtpSslAuth)
+TCLCURL_OPT_HANDLER(TclCurl_HandleFtpFileMethod)
+TCLCURL_OPT_HANDLER(TclCurl_HandleSshAuthTypes)
+TCLCURL_OPT_HANDLER(TclCurl_HandlePostRedir)
+TCLCURL_OPT_HANDLER(TclCurl_HandleProtocolMask)
+TCLCURL_OPT_HANDLER(TclCurl_HandleFtpSslCcc)
+TCLCURL_OPT_HANDLER(TclCurl_HandleSshKeyFunction)
+TCLCURL_OPT_HANDLER(TclCurl_HandleMailRcpt)
+TCLCURL_OPT_HANDLER(TclCurl_HandleChunkBgnProc)
+TCLCURL_OPT_HANDLER(TclCurl_HandleChunkBgnVar)
+TCLCURL_OPT_HANDLER(TclCurl_HandleChunkEndProc)
+TCLCURL_OPT_HANDLER(TclCurl_HandleFnmatchProc)
+TCLCURL_OPT_HANDLER(TclCurl_HandleResolveList)
+TCLCURL_OPT_HANDLER(TclCurl_HandleTlsAuthType)
+TCLCURL_OPT_HANDLER(TclCurl_HandleGssApiDelegation)
+TCLCURL_OPT_HANDLER(TclCurl_HandleTelnetOptions)
+TCLCURL_OPT_HANDLER(TclCurl_HandleCainfoBlob)
+
+#undef TCLCURL_OPT_HANDLER
 
 static const TclCurlOptionDef curlOptionDefs[] = {
 #define TCLCURLOPT_DEF_ENTRY(option, optname, configname, handler, curlopt, message) \
@@ -1681,7 +1633,7 @@ TclCurl_HandlePostRedir(Tcl_Interp *interp, struct curlObjData *curlData,
 
 static int
 TclCurl_HandleProtocolMask(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def)
+                           Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def)
 {
     CURL *curlHandle = curlData->curl;
     unsigned long int protocolMask;

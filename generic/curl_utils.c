@@ -4,6 +4,8 @@
 
 
 
+#include <ctype.h>
+#include <string.h>
 #include <curl/curl.h>
 #include <curl/easy.h>
 #include "tclcurl.h"
@@ -204,4 +206,47 @@ TclCurl_ErrorBuffer(Tcl_Interp *interp, struct curlObjData* curlData,Tcl_Obj *co
     }
 
     return TCL_OK;
+}
+
+/*
+ * Implementation of a very elementary strip spaces from string
+ *
+ */
+
+char* TclCurl_TrimString (char* str)
+{
+    char* start = str, end = start + strlen(str) - 1;
+    size_t len = strlen(str);
+    char** sstarts = (char **) calloc(len*sizeof(char *));
+    int    segment = 0;
+    int    s;
+    bool   space_strand = true;
+    char*  p = start;
+
+    while (isspace(*p)) { p++; }
+    while (p != end) {
+        if (isspace(*p)) {
+            *p = 0;
+            space_strand = true;
+        } else {
+            if (space_strand) {
+                sstarts[segment] = p;
+            }
+            space_strand = false;
+        }
+        p++;
+    }
+
+    p = start;
+    for (s=0; s < segment; s++) {
+        char* s;
+        size_t s_len;
+
+        s = sstart[s];
+        s_len = strlen(sstart[s]);
+
+        memmove(p,s,s_len);
+        p += s_len;
+    }
+    return start;
 }
