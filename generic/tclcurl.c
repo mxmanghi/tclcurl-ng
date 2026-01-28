@@ -288,7 +288,7 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 Tcl_WrongNumArgs(interp,2,objv,"option");
                 return TCL_ERROR;
             }
-            if (TclCurl_GetInfo(interp,objv[2])) {
+            if (TclCurl_GetInfo(interp,objv[2],curlHandle)) {
                 return TCL_ERROR;
             }
             break;

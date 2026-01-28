@@ -16,6 +16,7 @@
 
 #include <tcl.h>
 #include <curl/curl.h>
+#include <curl/easy.h>
 
 const static char *getInfoTable[] = {
     "effectiveurl",   "httpcode",       "responsecode",
@@ -34,7 +35,7 @@ const static char *getInfoTable[] = {
     (char *)NULL
 };
 
-CURLcode
+static CURLcode
 curlGetInfo(Tcl_Interp *interp,CURL *curlHandle,int tableIndex) {
     char                    *charPtr;
     long                     longNumber;
@@ -223,7 +224,7 @@ curlGetInfo(Tcl_Interp *interp,CURL *curlHandle,int tableIndex) {
             if (exitCode) {
                 return exitCode;
             }
-            resultObjPtr=Tcl_NewListObj(0,(Tcl_Obj **)NULL);
+            resultObjPtr = Tcl_NewListObj(0,(Tcl_Obj **)NULL);
             if (longNumber&CURLAUTH_BASIC) {
                 Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj("basic",-1));
             }
