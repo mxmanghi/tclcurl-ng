@@ -72,7 +72,7 @@ TEA_SETUP_COMPILER
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([tclcurl.c curl_setopts.c ftp.c curl_utils.c multi.c])
+TEA_ADD_SOURCES([tclcurl.c curl_setopts.c curl_getinfo.c ftp.c curl_utils.c multi.c])
 TCLCURL_SCRIPTS=tclcurl.tcl
 AC_SUBST(TCLCURL_SCRIPTS)
 

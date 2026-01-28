@@ -2,12 +2,12 @@
  * tclcurl_utils.c
  */
 
-
-
+#include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
 #include <curl/curl.h>
 #include <curl/easy.h>
+#include <tcl.h>
 #include "tclcurl.h"
 #include "tclcompat.h"
 
@@ -209,15 +209,18 @@ TclCurl_ErrorBuffer(Tcl_Interp *interp, struct curlObjData* curlData,Tcl_Obj *co
 }
 
 /*
- * Implementation of a very elementary strip spaces from string
+ * Implementation of a very elementary function to strip spaces 
+ * from string arguments
  *
  */
 
-char* TclCurl_TrimString (char* str)
+
+char* TclCurl_StripSpaces (char* str)
 {
-    char* start = str, end = start + strlen(str) - 1;
-    size_t len = strlen(str);
-    char** sstarts = (char **) calloc(len*sizeof(char *));
+    char*  start = str;
+    char*  end   = start + strlen(str) - 1;
+    size_t len   = strlen(str);
+    char** sstarts = (char **) calloc(len,sizeof(char *));
     int    segment = 0;
     int    s;
     bool   space_strand = true;
@@ -230,7 +233,7 @@ char* TclCurl_TrimString (char* str)
             space_strand = true;
         } else {
             if (space_strand) {
-                sstarts[segment] = p;
+                sstarts[segment++] = p;
             }
             space_strand = false;
         }
@@ -238,15 +241,41 @@ char* TclCurl_TrimString (char* str)
     }
 
     p = start;
-    for (s=0; s < segment; s++) {
-        char* s;
+    for (s = 0; s < segment; s++) {
+        char*  s_p;
         size_t s_len;
 
-        s = sstart[s];
-        s_len = strlen(sstart[s]);
+        s_p   = sstarts[s];
+        s_len = strlen(sstarts[s]);
 
-        memmove(p,s,s_len);
+        memmove(p,s_p,s_len);
         p += s_len;
+        *p = 0;
     }
+
+    free(sstarts);
     return start;
 }
+
+/*
+ * C level reimplementation of Tcl command 'join' 
+ *
+ */
+
+Tcl_Obj* TclCurl_JoinList (Tcl_Obj** objList,Tcl_Size obj_cnt,const char* join_c)
+{
+    Tcl_Obj* joined_string = Tcl_NewObj();
+    Tcl_Obj* join_obj = Tcl_NewStringObj(join_c,-1);
+    int i;
+
+    Tcl_IncrRefCount(join_obj);
+    for (i = 0;  i < obj_cnt;  i++) {
+	    if (i > 0) {
+            Tcl_AppendObjToObj(joined_string,join_obj);
+        }
+        Tcl_AppendObjToObj(joined_string,objList[i]);
+    }
+    Tcl_DecrRefCount(join_obj);
+    return joined_string;
+}
+

@@ -151,15 +151,19 @@ int curlResetHandle(Tcl_Interp *interp, struct curlObjData *curlData);
 
 int curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,Tcl_Obj *const objv,int tableIndex);
 
-int SetoptInt(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
-int SetoptLong(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
+//int SetoptInt(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
+//int SetoptLong(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
 int SetoptCurlOffT(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
-int SetoptChar(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
-int SetoptBlob(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
+//int SetoptChar(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
+//int SetoptBlob(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
 int SetoptSHandle(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
 int SetoptsList(Tcl_Interp *interp,struct curl_slist **slistPtr,Tcl_Obj *const objv);
 
-CURLcode curlGetInfo(Tcl_Interp *interp,CURL *curlHandle,int tableIndex);
+//CURLcode curlGetInfo(Tcl_Interp *interp,CURL *curlHandle,int tableIndex);
+
+/* curl_getinfo.c public interface */
+
+int TclCurl_GetInfo (Tcl_Interp* interp,Tcl_Obj* get_info_arg,CURL* curlHandle);
 
 void curlFreeSpace(struct curlObjData *curlData);
 
@@ -241,6 +245,8 @@ unsigned long int TclCurl_BuildProtocolMask(Tcl_Interp* interp, Tcl_Obj** protoc
 long              TclCurl_FTPClearCommandChannelOpt(Tcl_Interp* interp,Tcl_Obj* opt_o);
 long              TclCurl_FTPSSLMethod(Tcl_Interp* interp,Tcl_Obj* ssl_method_o);
 int               TclCurl_ErrorBuffer(Tcl_Interp *interp, struct curlObjData * const curlData,Tcl_Obj *const tcl_o);
+char*             TclCurl_StripSpaces(char* str);
+Tcl_Obj*          TclCurl_JoinList (Tcl_Obj** objList,Tcl_Size obj_cnt,const char* join_c);
 
 #ifdef  __cplusplus
 }

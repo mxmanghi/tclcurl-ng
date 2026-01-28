@@ -72,18 +72,18 @@ curlSetOptsTransfer(Tcl_Interp *interp, struct curlObjData *curlData,
  */
 int
 curlConfigTransfer(Tcl_Interp *interp, struct curlObjData *curlData,
-        int objc, Tcl_Obj *const objv[]) {
+                   int objc, Tcl_Obj *const objv[]) {
 
     int              tableIndex;
     int              i,j;
     Tcl_Obj         *resultPtr;
 
     for(i=2,j=3;i<objc;i=i+2,j=j+2) {
-        if (Tcl_GetIndexFromObj(interp, objv[i], configTable, "option", 
-                TCL_EXACT, &tableIndex)==TCL_ERROR) {
+        if (Tcl_GetIndexFromObj(interp, objv[i],
+                                configTable, "option", TCL_EXACT, &tableIndex) == TCL_ERROR) {
             return TCL_ERROR;
         }
-        if (i==objc-1) {
+        if (i == objc-1) {
             resultPtr=Tcl_ObjPrintf("Empty value for %s",configTable[tableIndex]);
             Tcl_SetObjResult(interp,resultPtr);            
             return TCL_ERROR;
@@ -114,10 +114,10 @@ curlConfigTransfer(Tcl_Interp *interp, struct curlObjData *curlData,
  *
  *----------------------------------------------------------------------
  */
-int
+static int
 SetoptInt(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
         int tableIndex,Tcl_Obj *tclObj) {
-    int        intNumber;
+    int intNumber;
 
     if (Tcl_GetIntFromObj(interp,tclObj,&intNumber)) {
         curlErrorSetOpt(interp,configTable,tableIndex,Tcl_GetString(tclObj));
@@ -149,7 +149,7 @@ SetoptInt(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
  *
  *----------------------------------------------------------------------
  */
-int
+static int
 SetoptLong(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
         int tableIndex,Tcl_Obj *tclObj) {
     long         longNumber;
@@ -222,7 +222,7 @@ SetoptCurlOffT(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
  *
  *----------------------------------------------------------------------
  */
-int
+static int
 SetoptChar(Tcl_Interp *interp,CURL *curlHandle,
         CURLoption opt,int tableIndex,Tcl_Obj *tclObj) {
     char    *optionPtr;
@@ -256,7 +256,7 @@ SetoptChar(Tcl_Interp *interp,CURL *curlHandle,
  *
  *----------------------------------------------------------------------
  */
-int
+static int
 SetoptBlob(Tcl_Interp *interp,CURL *curlHandle,
         CURLoption opt,int tableIndex,Tcl_Obj *tclObj) {
     struct curl_blob   optionBlob;
@@ -1632,11 +1632,10 @@ TclCurl_HandlePostRedir(Tcl_Interp *interp, struct curlObjData *curlData,
 }
 
 static int
-TclCurl_HandleProtocolMask(Tcl_Interp *interp, struct curlObjData *curlData,
-                           Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def)
+TclCurl_HandleProtocolMask(Tcl_Interp *interp,     struct curlObjData *curlData,
+                           Tcl_Obj    *const objv, int    tableIndex, const TclCurlOptionDef *def)
 {
     CURL *curlHandle = curlData->curl;
-    unsigned long int protocolMask;
     Tcl_Obj **protocols;
     Tcl_Size protocols_c;
     Tcl_Obj *tmpObjPtr;
@@ -1645,15 +1644,11 @@ TclCurl_HandleProtocolMask(Tcl_Interp *interp, struct curlObjData *curlData,
         return TCL_ERROR;
     }
 
-    protocolMask = TclCurl_BuildProtocolMask(interp,protocols,protocols_c);
-
-    tmpObjPtr=Tcl_NewLongObj(protocolMask);
+    tmpObjPtr = TclCurl_JoinList(protocols,protocols_c,",");
     Tcl_IncrRefCount(tmpObjPtr);
-    if (SetoptLong(interp,curlHandle,def->curlOpt,tableIndex,tmpObjPtr)) {
-        Tcl_DecrRefCount(tmpObjPtr);
-        return TCL_ERROR;
-    }
+    curl_easy_setopt(curlHandle,CURLOPT_PROTOCOLS_STR,Tcl_GetString(tmpObjPtr));
     Tcl_DecrRefCount(tmpObjPtr);
+
     return TCL_OK;
 }
 
