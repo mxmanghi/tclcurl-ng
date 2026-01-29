@@ -18,377 +18,310 @@
 #include <curl/curl.h>
 #include <curl/easy.h>
 
-const static char *getInfoTable[] = {
-    "effectiveurl",   "httpcode",       "responsecode",
-    "filetime",       "totaltime",      "namelookuptime",
-    "connecttime",    "pretransfertime","sizeupload",
-    "sizedownload",   "speeddownload",  "speedupload",
-    "headersize",     "requestsize",    "sslverifyresult",
-    "contentlengthdownload",            "contentlengthupload",
-    "starttransfertime",                "contenttype",
-    "redirecttime",   "redirectcount",  "httpauthavail",
-    "proxyauthavail", "oserrno",        "numconnects",
-    "sslengines",     "httpconnectcode","cookielist",
-    "ftpentrypath",   "redirecturl",    "primaryip",
-    "appconnecttime", "certinfo",       "conditionunmet",
-    "primaryport",    "localip",        "localport",
-    (char *)NULL
+#define TCLCURL_GETINFO_LIST(X) \
+    X(TCLCURL_INFO_EFFECTIVEURL, "effectiveurl") \
+    X(TCLCURL_INFO_HTTPCODE, "httpcode") \
+    X(TCLCURL_INFO_RESPONSECODE, "responsecode") \
+    X(TCLCURL_INFO_FILETIME, "filetime") \
+    X(TCLCURL_INFO_TOTALTIME, "totaltime") \
+    X(TCLCURL_INFO_NAMELOOKUPTIME, "namelookuptime") \
+    X(TCLCURL_INFO_CONNECTTIME, "connecttime") \
+    X(TCLCURL_INFO_PRETRANSFERTIME, "pretransfertime") \
+    X(TCLCURL_INFO_SIZEUPLOAD, "sizeupload") \
+    X(TCLCURL_INFO_SIZEDOWNLOAD, "sizedownload") \
+    X(TCLCURL_INFO_SPEEDDOWNLOAD, "speeddownload") \
+    X(TCLCURL_INFO_SPEEDUPLOAD, "speedupload") \
+    X(TCLCURL_INFO_HEADERSIZE, "headersize") \
+    X(TCLCURL_INFO_REQUESTSIZE, "requestsize") \
+    X(TCLCURL_INFO_SSLVERIFYRESULT, "sslverifyresult") \
+    X(TCLCURL_INFO_CONTENTLENGTHDOWNLOAD, "contentlengthdownload") \
+    X(TCLCURL_INFO_CONTENTLENGTHUPLOAD, "contentlengthupload") \
+    X(TCLCURL_INFO_STARTTRANSFERTIME, "starttransfertime") \
+    X(TCLCURL_INFO_CONTENTTYPE, "contenttype") \
+    X(TCLCURL_INFO_REDIRECTTIME, "redirecttime") \
+    X(TCLCURL_INFO_REDIRECTCOUNT, "redirectcount") \
+    X(TCLCURL_INFO_HTTPAUTHAVAIL, "httpauthavail") \
+    X(TCLCURL_INFO_PROXYAUTHAVAIL, "proxyauthavail") \
+    X(TCLCURL_INFO_OSERRNO, "oserrno") \
+    X(TCLCURL_INFO_NUMCONNECTS, "numconnects") \
+    X(TCLCURL_INFO_SSLENGINES, "sslengines") \
+    X(TCLCURL_INFO_HTTPCONNECTCODE, "httpconnectcode") \
+    X(TCLCURL_INFO_COOKIELIST, "cookielist") \
+    X(TCLCURL_INFO_FTPENTRYPATH, "ftpentrypath") \
+    X(TCLCURL_INFO_REDIRECTURL, "redirecturl") \
+    X(TCLCURL_INFO_PRIMARYIP, "primaryip") \
+    X(TCLCURL_INFO_APPCONNECTTIME, "appconnecttime") \
+    X(TCLCURL_INFO_CERTINFO, "certinfo") \
+    X(TCLCURL_INFO_CONDITIONUNMET, "conditionunmet") \
+    X(TCLCURL_INFO_PRIMARYPORT, "primaryport") \
+    X(TCLCURL_INFO_LOCALIP, "localip") \
+    X(TCLCURL_INFO_LOCALPORT, "localport")
+
+typedef enum {
+#define TCLCURL_GETINFO_ENUM_ENTRY(name, label) name,
+    TCLCURL_GETINFO_LIST(TCLCURL_GETINFO_ENUM_ENTRY)
+#undef TCLCURL_GETINFO_ENUM_ENTRY
+    TCLCURL_INFO_COUNT
+} TclCurlGetInfoId;
+
+static const char *const getInfoTable[TCLCURL_INFO_COUNT + 1] = {
+#define TCLCURL_GETINFO_TABLE_ENTRY(name, label) label,
+    TCLCURL_GETINFO_LIST(TCLCURL_GETINFO_TABLE_ENTRY)
+#undef TCLCURL_GETINFO_TABLE_ENTRY
+    NULL
 };
 
-static CURLcode
+static Tcl_Obj*
 curlGetInfo(Tcl_Interp *interp,CURL *curlHandle,int tableIndex) {
-    char                    *charPtr;
+    char*                    charPtr;
     long                     longNumber;
     double                   doubleNumber;
-    struct curl_slist       *slistPtr;
-    struct curl_certinfo    *certinfoPtr=NULL;
+    struct curl_slist*       slistPtr;
+    struct curl_slist*       slistHead;
+    struct curl_certinfo*    certinfoPtr=NULL;
     int                      i;
 
-    CURLcode    exitCode;
-
-    Tcl_Obj    *resultObjPtr;
+    Tcl_Obj*    resultObjPtr = NULL;
 
     switch(tableIndex) {
-        case 0:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_EFFECTIVE_URL,&charPtr);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_EFFECTIVEURL:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_EFFECTIVE_URL,&charPtr)) {
+                resultObjPtr = Tcl_NewStringObj(charPtr,-1);
             }
-            resultObjPtr=Tcl_NewStringObj(charPtr,-1);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 1:
-        case 2:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_RESPONSE_CODE,&longNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_HTTPCODE:
+        case TCLCURL_INFO_RESPONSECODE:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_RESPONSE_CODE,&longNumber)) {
+                resultObjPtr = Tcl_NewLongObj(longNumber);
             }
-            resultObjPtr=Tcl_NewLongObj(longNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 3:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_FILETIME,&longNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_FILETIME:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_FILETIME,&longNumber)) {
+                resultObjPtr = Tcl_NewLongObj(longNumber);
             }
-            resultObjPtr=Tcl_NewLongObj(longNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 4:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_TOTAL_TIME,&doubleNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_TOTALTIME:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_TOTAL_TIME,&doubleNumber)) {
+                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
-            resultObjPtr=Tcl_NewDoubleObj(doubleNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 5:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_NAMELOOKUP_TIME,
-                    &doubleNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_NAMELOOKUPTIME:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_NAMELOOKUP_TIME,
+                    &doubleNumber)) {
+                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
-            resultObjPtr=Tcl_NewDoubleObj(doubleNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 6:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_CONNECT_TIME,
-                    &doubleNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_CONNECTTIME:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_CONNECT_TIME,
+                    &doubleNumber)) {
+                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
-            resultObjPtr=Tcl_NewDoubleObj(doubleNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 7:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_PRETRANSFER_TIME,
-                    &doubleNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_PRETRANSFERTIME:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_PRETRANSFER_TIME,
+                    &doubleNumber)) {
+                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
-            resultObjPtr=Tcl_NewDoubleObj(doubleNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 8:
-            exitCode = curl_easy_getinfo(curlHandle,CURLINFO_SIZE_UPLOAD_T,&doubleNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_SIZEUPLOAD:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_SIZE_UPLOAD_T,&doubleNumber)) {
+                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
-            resultObjPtr=Tcl_NewDoubleObj(doubleNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 9:
-            exitCode = curl_easy_getinfo(curlHandle,CURLINFO_SIZE_DOWNLOAD_T,&doubleNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_SIZEDOWNLOAD:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_SIZE_DOWNLOAD_T,&doubleNumber)) {
+                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
-            resultObjPtr=Tcl_NewDoubleObj(doubleNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 10:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_SPEED_DOWNLOAD_T,&doubleNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_SPEEDDOWNLOAD:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_SPEED_DOWNLOAD_T,&doubleNumber)) {
+                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
-            resultObjPtr=Tcl_NewDoubleObj(doubleNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 11:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_SPEED_UPLOAD_T,&doubleNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_SPEEDUPLOAD:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_SPEED_UPLOAD_T,&doubleNumber)) {
+                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
-            resultObjPtr=Tcl_NewDoubleObj(doubleNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 12:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_HEADER_SIZE,&longNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_HEADERSIZE:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_HEADER_SIZE,&longNumber)) {
+                resultObjPtr = Tcl_NewLongObj(longNumber);
             }
-            resultObjPtr=Tcl_NewLongObj(longNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 13:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_REQUEST_SIZE,&longNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_REQUESTSIZE:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_REQUEST_SIZE,&longNumber)) {
+                resultObjPtr = Tcl_NewLongObj(longNumber);
             }
-            resultObjPtr=Tcl_NewLongObj(longNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 14:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_SSL_VERIFYRESULT,
-                    &longNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_SSLVERIFYRESULT:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_SSL_VERIFYRESULT,&longNumber)) {
+                resultObjPtr = Tcl_NewLongObj(longNumber);
             }
-            resultObjPtr=Tcl_NewLongObj(longNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 15:
-            exitCode = curl_easy_getinfo(curlHandle,CURLINFO_CONTENT_LENGTH_DOWNLOAD_T,&doubleNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_CONTENTLENGTHDOWNLOAD:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_CONTENT_LENGTH_DOWNLOAD_T,&doubleNumber)) {
+                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
-            resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 16:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_CONTENT_LENGTH_UPLOAD_T,&doubleNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_CONTENTLENGTHUPLOAD:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_CONTENT_LENGTH_UPLOAD_T,&doubleNumber)) {
+                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
-            resultObjPtr=Tcl_NewDoubleObj(doubleNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 17:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_STARTTRANSFER_TIME,&doubleNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_STARTTRANSFERTIME:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_STARTTRANSFER_TIME,&doubleNumber)) {
+                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
-            resultObjPtr=Tcl_NewDoubleObj(doubleNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 18:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_CONTENT_TYPE,&charPtr);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_CONTENTTYPE:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_CONTENT_TYPE,&charPtr)) {
+                resultObjPtr = Tcl_NewStringObj(charPtr,-1);
             }
-            resultObjPtr=Tcl_NewStringObj(charPtr,-1);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 19:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_REDIRECT_TIME,&doubleNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_REDIRECTTIME:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_REDIRECT_TIME,&doubleNumber)) {
+                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
-            resultObjPtr=Tcl_NewDoubleObj(doubleNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 20:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_REDIRECT_COUNT,&longNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_REDIRECTCOUNT:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_REDIRECT_COUNT,&longNumber)) {
+                resultObjPtr = Tcl_NewLongObj(longNumber);
             }
-            resultObjPtr=Tcl_NewLongObj(longNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 21:
-        case 22:
-            if (tableIndex==21) {
-                exitCode=curl_easy_getinfo(curlHandle,CURLINFO_HTTPAUTH_AVAIL,&longNumber);
+        case TCLCURL_INFO_HTTPAUTHAVAIL:
+        case TCLCURL_INFO_PROXYAUTHAVAIL:
+            if (tableIndex == TCLCURL_INFO_HTTPAUTHAVAIL) {
+                if (!curl_easy_getinfo(curlHandle,CURLINFO_HTTPAUTH_AVAIL,&longNumber)) {
+                    resultObjPtr = Tcl_NewListObj(0,(Tcl_Obj **)NULL);
+                }
             } else {
-                exitCode=curl_easy_getinfo(curlHandle,CURLINFO_PROXYAUTH_AVAIL,&longNumber);
-            }
-            if (exitCode) {
-                return exitCode;
-            }
-            resultObjPtr = Tcl_NewListObj(0,(Tcl_Obj **)NULL);
-            if (longNumber&CURLAUTH_BASIC) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj("basic",-1));
-            }
-            if (longNumber&CURLAUTH_DIGEST) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj("digest",-1));
-            }
-            if (longNumber&CURLAUTH_GSSNEGOTIATE) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj("gssnegotiate",-1));
-            }
-            if (longNumber&CURLAUTH_NTLM) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj("NTLM",-1));
-            }
-            Tcl_SetObjResult(interp,resultObjPtr);
-            break;
-        case 23:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_OS_ERRNO,&longNumber);
-            if (exitCode) {
-                return exitCode;
-            }
-            resultObjPtr=Tcl_NewLongObj(longNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
-            break;
-        case 24:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_NUM_CONNECTS,&longNumber);
-            if (exitCode) {
-                return exitCode;
-            }
-            resultObjPtr=Tcl_NewLongObj(longNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
-            break;
-        case 25:
-            exitCode=curl_easy_getinfo                                  \
-                    (curlHandle,CURLINFO_SSL_ENGINES,&slistPtr);
-            if (exitCode) {
-                return exitCode;
-            }
-            resultObjPtr=Tcl_NewListObj(0,(Tcl_Obj **)NULL);
-            while (slistPtr!=NULL) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj(slistPtr->data,-1));
-                slistPtr=slistPtr->next;
-            }
-            curl_slist_free_all(slistPtr);
-            Tcl_SetObjResult(interp,resultObjPtr);
-            break;
-        case 26:
-            exitCode=curl_easy_getinfo                                  \
-                    (curlHandle,CURLINFO_HTTP_CONNECTCODE,&longNumber);
-            if (exitCode) {
-                return exitCode;
-            }
-            resultObjPtr=Tcl_NewLongObj(longNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
-            break;
-        case 27:
-            exitCode=curl_easy_getinfo                                  \
-                    (curlHandle,CURLINFO_COOKIELIST,&slistPtr);
-            if (exitCode) {
-                return exitCode;
-            }
-            resultObjPtr=Tcl_NewListObj(0,(Tcl_Obj **)NULL);
-            while (slistPtr!=NULL) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj(slistPtr->data,-1));
-                slistPtr=slistPtr->next;
-            }
-            curl_slist_free_all(slistPtr);
-            Tcl_SetObjResult(interp,resultObjPtr);
-            break;
-        case 28:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_FTP_ENTRY_PATH,&charPtr);
-            if (exitCode) {
-                return exitCode;
-            }
-            resultObjPtr=Tcl_NewStringObj(charPtr,-1);
-            Tcl_SetObjResult(interp,resultObjPtr);
-            break;
-        case 29:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_REDIRECT_URL,&charPtr);
-            if (exitCode) {
-                return exitCode;
-            }
-            resultObjPtr=Tcl_NewStringObj(charPtr,-1);
-            Tcl_SetObjResult(interp,resultObjPtr);
-            break;
-        case 30:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_PRIMARY_IP,&charPtr);
-            if (exitCode) {
-                return exitCode;
-            }
-            resultObjPtr=Tcl_NewStringObj(charPtr,-1);
-            Tcl_SetObjResult(interp,resultObjPtr);
-            break;
-        case 31:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_APPCONNECT_TIME,&doubleNumber);
-            if (exitCode) {
-                return exitCode;
-            }
-            resultObjPtr=Tcl_NewDoubleObj(doubleNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
-            break;
-        case 32:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_CERTINFO,&certinfoPtr);
-            if (exitCode) {
-                return exitCode;
-            }
-            resultObjPtr=Tcl_NewListObj(0,(Tcl_Obj **)NULL);
-            Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewIntObj(certinfoPtr->num_of_certs));
-            for (i=0; i < certinfoPtr->num_of_certs; i++) {
-                for (slistPtr = certinfoPtr->certinfo[i]; slistPtr; slistPtr=slistPtr->next) {
-                    Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj(slistPtr->data,-1));
+                if (!curl_easy_getinfo(curlHandle,CURLINFO_PROXYAUTH_AVAIL,&longNumber)) {
+                    resultObjPtr = Tcl_NewListObj(0,(Tcl_Obj **)NULL);
                 }
             }
-            Tcl_SetObjResult(interp,resultObjPtr);
-            break;
-        case 33:
-            exitCode = curl_easy_getinfo(curlHandle,CURLINFO_CONDITION_UNMET,&longNumber);
-            if (exitCode) {
-                return exitCode;
+            if (resultObjPtr != NULL) {
+                if (longNumber&CURLAUTH_BASIC) {
+                    Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj("basic",-1));
+                }
+                if (longNumber&CURLAUTH_DIGEST) {
+                    Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj("digest",-1));
+                }
+                if (longNumber&CURLAUTH_GSSNEGOTIATE) {
+                    Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj("gssnegotiate",-1));
+                }
+                if (longNumber&CURLAUTH_NTLM) {
+                    Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj("NTLM",-1));
+                }
             }
-            resultObjPtr = Tcl_NewLongObj(longNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 34:
-            exitCode = curl_easy_getinfo(curlHandle,CURLINFO_PRIMARY_PORT,&longNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_OSERRNO:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_OS_ERRNO,&longNumber)) {
+                resultObjPtr = Tcl_NewLongObj(longNumber);
             }
-            resultObjPtr = Tcl_NewLongObj(longNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 35:
-            exitCode=curl_easy_getinfo(curlHandle,CURLINFO_LOCAL_IP,&charPtr);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_NUMCONNECTS:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_NUM_CONNECTS,&longNumber)) {
+                resultObjPtr = Tcl_NewLongObj(longNumber);
             }
-            resultObjPtr=Tcl_NewStringObj(charPtr,-1);
-            Tcl_SetObjResult(interp,resultObjPtr);
             break;
-        case 36:
-            exitCode=curl_easy_getinfo                                  \
-                    (curlHandle,CURLINFO_LOCAL_PORT,&longNumber);
-            if (exitCode) {
-                return exitCode;
+        case TCLCURL_INFO_SSLENGINES:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_SSL_ENGINES,&slistPtr)) {
+                resultObjPtr = Tcl_NewListObj(0,(Tcl_Obj **)NULL);
+                slistHead = slistPtr;
+                while (slistPtr != NULL) {
+                    Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj(slistPtr->data,-1));
+                    slistPtr = slistPtr->next;
+                }
+                curl_slist_free_all(slistHead);
             }
-            resultObjPtr=Tcl_NewLongObj(longNumber);
-            Tcl_SetObjResult(interp,resultObjPtr);
+            break;
+        case TCLCURL_INFO_HTTPCONNECTCODE:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_HTTP_CONNECTCODE,&longNumber)) {
+                resultObjPtr = Tcl_NewLongObj(longNumber);
+            }
+            break;
+        case TCLCURL_INFO_COOKIELIST:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_COOKIELIST,&slistPtr)) {
+                resultObjPtr = Tcl_NewListObj(0,(Tcl_Obj **)NULL);
+                slistHead = slistPtr;
+                while (slistPtr!=NULL) {
+                    Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj(slistPtr->data,-1));
+                    slistPtr = slistPtr->next;
+                }
+                curl_slist_free_all(slistHead);
+            }
+            break;
+        case TCLCURL_INFO_FTPENTRYPATH:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_FTP_ENTRY_PATH,&charPtr)) {
+                resultObjPtr = Tcl_NewStringObj(charPtr,-1);
+            }
+            break;
+        case TCLCURL_INFO_REDIRECTURL:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_REDIRECT_URL,&charPtr)) {
+                resultObjPtr = Tcl_NewStringObj(charPtr,-1);
+            }
+            break;
+        case TCLCURL_INFO_PRIMARYIP:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_PRIMARY_IP,&charPtr)) {
+                resultObjPtr = Tcl_NewStringObj(charPtr,-1);
+            }
+            break;
+        case TCLCURL_INFO_APPCONNECTTIME:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_APPCONNECT_TIME,&doubleNumber)) {
+                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
+            }
+            break;
+        case TCLCURL_INFO_CERTINFO:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_CERTINFO,&certinfoPtr)) {
+                resultObjPtr = Tcl_NewListObj(0,(Tcl_Obj **)NULL);
+                Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewIntObj(certinfoPtr->num_of_certs));
+                for (i=0; i < certinfoPtr->num_of_certs; i++) {
+                    for (slistPtr = certinfoPtr->certinfo[i]; slistPtr; slistPtr=slistPtr->next) {
+                        Tcl_ListObjAppendElement(interp,resultObjPtr,Tcl_NewStringObj(slistPtr->data,-1));
+                    }
+                }
+            }
+            break;
+        case TCLCURL_INFO_CONDITIONUNMET:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_CONDITION_UNMET,&longNumber)) {
+                resultObjPtr = Tcl_NewLongObj(longNumber);
+            }
+            break;
+        case TCLCURL_INFO_PRIMARYPORT:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_PRIMARY_PORT,&longNumber)) {
+                resultObjPtr = Tcl_NewLongObj(longNumber);
+            }
+            break;
+        case TCLCURL_INFO_LOCALIP:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_LOCAL_IP,&charPtr)) {
+                resultObjPtr = Tcl_NewStringObj(charPtr,-1);
+            }
+            break;
+        case TCLCURL_INFO_LOCALPORT:
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_LOCAL_PORT,&longNumber)) {
+                resultObjPtr = Tcl_NewLongObj(longNumber);
+            }
             break;
     }
-    return 0;
+    return resultObjPtr;
 }
 
 
-int TclCurl_GetInfo (Tcl_Interp* interp,Tcl_Obj* get_info_arg,CURL* curlHandle)
+int TclCurl_GetInfo (Tcl_Interp* interp,Tcl_Obj* get_info_arg,CURL* curlHandle,Tcl_Obj** result_p)
 {
     int tableIndex;
+    Tcl_Obj* resultObj;
 
     if (Tcl_GetIndexFromObj(interp,get_info_arg,getInfoTable,
                             "getinfo option",TCL_EXACT,&tableIndex) == TCL_ERROR) {
         return 1;
     }
 
-    if (curlGetInfo(interp,curlHandle,tableIndex)) {
+    resultObj = curlGetInfo(interp,curlHandle,tableIndex);
+    if (resultObj == NULL) {
         return 1;
     }
+    *result_p = resultObj;
+
     return 0;
 }

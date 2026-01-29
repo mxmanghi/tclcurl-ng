@@ -284,14 +284,19 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
             }
             break;
         case TCLCURL_CMD_GETINFO:
+        {
+            Tcl_Obj* resultObjPtr;
+
             if (objc != 3) {
                 Tcl_WrongNumArgs(interp,2,objv,"option");
                 return TCL_ERROR;
             }
-            if (TclCurl_GetInfo(interp,objv[2],curlHandle)) {
+            if (TclCurl_GetInfo(interp,objv[2],curlHandle,&resultObjPtr)) {
                 return TCL_ERROR;
             }
+            Tcl_SetObjResult(interp,resultObjPtr);
             break;
+        }
         case TCLCURL_CMD_CLEANUP:
             if (objc != 2) {
                 Tcl_WrongNumArgs(interp,2,objv,"");
@@ -313,7 +318,7 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 Tcl_WrongNumArgs(interp,2,objv,"");
                 return TCL_ERROR;
             }
-            if (curlDupHandle(interp,curlData,objc,objv)==TCL_ERROR) {
+            if (curlDupHandle(interp,curlData,objc,objv) == TCL_ERROR) {
                 return TCL_ERROR;
             }
             break;
@@ -322,7 +327,7 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 Tcl_WrongNumArgs(interp,2,objv,"");
                 return TCL_ERROR;
             }
-            if (curlResetHandle(interp,curlData)==TCL_ERROR) {
+            if (curlResetHandle(interp,curlData) == TCL_ERROR) {
                 return TCL_ERROR;
             }
             break;
@@ -331,7 +336,7 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 Tcl_WrongNumArgs(interp,2,objv,"");
                 return TCL_ERROR;
             }
-            if (curl_easy_pause(curlData->curl,CURLPAUSE_ALL)==TCL_ERROR) {
+            if (curl_easy_pause(curlData->curl,CURLPAUSE_ALL) == TCL_ERROR) {
                 return TCL_ERROR;
             }
             break;
@@ -340,7 +345,7 @@ curlObjCmd (ClientData clientData, Tcl_Interp *interp,
                 Tcl_WrongNumArgs(interp,2,objv,"");
                 return TCL_ERROR;
             }
-            if (curl_easy_pause(curlData->curl,CURLPAUSE_CONT)==TCL_ERROR) {
+            if (curl_easy_pause(curlData->curl,CURLPAUSE_CONT) == TCL_ERROR) {
                 return TCL_ERROR;
             }
             break;

@@ -163,7 +163,7 @@ int SetoptsList(Tcl_Interp *interp,struct curl_slist **slistPtr,Tcl_Obj *const o
 
 /* curl_getinfo.c public interface */
 
-int TclCurl_GetInfo (Tcl_Interp* interp,Tcl_Obj* get_info_arg,CURL* curlHandle);
+int TclCurl_GetInfo (Tcl_Interp* interp,Tcl_Obj* get_info_arg,CURL* curlHandle,Tcl_Obj** resultObjPtr);
 
 void curlFreeSpace(struct curlObjData *curlData);
 
