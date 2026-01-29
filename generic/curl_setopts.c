@@ -42,7 +42,7 @@ int
 curlSetOptsTransfer(Tcl_Interp *interp, struct curlObjData *curlData,
         int objc, Tcl_Obj *const objv[]) {
 
-    int            tableIndex;
+    int tableIndex;
 
     if (Tcl_GetIndexFromObj(interp, objv[2], optionTable, "option", 
             TCL_EXACT, &tableIndex)==TCL_ERROR) {
@@ -303,7 +303,7 @@ SetoptSHandle(Tcl_Interp *interp,CURL *curlHandle,
     struct shcurlObjData    *shandleDataPtr;
 
     shandleName=Tcl_GetString(tclObj);
-    if (0==Tcl_GetCommandInfo(interp,shandleName,infoPtr)) {
+    if (Tcl_GetCommandInfo(interp,shandleName,infoPtr) == 0) {
         return 1;
     }
     shandleDataPtr=(struct shcurlObjData *)(infoPtr->objClientData);

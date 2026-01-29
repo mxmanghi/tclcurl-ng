@@ -106,43 +106,56 @@ curlGetInfo(Tcl_Interp *interp,CURL *curlHandle,int tableIndex) {
             }
             break;
         case TCLCURL_INFO_NAMELOOKUPTIME:
-            if (!curl_easy_getinfo(curlHandle,CURLINFO_NAMELOOKUP_TIME,
-                    &doubleNumber)) {
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_NAMELOOKUP_TIME,&doubleNumber)) {
                 resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
             break;
         case TCLCURL_INFO_CONNECTTIME:
-            if (!curl_easy_getinfo(curlHandle,CURLINFO_CONNECT_TIME,
-                    &doubleNumber)) {
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_CONNECT_TIME,&doubleNumber)) {
                 resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
             break;
         case TCLCURL_INFO_PRETRANSFERTIME:
-            if (!curl_easy_getinfo(curlHandle,CURLINFO_PRETRANSFER_TIME,
-                    &doubleNumber)) {
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_PRETRANSFER_TIME,&doubleNumber)) {
                 resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
             }
             break;
         case TCLCURL_INFO_SIZEUPLOAD:
-            if (!curl_easy_getinfo(curlHandle,CURLINFO_SIZE_UPLOAD_T,&doubleNumber)) {
-                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
+        {
+            curl_off_t longCurlInt;
+
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_SIZE_UPLOAD_T,&longCurlInt)) {
+                resultObjPtr = Tcl_NewWideIntObj((Tcl_WideInt)longCurlInt);
             }
             break;
+        }
         case TCLCURL_INFO_SIZEDOWNLOAD:
-            if (!curl_easy_getinfo(curlHandle,CURLINFO_SIZE_DOWNLOAD_T,&doubleNumber)) {
-                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
+        {
+            curl_off_t longCurlInt;
+
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_SIZE_DOWNLOAD_T,&longCurlInt)) {
+                resultObjPtr = Tcl_NewWideIntObj((Tcl_WideInt)longCurlInt);
             }
             break;
+        }
         case TCLCURL_INFO_SPEEDDOWNLOAD:
-            if (!curl_easy_getinfo(curlHandle,CURLINFO_SPEED_DOWNLOAD_T,&doubleNumber)) {
-                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
+        {
+            curl_off_t longCurlInt;
+
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_SPEED_DOWNLOAD_T,&longCurlInt)) {
+                resultObjPtr = Tcl_NewWideIntObj((Tcl_WideInt)longCurlInt);
             }
             break;
+        }
         case TCLCURL_INFO_SPEEDUPLOAD:
-            if (!curl_easy_getinfo(curlHandle,CURLINFO_SPEED_UPLOAD_T,&doubleNumber)) {
-                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
+        {
+            curl_off_t longCurlInt;
+
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_SPEED_UPLOAD_T,&longCurlInt)) {
+                resultObjPtr = Tcl_NewWideIntObj((Tcl_WideInt)longCurlInt);
             }
             break;
+        }
         case TCLCURL_INFO_HEADERSIZE:
             if (!curl_easy_getinfo(curlHandle,CURLINFO_HEADER_SIZE,&longNumber)) {
                 resultObjPtr = Tcl_NewLongObj(longNumber);
@@ -159,15 +172,23 @@ curlGetInfo(Tcl_Interp *interp,CURL *curlHandle,int tableIndex) {
             }
             break;
         case TCLCURL_INFO_CONTENTLENGTHDOWNLOAD:
-            if (!curl_easy_getinfo(curlHandle,CURLINFO_CONTENT_LENGTH_DOWNLOAD_T,&doubleNumber)) {
-                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
+        {
+            curl_off_t longCurlInt;
+
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_CONTENT_LENGTH_DOWNLOAD_T,&longCurlInt)) {
+                resultObjPtr = Tcl_NewWideIntObj((Tcl_WideInt)longCurlInt);
             }
             break;
+        }
         case TCLCURL_INFO_CONTENTLENGTHUPLOAD:
-            if (!curl_easy_getinfo(curlHandle,CURLINFO_CONTENT_LENGTH_UPLOAD_T,&doubleNumber)) {
-                resultObjPtr = Tcl_NewDoubleObj(doubleNumber);
+        {
+            curl_off_t longCurlInt;
+
+            if (!curl_easy_getinfo(curlHandle,CURLINFO_CONTENT_LENGTH_UPLOAD_T,&longCurlInt)) {
+                resultObjPtr = Tcl_NewWideIntObj((Tcl_WideInt)longCurlInt);
             }
             break;
+        }
         case TCLCURL_INFO_STARTTRANSFERTIME:
             if (!curl_easy_getinfo(curlHandle,CURLINFO_STARTTRANSFER_TIME,&doubleNumber)) {
                 resultObjPtr = Tcl_NewDoubleObj(doubleNumber);

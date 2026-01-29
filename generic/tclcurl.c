@@ -1449,57 +1449,57 @@ curlVersionInfo (ClientData clientData, Tcl_Interp *interp,
         case 3:
             resultObjPtr=Tcl_NewListObj(0,(Tcl_Obj **)NULL);
             if (infoPtr->features&CURL_VERSION_IPV6) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("IPV6",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,
+                        Tcl_NewStringObj("IPV6",-1));
             }
             if (infoPtr->features&CURL_VERSION_KERBEROS4) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("KERBEROS4",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,
+                        Tcl_NewStringObj("KERBEROS4",-1));
             }
             if (infoPtr->features&CURL_VERSION_SSL) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("SSL",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,
+                        Tcl_NewStringObj("SSL",-1));
             }
             if (infoPtr->features&CURL_VERSION_LIBZ) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("LIBZ",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,
+                        Tcl_NewStringObj("LIBZ",-1));
             }
             if (infoPtr->features&CURL_VERSION_NTLM) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("NTLM",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,
+                        Tcl_NewStringObj("NTLM",-1));
             }
             if (infoPtr->features&CURL_VERSION_GSSNEGOTIATE) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("GSSNEGOTIATE",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,
+                        Tcl_NewStringObj("GSSNEGOTIATE",-1));
             }
             if (infoPtr->features&CURL_VERSION_DEBUG) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("DEBUG",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,
+                        Tcl_NewStringObj("DEBUG",-1));
             }
             if (infoPtr->features&CURL_VERSION_ASYNCHDNS) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("ASYNCHDNS",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,
+                        Tcl_NewStringObj("ASYNCHDNS",-1));
             }
             if (infoPtr->features&CURL_VERSION_SPNEGO) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("SPNEGO",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,
+                        Tcl_NewStringObj("SPNEGO",-1));
             }
             if (infoPtr->features&CURL_VERSION_LARGEFILE) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("LARGEFILE",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,
+                        Tcl_NewStringObj("LARGEFILE",-1));
             }
             if (infoPtr->features&CURL_VERSION_IDN) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("IDN",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,
+                        Tcl_NewStringObj("IDN",-1));
             }
             if (infoPtr->features&CURL_VERSION_SSPI) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("SSPI",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,
+                        Tcl_NewStringObj("SSPI",-1));
             }
             break;
             if (infoPtr->features&CURL_VERSION_CONV) {
-                Tcl_ListObjAppendElement(interp,resultObjPtr
-                        ,Tcl_NewStringObj("CONV",-1));
+                Tcl_ListObjAppendElement(interp,resultObjPtr,
+                                         Tcl_NewStringObj("CONV",-1));
             }
         case 4:
             resultObjPtr=Tcl_NewStringObj(infoPtr->ssl_version,-1);
@@ -1511,15 +1511,17 @@ curlVersionInfo (ClientData clientData, Tcl_Interp *interp,
             resultObjPtr=Tcl_NewStringObj(infoPtr->libz_version,-1);
             break;
         case 7:
+        {
             resultObjPtr=Tcl_NewListObj(0,(Tcl_Obj **)NULL);
             for (i=0;;i++) {
                 if (infoPtr->protocols[i]!=NULL) {
-                    Tcl_ListObjAppendElement(interp,resultObjPtr
-                            ,Tcl_NewStringObj(infoPtr->protocols[i],-1));
+                    Tcl_ListObjAppendElement(interp,resultObjPtr,
+                                             Tcl_NewStringObj(infoPtr->protocols[i],-1));
                 } else {
                     break;
                 }
             }
+        }
     }
 
     Tcl_SetObjResult(interp,resultObjPtr);
@@ -2240,8 +2242,8 @@ curlErrorStrings (Tcl_Interp *interp, Tcl_Obj *const objv,int type) {
  *----------------------------------------------------------------------
  */
 int
-curlEasyStringError (ClientData clientData, Tcl_Interp *interp,
-        int objc,Tcl_Obj *const objv[]) {
+curlEasyStringError (ClientData clientData, Tcl_Interp *interp, 
+                     int objc,Tcl_Obj *const objv[]) {
 
     if (objc<2) {
         Tcl_WrongNumArgs(interp,1,objv,"errorCode");
