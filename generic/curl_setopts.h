@@ -6,6 +6,8 @@
 #ifndef __curl_setopts_h__
 #define __curl_setopts_h__
 
+#include "curl_mime.h"
+
 #define TCLCURL_OPTION_LIST(X) \
     X(TCLCURLOPT_URL, "CURLOPT_URL", "-url", TclCurl_HandleSetoptChar, CURLOPT_URL, NULL) \
     X(TCLCURLOPT_FILE, "CURLOPT_FILE", "-file", TclCurl_HandleOutFile, 0, NULL) \
@@ -192,13 +194,6 @@ enum curlOptionsIndices {
 
 };
 
-const static char *optionTable[] = {
-#define TCLCURLOPT_OPTION_ENTRY(option, optname, configname, handler, curlopt, message) optname,
-    TCLCURL_OPTION_LIST(TCLCURLOPT_OPTION_ENTRY)
-#undef TCLCURLOPT_OPTION_ENTRY
-    (char *)NULL
-};
-
 const static char *configTable[] = {
 #define TCLCURLOPT_CONFIG_ENTRY(option, optname, configname, handler, curlopt, message) configname,
     TCLCURL_OPTION_LIST(TCLCURLOPT_CONFIG_ENTRY)
@@ -206,74 +201,18 @@ const static char *configTable[] = {
     (char *) NULL
 };
 
-const static char *gssapidelegation[] = {
-    "flag", "policyflag", (char *) NULL
-};
+typedef struct TclCurlOptionDef TclCurlOptionDef;
 
-const static char *tlsauth[] = {
-    "none", "srp", (char *)NULL
-};
+typedef int (*TclCurlOptionHandler)(Tcl_Interp *interp,
+        struct curlObjData *curlData, Tcl_Obj *const objv, int tableIndex,
+        const TclCurlOptionDef *def);
 
-const static char *postredir[] = {
-    "301", "302", "all", (char *)NULL
+struct TclCurlOptionDef {
+    const char           *optionName;
+    const char           *configName;
+    TclCurlOptionHandler  handler;
+    CURLoption            curlOpt;
+    const char           *errorMessage;
 };
-
-const static char *sshauthtypes[] = {
-    "publickey", "password", "host", "keyboard", "any", (char *)NULL
-};
-
-const static char *ftpfilemethod[] = {
-    "default", "multicwd", "nocwd", "singlecwd", (char *)NULL
-};
-
-const static char *sslversion[] = {
-    "default", "tlsv1", "sslv2", "sslv3", "tlsv1_0", "tlsv1_1", "tlsv1_2", "tlsv1_3",
-    "maxdefault", "maxtlsv1_0", "maxtlsv1_1", "maxtlsv1_2", "maxtlsv1_3", (char *)NULL
-};
-
-const static char *ftpsslauth[] = {
-    "default", "ssl", "tls", (char *)NULL
-};
-
-const static char *ipresolve[] = {
-    "whatever", "v4", "v6", (char *)NULL
-};
-
-const static char *httpAuthMethods[] = {
-    "basic", "digest", "digestie", "gssnegotiate", "ntlm", "any", "anysafe", "ntlmwb", (char *)NULL
-};
-
-const static char *proxyTypeTable[] = {
-    "http", "http1.0", "socks4", "socks4a", "socks5", "socks5h", (char *)NULL
-};
-
-const static char *encodingTable[] = {
-    "identity", "deflated", "all", (char *)NULL
-};
-
-const static char *netrcTable[] = {
-    "optional", "ignored", "required", (char *)NULL
-};
-
-CONST static char   *httpVersionTable[] = {
-    "none",     /* CURL_HTTP_VERSION_NONE */
-    "1.0",      /* CURL_HTTP_VERSION_1_0  */
-    "1.1",      /* CURL_HTTP_VERSION_1_1  */
-    "2.0",      /* CURL_HTTP_VERSION_2_0  */
-    "2TLS",     /* CURL_HTTP_VERSION_2TLS */
-    "2_PRIOR_KNOWLEDGE",  /* CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE */
-    (char *)NULL
-};
-
-CONST static char   *curlFormTable[] = {
-    "name",  "contents", "file", "contenttype", "contentheader", "filename",
-    "bufferName", "buffer", "filecontent", (char *)NULL
-};
-
-const static char *timeCond[] = {
-    "ifmodsince", "ifunmodsince",
-    (char *)NULL
-};
-
 
 #endif

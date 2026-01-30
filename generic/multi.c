@@ -12,6 +12,8 @@
  */
 
 #include "multi.h"
+#include "curl_mime.h"
+
 #ifndef _WIN32
 #include <sys/time.h>
 #endif
@@ -234,7 +236,7 @@ curlAddMultiHandle(Tcl_Interp *interp,CURLM *curlMultiHandlePtr
     if (curlOpenFiles(interp,curlDataPtr)) {
         return TCL_ERROR;
     }
-    if (curlSetPostData(interp,curlDataPtr)) {
+    if (TclCurl_SetPostData(interp,curlDataPtr)) {
         return TCL_ERROR;
     }
 
@@ -274,7 +276,7 @@ curlRemoveMultiHandle(Tcl_Interp *interp,CURLM *curlMultiHandle
     curlEasyHandleListRemove(curlMultiHandle,curlDataPtr->curl);
 
     curlCloseFiles(curlDataPtr);
-    curlResetPostData(curlDataPtr);
+    TclCurl_ResetPostData(curlDataPtr);
 
     if (curlDataPtr->bodyVarName) {
         curlSetBodyVarName(interp,curlDataPtr);

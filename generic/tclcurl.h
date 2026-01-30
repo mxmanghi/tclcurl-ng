@@ -5,6 +5,7 @@
  * to access libcurl.
  *
  * Copyright (c) 2001-2011 Andres Garcia Garcia.
+ * Copyright (c) 2026 Massimo Manghi
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -219,7 +220,6 @@ void curlResetPostData(struct curlObjData *curlDataPtr);
 void curlResetFormArray(struct curl_forms *formArray);
 
 void curlSetBodyVarName(Tcl_Interp *interp,struct curlObjData *curlDataPtr);
-
 char *curlstrdup (char *old);
 
 Tcl_Obj* curlCreateShareObjCmd (Tcl_Interp *interp,struct shcurlObjData  *shcurlData);
@@ -247,6 +247,9 @@ long              TclCurl_FTPSSLMethod(Tcl_Interp* interp,Tcl_Obj* ssl_method_o)
 int               TclCurl_ErrorBuffer(Tcl_Interp *interp, struct curlObjData * const curlData,Tcl_Obj *const tcl_o);
 char*             TclCurl_StripSpaces(char* str);
 Tcl_Obj*          TclCurl_JoinList (Tcl_Obj** objList,Tcl_Size obj_cnt,const char* join_c);
+
+int TclCurl_SizeT2TclSize(size_t in, Tcl_Size *out);
+int TclCurl_TclSize2SizeT(Tcl_Size in, size_t *out);
 
 #ifdef  __cplusplus
 }

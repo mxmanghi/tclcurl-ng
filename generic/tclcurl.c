@@ -18,13 +18,12 @@
 #endif
 
 #include "tclcurl.h"
+#include "curl_mime.h"
 
-#include <sys/types.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
 
-#include <limits.h>  /* for INT_MAX etc. */
 #include <stddef.h>  /* for size_t */
 
 #ifndef multi_h
@@ -406,14 +405,14 @@ curlPerform(Tcl_Interp *interp,CURL *curlHandle,
     if (curlOpenFiles(interp,curlData)) {
         return TCL_ERROR;
     }
-    if (curlSetPostData(interp,curlData)) {
+    if (TclCurl_SetPostData(interp,curlData)) {
         return TCL_ERROR;
     }
     exitCode=curl_easy_perform(curlHandle);
     resultPtr=Tcl_NewIntObj(exitCode);
     Tcl_SetObjResult(interp,resultPtr);
     curlCloseFiles(curlData);
-    curlResetPostData(curlData);
+    TclCurl_ResetPostData(curlData);
     if (curlData->bodyVarName) {
         curlSetBodyVarName(interp,curlData);
     }
@@ -1767,103 +1766,7 @@ curlseek(void *instream, curl_off_t offset, int origin)
     return CURLIOE_OK;
 }
 
-/*----------------------------------------------------------------------
- *
- * curlSetPostData --
- *
- *  In case there is going to be a post transfer, this function sets the
- *  data that is going to be posted.
- *
- * Parameters:
- *	interp: Tcl interpreter we are using.
- *	curlData: A pointer to the struct with the transfer data.
- *
- * Results:
- *  A standard Tcl result.
- *----------------------------------------------------------------------
- */
-int
-curlSetPostData(Tcl_Interp *interp,struct curlObjData *curlDataPtr) {
-    Tcl_Obj        *errorMsgObjPtr;
 
-    if (curlDataPtr->postListFirst!=NULL) {
-        if (curl_easy_setopt(curlDataPtr->curl,CURLOPT_MIMEPOST,curlDataPtr->postListFirst)) {
-            curl_formfree(curlDataPtr->postListFirst);
-            errorMsgObjPtr=Tcl_NewStringObj("Error setting the data to post",-1);
-            Tcl_SetObjResult(interp,errorMsgObjPtr);
-            return TCL_ERROR;
-        }
-    }
-    return TCL_OK;
-}
-
-/*----------------------------------------------------------------------
- *
- * curlResetPostData --
- *
- *  After performing a transfer, this function is invoked to erease the
- *  posr data.
- *
- * Parameter:
- *  curlData: A pointer to the struct with the transfer data.
- *----------------------------------------------------------------------
- */
-void
-curlResetPostData(struct curlObjData *curlDataPtr) {
-    struct formArrayStruct *tmpPtr;
-
-    if (curlDataPtr->postListFirst) {
-        curl_formfree(curlDataPtr->postListFirst);
-        curlDataPtr->postListFirst=NULL;
-        curlDataPtr->postListLast=NULL;
-        curl_easy_setopt(curlDataPtr->curl,CURLOPT_MIMEPOST,NULL);
-
-        while (curlDataPtr->formArray!=NULL) {
-            if (curlDataPtr->formArray->formHeaderList!=NULL) {
-                curl_slist_free_all(curlDataPtr->formArray->formHeaderList);
-                curlDataPtr->formArray->formHeaderList=NULL;
-            }
-            curlResetFormArray(curlDataPtr->formArray->formArray);
-            tmpPtr=curlDataPtr->formArray->next;
-            Tcl_Free((char *)curlDataPtr->formArray);
-            curlDataPtr->formArray=tmpPtr;
-        }
-    }
-}
-
-/*----------------------------------------------------------------------
- *
- * curlResetFormArray --
- *
- *  Cleans the contents of the formArray, it is done after a transfer or
- *  if 'curl_formadd' returns an error.
- *
- * Parameter:
- *  formArray: A pointer to the array to clean up.
- *----------------------------------------------------------------------
- */
-void
-curlResetFormArray(struct curl_forms *formArray) {
-    int i;
-
-    for (i=0;formArray[i].option!=CURLFORM_END;i++) {
-        switch (formArray[i].option) {
-            case CURLFORM_COPYNAME:
-            case CURLFORM_COPYCONTENTS:
-            case CURLFORM_FILE:
-            case CURLFORM_CONTENTTYPE:
-            case CURLFORM_FILENAME:
-            case CURLFORM_FILECONTENT:
-            case CURLFORM_BUFFER:
-            case CURLFORM_BUFFERPTR:
-                Tcl_Free((char *)(formArray[i].value));
-                break;
-            default:
-                break;
-        }
-    }
-    Tcl_Free((char *)formArray);
-}
 
 /*----------------------------------------------------------------------
  *

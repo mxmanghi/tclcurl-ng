@@ -5442,7 +5442,7 @@ printf "%s\n" "#define AC_APPLE_UNIVERSAL_BUILD 1" >>confdefs.h
 #-----------------------------------------------------------------------
 
 
-    vars="tclcurl.c curl_setopts.c curl_getinfo.c ftp.c curl_utils.c multi.c"
+    vars="tclcurl.c tcl_size.c curl_mime.c curl_setopts.c curl_getinfo.c ftp.c curl_utils.c multi.c"
     for i in $vars; do
 	case $i in
 	    \$*)

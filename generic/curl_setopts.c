@@ -7,19 +7,81 @@
 #include "tclcurl.h"
 #include "curl_setopts.h"
 
-/* size_t -> Tcl_Size */
-static inline int SizeT2TclSize(size_t in, Tcl_Size *out) {
-    if (in > (size_t)TCL_SIZE_MAX) return 0;  /* overflow for Tcl_Size */
-    *out = (Tcl_Size)in;
-    return 1;
-}
+/*
+ * The optionTable array is built straight from the X-macro defined
+ * table data defined in curl_setopts.h
+ */
 
-/* Tcl_Size -> size_t */
-static inline int TclSize2SizeT(Tcl_Size in, size_t *out) {
-    if (in < 0) return 0;  /* negative not representable as size_t */
-    *out = (size_t)in;
-    return 1;
-}
+const static char *optionTable[] = {
+#define TCLCURLOPT_OPTION_ENTRY(option, optname, configname, handler, curlopt, message) optname,
+    TCLCURL_OPTION_LIST(TCLCURLOPT_OPTION_ENTRY)
+#undef TCLCURLOPT_OPTION_ENTRY
+    (char *)NULL
+};
+
+const static char *gssapidelegation[] = {
+    "flag", "policyflag", (char *) NULL
+};
+
+const static char *tlsauth[] = {
+    "none", "srp", (char *)NULL
+};
+
+const static char *postredir[] = {
+    "301", "302", "all", (char *)NULL
+};
+
+const static char *sshauthtypes[] = {
+    "publickey", "password", "host", "keyboard", "any", (char *)NULL
+};
+
+const static char *ftpfilemethod[] = {
+    "default", "multicwd", "nocwd", "singlecwd", (char *)NULL
+};
+
+const static char *sslversion[] = {
+    "default", "tlsv1", "sslv2", "sslv3", "tlsv1_0", "tlsv1_1", "tlsv1_2", "tlsv1_3",
+    "maxdefault", "maxtlsv1_0", "maxtlsv1_1", "maxtlsv1_2", "maxtlsv1_3", (char *)NULL
+};
+
+const static char *ftpsslauth[] = {
+    "default", "ssl", "tls", (char *)NULL
+};
+
+const static char *ipresolve[] = {
+    "whatever", "v4", "v6", (char *)NULL
+};
+
+const static char *httpAuthMethods[] = {
+    "basic", "digest", "digestie", "gssnegotiate", "ntlm", "any", "anysafe", "ntlmwb", (char *)NULL
+};
+
+const static char *proxyTypeTable[] = {
+    "http", "http1.0", "socks4", "socks4a", "socks5", "socks5h", (char *)NULL
+};
+
+const static char *encodingTable[] = {
+    "identity", "deflated", "all", (char *)NULL
+};
+
+const static char *netrcTable[] = {
+    "optional", "ignored", "required", (char *)NULL
+};
+
+CONST static char   *httpVersionTable[] = {
+    "none",     /* CURL_HTTP_VERSION_NONE */
+    "1.0",      /* CURL_HTTP_VERSION_1_0  */
+    "1.1",      /* CURL_HTTP_VERSION_1_1  */
+    "2.0",      /* CURL_HTTP_VERSION_2_0  */
+    "2TLS",     /* CURL_HTTP_VERSION_2TLS */
+    "2_PRIOR_KNOWLEDGE",  /* CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE */
+    (char *)NULL
+};
+
+const static char *timeCond[] = {
+    "ifmodsince", "ifunmodsince",
+    (char *)NULL
+};
 
 /*
  *----------------------------------------------------------------------
@@ -327,18 +389,6 @@ SetoptSHandle(Tcl_Interp *interp,CURL *curlHandle,
  *----------------------------------------------------------------------
  */
 
-typedef struct TclCurlOptionDef TclCurlOptionDef;
-typedef int (*TclCurlOptionHandler)(Tcl_Interp *interp,
-        struct curlObjData *curlData, Tcl_Obj *const objv, int tableIndex,
-        const TclCurlOptionDef *def);
-
-struct TclCurlOptionDef {
-    const char           *optionName;
-    const char           *configName;
-    TclCurlOptionHandler  handler;
-    CURLoption            curlOpt;
-    const char           *errorMessage;
-};
 
 #define TCLCURL_OPT_HANDLER(handler) static int handler(Tcl_Interp *interp, \
         struct curlObjData *curlData, Tcl_Obj *const objv, int tableIndex, \
@@ -356,7 +406,6 @@ TCLCURL_OPT_HANDLER(TclCurl_HandleTransferText)
 TCLCURL_OPT_HANDLER(TclCurl_HandleMute)
 TCLCURL_OPT_HANDLER(TclCurl_HandleErrorBuffer)
 TCLCURL_OPT_HANDLER(TclCurl_HandleHttpHeaderList)
-TCLCURL_OPT_HANDLER(TclCurl_HandleHttpPost)
 TCLCURL_OPT_HANDLER(TclCurl_HandleSslVersion)
 TCLCURL_OPT_HANDLER(TclCurl_HandleQuoteList)
 TCLCURL_OPT_HANDLER(TclCurl_HandlePostQuoteList)
@@ -398,6 +447,10 @@ TCLCURL_OPT_HANDLER(TclCurl_HandleTlsAuthType)
 TCLCURL_OPT_HANDLER(TclCurl_HandleGssApiDelegation)
 TCLCURL_OPT_HANDLER(TclCurl_HandleTelnetOptions)
 TCLCURL_OPT_HANDLER(TclCurl_HandleCainfoBlob)
+
+int TclCurl_HandleHttpPost(Tcl_Interp *interp, \
+        struct curlObjData *curlData, Tcl_Obj *const objv, int tableIndex, \
+        const TclCurlOptionDef *def);
 
 #undef TCLCURL_OPT_HANDLER
 
@@ -627,135 +680,6 @@ TclCurl_HandleHttpHeaderList(Tcl_Interp *interp, struct curlObjData *curlData,
     if (curl_easy_setopt(curlHandle,CURLOPT_HTTPHEADER,curlData->headerList)) {
         curl_slist_free_all(curlData->headerList);
         curlData->headerList=NULL;
-        return TCL_ERROR;
-    }
-    return TCL_OK;
-}
-
-static int
-TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def)
-{
-    Tcl_Obj *resultObjPtr;
-    Tcl_Size i,j;
-    Tcl_Size post_data_numel;
-    Tcl_Obj **httpPostData;
-    int curlTableIndex;
-    int formaddError,formArrayIndex;
-    struct formArrayStruct   *newFormArray;
-    struct curl_forms        *formArray;
-    Tcl_Size                  curlformBufferSize;
-    size_t                    contentslen;
-    unsigned char            *tmpUStr;
-    char*                     tmpStr = NULL;
-
-    (void)def;
-
-    if (Tcl_ListObjGetElements(interp,objv,&post_data_numel,&httpPostData) == TCL_ERROR) {
-        return TCL_ERROR;
-    }
-    formaddError = 0;
-    newFormArray = (struct formArrayStruct *)Tcl_Alloc(sizeof(struct formArrayStruct));
-    formArray = (struct curl_forms *)Tcl_Alloc(post_data_numel*(sizeof(struct curl_forms)));
-    formArrayIndex = 0;
-
-    newFormArray->next=curlData->formArray;
-    newFormArray->formArray=formArray;
-    newFormArray->formHeaderList=NULL;
-
-    for (i=0,j=0;i<post_data_numel;i+=2,j+=1) {
-        if (Tcl_GetIndexFromObj(interp,httpPostData[i],curlFormTable,
-                "CURLFORM option",TCL_EXACT,&curlTableIndex)==TCL_ERROR) {
-            formaddError=1;
-            break;
-        }
-        switch (curlTableIndex) {
-            case NAME_HTTP_OPT:
-                formArray[formArrayIndex].option = CURLFORM_COPYNAME;
-                formArray[formArrayIndex].value  = curlstrdup(Tcl_GetString(httpPostData[i+1]));
-                break;
-            case CONTENTS_HTTP_OPT:
-            {
-                tmpStr=Tcl_GetStringFromObj(httpPostData[i+1],&curlformBufferSize);
-                formArray[formArrayIndex].option = CURLFORM_COPYCONTENTS;
-
-                formArray[formArrayIndex].value = Tcl_Alloc((curlformBufferSize > 0) ? curlformBufferSize : 1);
-
-                if (curlformBufferSize > 0) {
-                    size_t buffer_size;
-
-                    if (TclSize2SizeT(curlformBufferSize,&buffer_size) == 0) {
-                        curlErrorSetOpt(interp,configTable,tableIndex,"Inconsistent buffer size");
-                        return TCL_ERROR;
-                    }
-                    memcpy((char *)formArray[formArrayIndex].value,tmpStr,buffer_size);
-                } else {
-                    memset((char *)formArray[formArrayIndex].value,0,1);
-                }
-
-                formArrayIndex++;
-                formArray[formArrayIndex].option = CURLFORM_CONTENTSLENGTH;
-                contentslen=curlformBufferSize++;
-                formArray[formArrayIndex].value  = (char *)contentslen;
-                break;
-            }
-            case FILE_HTTP_OPT:
-                formArray[formArrayIndex].option = CURLFORM_FILE;
-                formArray[formArrayIndex].value  = curlstrdup(Tcl_GetString(httpPostData[i+1]));
-                break;
-            case CONTENTTYPE_HTTP_OPT:
-                formArray[formArrayIndex].option = CURLFORM_CONTENTTYPE;
-                formArray[formArrayIndex].value  = curlstrdup(Tcl_GetString(httpPostData[i+1]));
-                break;
-            case CONTENTHEADER_HTTP_OPT:
-                formArray[formArrayIndex].option = CURLFORM_CONTENTHEADER;
-                if(SetoptsList(interp,&newFormArray->formHeaderList,httpPostData[i+1])) {
-                    curlErrorSetOpt(interp,configTable,tableIndex,"Header list invalid");
-                    formaddError=1;
-                    return TCL_ERROR;
-                }
-                formArray[formArrayIndex].value  = (char *)newFormArray->formHeaderList;
-                break;
-            case FILENAME_HTTP_OPT:
-                formArray[formArrayIndex].option = CURLFORM_FILENAME;
-                formArray[formArrayIndex].value  = curlstrdup(Tcl_GetString(httpPostData[i+1]));
-                break;
-            case BUFFERNAME_HTTP_OPT:
-                formArray[formArrayIndex].option = CURLFORM_BUFFER;
-                formArray[formArrayIndex].value  = curlstrdup(Tcl_GetString(httpPostData[i+1]));
-                break;
-            case BUFFER_HTTP_OPT:
-                tmpUStr=Tcl_GetByteArrayFromObj(httpPostData[i+1],&curlformBufferSize);
-                formArray[formArrayIndex].option = CURLFORM_BUFFERPTR;
-                formArray[formArrayIndex].value  = (char *)
-                        memcpy(Tcl_Alloc(curlformBufferSize), tmpUStr, curlformBufferSize);
-                formArrayIndex++;
-                formArray[formArrayIndex].option = CURLFORM_BUFFERLENGTH;
-                contentslen=curlformBufferSize;
-                formArray[formArrayIndex].value  = (char *)contentslen;
-                break;
-            case FILECONTENT_HTTP_OPT:
-                formArray[formArrayIndex].option = CURLFORM_FILECONTENT;
-                formArray[formArrayIndex].value  = curlstrdup(Tcl_GetString(httpPostData[i+1]));
-                break;
-        }
-        formArrayIndex++;
-    }
-    formArray[formArrayIndex].option=CURLFORM_END;
-    curlData->formArray=newFormArray;
-
-    if (0==formaddError) {
-        formaddError=curl_formadd(&(curlData->postListFirst),
-                                  &(curlData->postListLast), CURLFORM_ARRAY, formArray,
-                                  CURLFORM_END);
-    }
-    if (formaddError != CURL_FORMADD_OK) {
-        curlResetFormArray(formArray);
-        curlData->formArray=newFormArray->next;
-        Tcl_Free((char *)newFormArray);
-        resultObjPtr=Tcl_ObjPrintf("%d",formaddError);
-        Tcl_SetObjResult(interp,resultObjPtr);
-        Tcl_Free(tmpStr);
         return TCL_ERROR;
     }
     return TCL_OK;
