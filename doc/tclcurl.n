@@ -832,7 +832,7 @@ If you want to do a zero-byte POST, you need to set
 \fB-postfieldsize\fP explicitly to zero, as simply setting
 \fB-postfields\fP to NULL or "" just effectively disables the sending
 of the specified string. TclCurl will instead assume that the POST
-data will be send using the read callback!
+data will be sent using the read callback!
 
 Using POST with HTTP 1.1 implies the use of a "Expect: 100-continue" header.
 You can disable this header with \fB-httpheader\fP as usual.
