@@ -1909,10 +1909,10 @@ char
 *curlstrdup (char *old) {
     char    *tmpPtr;
 
-    if (old==NULL) {
+    if (old == NULL) {
         return NULL;
     }
-    tmpPtr=Tcl_Alloc(strlen(old)+1);
+    tmpPtr = Tcl_Alloc(strlen(old)+1);
     strcpy(tmpPtr,old);
 
     return tmpPtr;
@@ -1983,7 +1983,7 @@ curlShareInitObjCmd (ClientData clientData, Tcl_Interp *interp,
     Tcl_Obj               *shandleObj;
 
     shcurlData=(struct shcurlObjData *)Tcl_Alloc(sizeof(struct shcurlObjData));
-    if (shcurlData==NULL) {
+    if (shcurlData == NULL) {
         resultPtr=Tcl_NewStringObj("Couldn't allocate memory",-1);
         Tcl_SetObjResult(interp,resultPtr);
         return TCL_ERROR;
@@ -1992,7 +1992,7 @@ curlShareInitObjCmd (ClientData clientData, Tcl_Interp *interp,
     memset(shcurlData, 0, sizeof(struct shcurlObjData));
 
     shcurlHandle=curl_share_init();
-    if (shcurlHandle==NULL) {
+    if (shcurlHandle == NULL) {
         resultPtr=Tcl_NewStringObj("Couldn't create share handle",-1);
         Tcl_SetObjResult(interp,resultPtr);
         return TCL_ERROR;
@@ -2028,8 +2028,8 @@ curlShareInitObjCmd (ClientData clientData, Tcl_Interp *interp,
  */
 
 void
-curlShareLockFunc (CURL *handle, curl_lock_data data, curl_lock_access access
-        , void *userptr) {
+curlShareLockFunc (CURL *handle, curl_lock_data data, curl_lock_access access,
+                   void *userptr) {
 
     switch(data) {
         case CURL_LOCK_DATA_COOKIE:

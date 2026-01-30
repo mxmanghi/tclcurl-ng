@@ -654,10 +654,10 @@ TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
     if (Tcl_ListObjGetElements(interp,objv,&post_data_numel,&httpPostData) == TCL_ERROR) {
         return TCL_ERROR;
     }
-    formaddError=0;
-    newFormArray=(struct formArrayStruct *)Tcl_Alloc(sizeof(struct formArrayStruct));
-    formArray=(struct curl_forms *)Tcl_Alloc(post_data_numel*(sizeof(struct curl_forms)));
-    formArrayIndex=0;
+    formaddError = 0;
+    newFormArray = (struct formArrayStruct *)Tcl_Alloc(sizeof(struct formArrayStruct));
+    formArray = (struct curl_forms *)Tcl_Alloc(post_data_numel*(sizeof(struct curl_forms)));
+    formArrayIndex = 0;
 
     newFormArray->next=curlData->formArray;
     newFormArray->formArray=formArray;
@@ -745,11 +745,11 @@ TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
     curlData->formArray=newFormArray;
 
     if (0==formaddError) {
-        formaddError=curl_formadd(&(curlData->postListFirst)
-                ,&(curlData->postListLast), CURLFORM_ARRAY, formArray
-                , CURLFORM_END);
+        formaddError=curl_formadd(&(curlData->postListFirst),
+                                  &(curlData->postListLast), CURLFORM_ARRAY, formArray,
+                                  CURLFORM_END);
     }
-    if (formaddError!=CURL_FORMADD_OK) {
+    if (formaddError != CURL_FORMADD_OK) {
         curlResetFormArray(formArray);
         curlData->formArray=newFormArray->next;
         Tcl_Free((char *)newFormArray);
