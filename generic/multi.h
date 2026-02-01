@@ -11,9 +11,10 @@
  *
  */
 
-#define multi_h
-#include "tclcurl.h"
+#ifndef __multi_h__
+#define __multi_h__
 
+#include "tclcurl.h"
 
 #ifdef  __cplusplus
 extern "C" {
@@ -62,9 +63,7 @@ const static char *multiConfigTable[] = {
 };
 
 char *curlCreateMultiObjCmd (Tcl_Interp *interp,struct curlMultiObjData *curlMultiData);
-
 int Tclcurl_MultiInit (Tcl_Interp *interp);
-
 int curlMultiDeleteCmd(ClientData clientData);
 
 int curlInitMultiObjCmd (ClientData clientData, Tcl_Interp *interp,
@@ -111,5 +110,6 @@ int curlEventProc(Tcl_Event *evPtr,int flags);
 
 #ifdef  __cplusplus
 }
-
 #endif
+
+#endif /* __multi_h __ */

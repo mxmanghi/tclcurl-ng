@@ -249,6 +249,15 @@ TEA_MAKE_LIB
 TEA_PROG_TCLSH
 #TEA_PROG_WISH
 
+# Tcl9 defines MODULE_SCOPE, but autotools override it, so we try
+# to prevent to have warnings for preprocessor symbols being redefined
+
+AH_BOTTOM([[
+#ifdef MODULE_SCOPE
+# undef MODULE_SCOPE
+#endif
+]])
+
 #--------------------------------------------------------------------
 # Finally, substitute all of the various values into the Makefile.
 # You may alternatively have a special pkgIndex.tcl.in or other files

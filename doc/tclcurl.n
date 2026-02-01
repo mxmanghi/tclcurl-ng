@@ -425,7 +425,7 @@ this means, you probably don't want this tunnel option.
 
 .TP
 .B -socks5gssapiservice
-Pass thee name of the service. The default service name for a SOCKS5 server is
+Pass the name of the service. The default service name for a SOCKS5 server is
 rcmd/server-fqdn. This option allows you to change it.
 
 .TP
@@ -859,7 +859,7 @@ instruct what data to pass on to the server through a
 First, there are some basics you need to understand about multipart/formdata
 posts. Each part consists of at least a \fBNAME\fP and a \fBCONTENTS\fP part. If the part
 is made for file upload, there are also a stored \fBCONTENT-TYPE\fP and a
-\fBFILENAME\fP. Below, we'll discuss on what options you use to set these
+\fBFILENAME\fP. Below, we'll discuss which options set these
 properties in the parts you want to add to your post.
 
 The list must contain a \fB'name'\fP tag with the name of the section followed

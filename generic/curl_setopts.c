@@ -4,6 +4,10 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "tclcurl.h"
 #include "curl_setopts.h"
 
@@ -390,67 +394,64 @@ SetoptSHandle(Tcl_Interp *interp,CURL *curlHandle,
  */
 
 
-#define TCLCURL_OPT_HANDLER(handler) static int handler(Tcl_Interp *interp, \
+#define TCLCURL_OPT_HANDLER(handler) handler(Tcl_Interp *interp, \
         struct curlObjData *curlData, Tcl_Obj *const objv, int tableIndex, \
         const TclCurlOptionDef *def);
 
-TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptChar)
-TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptInt)
-TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptLong)
-TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptCurlOffT)
-TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptSHandle)
-TCLCURL_OPT_HANDLER(TclCurl_HandleOutFile)
-TCLCURL_OPT_HANDLER(TclCurl_HandleReadData)
-TCLCURL_OPT_HANDLER(TclCurl_HandleNetrc)
-TCLCURL_OPT_HANDLER(TclCurl_HandleTransferText)
-TCLCURL_OPT_HANDLER(TclCurl_HandleMute)
-TCLCURL_OPT_HANDLER(TclCurl_HandleErrorBuffer)
-TCLCURL_OPT_HANDLER(TclCurl_HandleHttpHeaderList)
-TCLCURL_OPT_HANDLER(TclCurl_HandleSslVersion)
-TCLCURL_OPT_HANDLER(TclCurl_HandleQuoteList)
-TCLCURL_OPT_HANDLER(TclCurl_HandlePostQuoteList)
-TCLCURL_OPT_HANDLER(TclCurl_HandleWriteHeader)
-TCLCURL_OPT_HANDLER(TclCurl_HandleTimeCondition)
-TCLCURL_OPT_HANDLER(TclCurl_HandleStderrFile)
-TCLCURL_OPT_HANDLER(TclCurl_HandleHeaderVar)
-TCLCURL_OPT_HANDLER(TclCurl_HandleBodyVar)
-TCLCURL_OPT_HANDLER(TclCurl_HandleProgressProc)
-TCLCURL_OPT_HANDLER(TclCurl_HandleCancelTransVarName)
-TCLCURL_OPT_HANDLER(TclCurl_HandleWriteProc)
-TCLCURL_OPT_HANDLER(TclCurl_HandleReadProc)
-TCLCURL_OPT_HANDLER(TclCurl_HandleHttpVersion)
-TCLCURL_OPT_HANDLER(TclCurl_HandlePrequoteList)
-TCLCURL_OPT_HANDLER(TclCurl_HandleDebugProc)
-TCLCURL_OPT_HANDLER(TclCurl_HandleEncoding)
-TCLCURL_OPT_HANDLER(TclCurl_HandleProxyType)
-TCLCURL_OPT_HANDLER(TclCurl_HandleHttp200Aliases)
-TCLCURL_OPT_HANDLER(TclCurl_HandleCommand)
-TCLCURL_OPT_HANDLER(TclCurl_HandleHttpAuth)
-TCLCURL_OPT_HANDLER(TclCurl_HandleProxyAuth)
-TCLCURL_OPT_HANDLER(TclCurl_HandleIpResolve)
-TCLCURL_OPT_HANDLER(TclCurl_HandleFtpSsl)
-TCLCURL_OPT_HANDLER(TclCurl_HandleObsolete)
-TCLCURL_OPT_HANDLER(TclCurl_HandleFtpSslAuth)
-TCLCURL_OPT_HANDLER(TclCurl_HandleFtpFileMethod)
-TCLCURL_OPT_HANDLER(TclCurl_HandleSshAuthTypes)
-TCLCURL_OPT_HANDLER(TclCurl_HandlePostRedir)
-TCLCURL_OPT_HANDLER(TclCurl_HandleProtocolMask)
-TCLCURL_OPT_HANDLER(TclCurl_HandleFtpSslCcc)
-TCLCURL_OPT_HANDLER(TclCurl_HandleSshKeyFunction)
-TCLCURL_OPT_HANDLER(TclCurl_HandleMailRcpt)
-TCLCURL_OPT_HANDLER(TclCurl_HandleChunkBgnProc)
-TCLCURL_OPT_HANDLER(TclCurl_HandleChunkBgnVar)
-TCLCURL_OPT_HANDLER(TclCurl_HandleChunkEndProc)
-TCLCURL_OPT_HANDLER(TclCurl_HandleFnmatchProc)
-TCLCURL_OPT_HANDLER(TclCurl_HandleResolveList)
-TCLCURL_OPT_HANDLER(TclCurl_HandleTlsAuthType)
-TCLCURL_OPT_HANDLER(TclCurl_HandleGssApiDelegation)
-TCLCURL_OPT_HANDLER(TclCurl_HandleTelnetOptions)
-TCLCURL_OPT_HANDLER(TclCurl_HandleCainfoBlob)
-
-int TclCurl_HandleHttpPost(Tcl_Interp *interp, \
-        struct curlObjData *curlData, Tcl_Obj *const objv, int tableIndex, \
-        const TclCurlOptionDef *def);
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptChar)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptInt)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptLong)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptCurlOffT)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptSHandle)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleOutFile)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleReadData)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleNetrc)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleTransferText)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleMute)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleErrorBuffer)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleHttpHeaderList)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleSslVersion)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleQuoteList)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandlePostQuoteList)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleWriteHeader)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleTimeCondition)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleStderrFile)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleHeaderVar)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleBodyVar)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleProgressProc)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleCancelTransVarName)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleWriteProc)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleReadProc)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleHttpVersion)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandlePrequoteList)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleDebugProc)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleEncoding)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleProxyType)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleHttp200Aliases)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleCommand)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleHttpAuth)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleProxyAuth)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleIpResolve)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleFtpSsl)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleObsolete)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleFtpSslAuth)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleFtpFileMethod)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleSshAuthTypes)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandlePostRedir)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleProtocolMask)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleFtpSslCcc)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleSshKeyFunction)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleMailRcpt)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleChunkBgnProc)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleChunkBgnVar)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleChunkEndProc)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleFnmatchProc)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleResolveList)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleTlsAuthType)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleGssApiDelegation)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleTelnetOptions)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleCainfoBlob)
+       int TCLCURL_OPT_HANDLER(TclCurl_HandleHttpPost)
 
 #undef TCLCURL_OPT_HANDLER
 
@@ -949,7 +950,7 @@ TclCurl_HandleProgressProc(Tcl_Interp *interp, struct curlObjData *curlData,
     Tcl_Free(curlData->progressProc);
     curlData->progressProc=curlstrdup(Tcl_GetString(objv));
     if (strcmp(curlData->progressProc,"")) {
-        if (curl_easy_setopt(curlHandle,CURLOPT_PROGRESSFUNCTION,
+        if (curl_easy_setopt(curlHandle,CURLOPT_XFERINFOFUNCTION,
                 curlProgressCallback)) {
             return TCL_ERROR;
         }
@@ -958,7 +959,7 @@ TclCurl_HandleProgressProc(Tcl_Interp *interp, struct curlObjData *curlData,
             return TCL_ERROR;
         }
     } else {
-        if (curl_easy_setopt(curlHandle,CURLOPT_PROGRESSFUNCTION,NULL)) {
+        if (curl_easy_setopt(curlHandle,CURLOPT_XFERINFOFUNCTION,NULL)) {
             return TCL_ERROR;
         }
     }

@@ -11,6 +11,13 @@
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <tcl.h>
+#include "tclcurl.h"
+
 #ifdef _WIN32
 #define UNICODE
 #define _UNICODE
@@ -186,8 +193,8 @@ curlCreateObjCmd (Tcl_Interp *interp,struct curlObjData  *curlData) {
  */
 
 int
-curlInitObjCmd (ClientData clientData, Tcl_Interp *interp,
-        int objc,Tcl_Obj *const objv[]) {
+curlInitObjCmd (ClientData clientData,Tcl_Interp *interp,
+                int objc,Tcl_Obj *const objv[]) {
 
     Tcl_Obj             *resultPtr;
     CURL                *curlHandle;
@@ -379,6 +386,27 @@ curlDeleteCmd(ClientData clientData) {
 
     return TCL_OK;
 }
+
+/*----------------------------------------------------------------------
+ *
+ * curlseek --
+ *
+ *  When the user requests the 'any' auth, libcurl may need
+ *  to send the PUT/POST data more than once and thus may need to ask
+ *  the app to "rewind" the read data stream to start.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+curlseek(void *instream, curl_off_t offset, int origin)
+{
+    if (-1 == fseek((FILE *)instream, 0, origin)) {
+          return CURLIOE_FAILRESTART;
+    }
+    return CURLIOE_OK;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -1745,28 +1773,6 @@ curlOpenFile(Tcl_Interp *interp,char *fileName, FILE **handle, int writing, int 
     }
     return 0;
 }
-
-/*----------------------------------------------------------------------
- *
- * curlseek --
- *
- *  When the user requests the 'any' auth, libcurl may need
- *  to send the PUT/POST data more than once and thus may need to ask
- *  the app to "rewind" the read data stream to start.
- *
- *----------------------------------------------------------------------
- */
-
-int
-curlseek(void *instream, curl_off_t offset, int origin)
-{
-    if (-1 == fseek((FILE *)instream, 0, origin)) {
-          return CURLIOE_FAILRESTART;
-    }
-    return CURLIOE_OK;
-}
-
-
 
 /*----------------------------------------------------------------------
  *

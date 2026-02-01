@@ -16,9 +16,16 @@
 #include "curl_mime.h"
 #include "curl_setopts.h"
 
+enum curlFormIndices {
+    NAME_HTTP_OPT,  CONTENTS_HTTP_OPT, FILE_HTTP_OPT, 
+    CONTENTTYPE_HTTP_OPT, CONTENTHEADER_HTTP_OPT, FILENAME_HTTP_OPT,
+    BUFFERNAME_HTTP_OPT, BUFFER_HTTP_OPT, FILECONTENT_HTTP_OPT
+};
+
 const static char *curlFormTable[] = {
-    "name",  "contents", "file", "contenttype", "contentheader", "filename",
-    "bufferName", "buffer", "filecontent", (char *)NULL
+    "name",         "contents",         "file", 
+    "contenttype",  "contentheader",    "filename",
+    "bufferName",   "buffer",           "filecontent", (char *)NULL
 };
 
 /*----------------------------------------------------------------------
@@ -72,10 +79,10 @@ TclCurl_ResetPostData(struct curlObjData *curlDataPtr) {
         curlDataPtr->postListLast  = NULL;
         curl_easy_setopt(curlDataPtr->curl,CURLOPT_MIMEPOST,NULL);
 
-        while (curlDataPtr->formArray!=NULL) {
-            if (curlDataPtr->formArray->formHeaderList!=NULL) {
+        while (curlDataPtr->formArray != NULL) {
+            if (curlDataPtr->formArray->formHeaderList != NULL) {
                 curl_slist_free_all(curlDataPtr->formArray->formHeaderList);
-                curlDataPtr->formArray->formHeaderList=NULL;
+                curlDataPtr->formArray->formHeaderList = NULL;
             }
             curlResetFormArray(curlDataPtr->formArray->formArray);
             tmpPtr=curlDataPtr->formArray->next;
@@ -133,18 +140,18 @@ int
 TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
         Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def)
 {
-    Tcl_Obj *resultObjPtr;
-    Tcl_Size i,j;
-    Tcl_Size post_data_numel;
-    Tcl_Obj **httpPostData;
-    int curlTableIndex;
-    int formaddError,formArrayIndex;
-    struct formArrayStruct   *newFormArray;
-    struct curl_forms        *formArray;
-    Tcl_Size                  curlformBufferSize;
-    size_t                    contentslen;
-    unsigned char            *tmpUStr;
-    char*                     tmpStr = NULL;
+    Tcl_Obj*                resultObjPtr;
+    Tcl_Size                i,j;
+    Tcl_Size                post_data_numel;
+    Tcl_Obj**               httpPostData;
+    int                     curlTableIndex;
+    int                     formaddError,formArrayIndex;
+    struct formArrayStruct* newFormArray;
+    struct curl_forms*      formArray;
+    Tcl_Size                curlformBufferSize;
+    size_t                  contentslen;
+    unsigned char*          tmpUStr;
+    char*                   tmpStr = NULL;
 
     (void)def;
 
@@ -153,7 +160,7 @@ TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
     }
     formaddError = 0;
     newFormArray = (struct formArrayStruct *)Tcl_Alloc(sizeof(struct formArrayStruct));
-    formArray = (struct curl_forms *)Tcl_Alloc(post_data_numel*(sizeof(struct curl_forms)));
+    formArray    = (struct curl_forms *)Tcl_Alloc(post_data_numel*(sizeof(struct curl_forms)));
     formArrayIndex = 0;
 
     newFormArray->next=curlData->formArray;
@@ -162,7 +169,7 @@ TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
 
     for (i=0,j=0;i<post_data_numel;i+=2,j+=1) {
         if (Tcl_GetIndexFromObj(interp,httpPostData[i],curlFormTable,
-                "CURLFORM option",TCL_EXACT,&curlTableIndex)==TCL_ERROR) {
+                "CURLFORM option",TCL_EXACT,&curlTableIndex) == TCL_ERROR) {
             formaddError=1;
             break;
         }
@@ -241,7 +248,7 @@ TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
     formArray[formArrayIndex].option=CURLFORM_END;
     curlData->formArray=newFormArray;
 
-    if (0==formaddError) {
+    if (formaddError == 0) {
         formaddError=curl_formadd(&(curlData->postListFirst),
                                   &(curlData->postListLast), CURLFORM_ARRAY, formArray,
                                   CURLFORM_END);

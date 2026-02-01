@@ -32,7 +32,6 @@
 extern "C" {
 #endif
 
-#include "config.h"
 #include "tclcompat.h"
 
 /*
@@ -125,18 +124,8 @@ struct shcurlObjData {
     CURLSH               *shandle;
 };
 
-#ifndef multi_h
-enum curlFormIndices {
-    NAME_HTTP_OPT,  CONTENTS_HTTP_OPT, FILE_HTTP_OPT, 
-    CONTENTTYPE_HTTP_OPT, CONTENTHEADER_HTTP_OPT, FILENAME_HTTP_OPT,
-    BUFFERNAME_HTTP_OPT, BUFFER_HTTP_OPT, FILECONTENT_HTTP_OPT
-};
-
-int curlseek(void *instream, curl_off_t offset, int origin);
-int Tclcurl_MultiInit (Tcl_Interp *interp);
-#endif
-
 EXTERN int Tclcurl_Init(Tcl_Interp *interp);
+int Tclcurl_MultiInit (Tcl_Interp *interp);
 
 Tcl_Obj* curlCreateObjCmd(Tcl_Interp *interp,struct curlObjData  *curlData);
 int curlInitObjCmd(ClientData clientData, Tcl_Interp *interp, int objc,Tcl_Obj *const objv[]);
@@ -154,7 +143,7 @@ int curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,Tcl_Obj *const 
 
 //int SetoptInt(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
 //int SetoptLong(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
-int SetoptCurlOffT(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
+//int SetoptCurlOffT(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
 //int SetoptChar(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
 //int SetoptBlob(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
 int SetoptSHandle(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
@@ -241,7 +230,7 @@ int curlMultiStringError (ClientData clientData, Tcl_Interp *interp,
 /* */
 
 int               TclCurl_SetOpts(Tcl_Interp *interp, struct curlObjData *curlData,Tcl_Obj *const objv,int tableIndex);
-unsigned long int TclCurl_BuildProtocolMask(Tcl_Interp* interp, Tcl_Obj** protocols,int protocols_c);
+unsigned long int TclCurl_BuildProtocolMask(Tcl_Interp* interp, Tcl_Obj** protocols,Tcl_Size protocols_c);
 long              TclCurl_FTPClearCommandChannelOpt(Tcl_Interp* interp,Tcl_Obj* opt_o);
 long              TclCurl_FTPSSLMethod(Tcl_Interp* interp,Tcl_Obj* ssl_method_o);
 int               TclCurl_ErrorBuffer(Tcl_Interp *interp, struct curlObjData * const curlData,Tcl_Obj *const tcl_o);
