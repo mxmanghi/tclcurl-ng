@@ -262,5 +262,5 @@ AH_BOTTOM([[
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-AC_CONFIG_FILES([Makefile pkgIndex.tcl])
+AC_CONFIG_FILES([Makefile pkgIndex.tcl doc/tclcurl.n])
 AC_OUTPUT

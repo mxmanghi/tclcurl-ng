@@ -1,3 +1,8 @@
+2026-02-01 Massimo Manghi <massimo.manghi@rivetweb.org>
+    * generic/tclcurl.c: fundamental revisions. Code subdivided into modules, adoption
+    of X-macro patterns in order to have option tables controlled by data rather than
+    long switch...case construct, removing obsolete macros
+
 2011-10-03 Andres Garcia <fandom@telefonica.net>
 
     * Release version 7.22.0
