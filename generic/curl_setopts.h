@@ -202,10 +202,17 @@ const static char *configTable[] = {
 };
 
 typedef struct TclCurlOptionDef TclCurlOptionDef;
+typedef struct TclCurlOptsArgs TclCurlOptsArgs;
 
-typedef int (*TclCurlOptionHandler)(Tcl_Interp *interp,
-        struct curlObjData *curlData, Tcl_Obj *const objv, int tableIndex,
-        const TclCurlOptionDef *def);
+struct TclCurlOptsArgs {
+    Tcl_Interp            *interp;
+    struct curlObjData    *curlData;
+    Tcl_Obj *const         objv;
+    int                   tableIndex;
+    const TclCurlOptionDef *def;
+};
+
+typedef int (*TclCurlOptionHandler)(TclCurlOptsArgs *args);
 
 struct TclCurlOptionDef {
     const char           *optionName;

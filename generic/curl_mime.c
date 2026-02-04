@@ -137,8 +137,7 @@ TclCurl_ResetFormArray(struct curl_forms *formArray) {
  *----------------------------------------------------------------------
  */
 int
-TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
-        Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def)
+TclCurl_HandleHttpPost(TclCurlOptsArgs *args)
 {
     Tcl_Obj*                resultObjPtr;
     Tcl_Size                i,j;
@@ -152,10 +151,7 @@ TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
     size_t                  contentslen;
     unsigned char*          tmpUStr;
     char*                   tmpStr = NULL;
-
-    (void)def;
-
-    if (Tcl_ListObjGetElements(interp,objv,&post_data_numel,&httpPostData) == TCL_ERROR) {
+    if (Tcl_ListObjGetElements(args->interp,args->objv,&post_data_numel,&httpPostData) == TCL_ERROR) {
         return TCL_ERROR;
     }
     formaddError = 0;
@@ -163,12 +159,12 @@ TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
     formArray    = (struct curl_forms *)Tcl_Alloc(post_data_numel*(sizeof(struct curl_forms)));
     formArrayIndex = 0;
 
-    newFormArray->next=curlData->formArray;
+    newFormArray->next=args->curlData->formArray;
     newFormArray->formArray=formArray;
     newFormArray->formHeaderList=NULL;
 
     for (i=0,j=0;i<post_data_numel;i+=2,j+=1) {
-        if (Tcl_GetIndexFromObj(interp,httpPostData[i],curlFormTable,
+        if (Tcl_GetIndexFromObj(args->interp,httpPostData[i],curlFormTable,
                 "CURLFORM option",TCL_EXACT,&curlTableIndex) == TCL_ERROR) {
             formaddError=1;
             break;
@@ -189,7 +185,7 @@ TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
                     size_t buffer_size;
 
                     if (TclCurl_TclSize2SizeT(curlformBufferSize,&buffer_size) == 0) {
-                        curlErrorSetOpt(interp,configTable,tableIndex,"Inconsistent buffer size");
+                        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"Inconsistent buffer size");
                         return TCL_ERROR;
                     }
                     memcpy((char *)formArray[formArrayIndex].value,tmpStr,buffer_size);
@@ -213,8 +209,8 @@ TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
                 break;
             case CONTENTHEADER_HTTP_OPT:
                 formArray[formArrayIndex].option = CURLFORM_CONTENTHEADER;
-                if(SetoptsList(interp,&newFormArray->formHeaderList,httpPostData[i+1])) {
-                    curlErrorSetOpt(interp,configTable,tableIndex,"Header list invalid");
+                if(SetoptsList(args->interp,&newFormArray->formHeaderList,httpPostData[i+1])) {
+                    curlErrorSetOpt(args->interp,configTable,args->tableIndex,"Header list invalid");
                     formaddError=1;
                     return TCL_ERROR;
                 }
@@ -246,19 +242,19 @@ TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
         formArrayIndex++;
     }
     formArray[formArrayIndex].option=CURLFORM_END;
-    curlData->formArray=newFormArray;
+    args->curlData->formArray=newFormArray;
 
     if (formaddError == 0) {
-        formaddError=curl_formadd(&(curlData->postListFirst),
-                                  &(curlData->postListLast), CURLFORM_ARRAY, formArray,
+        formaddError=curl_formadd(&(args->curlData->postListFirst),
+                                  &(args->curlData->postListLast), CURLFORM_ARRAY, formArray,
                                   CURLFORM_END);
     }
     if (formaddError != CURL_FORMADD_OK) {
         TclCurl_ResetFormArray(formArray);
-        curlData->formArray=newFormArray->next;
+        args->curlData->formArray=newFormArray->next;
         Tcl_Free((char *)newFormArray);
         resultObjPtr=Tcl_ObjPrintf("%d",formaddError);
-        Tcl_SetObjResult(interp,resultObjPtr);
+        Tcl_SetObjResult(args->interp,resultObjPtr);
         Tcl_Free(tmpStr);
         return TCL_ERROR;
     }

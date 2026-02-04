@@ -2,11 +2,12 @@
 #define __curl_mime_h__
 
 typedef struct TclCurlOptionDef TclCurlOptionDef;
+typedef struct TclCurlOptsArgs TclCurlOptsArgs;
 
 int               TclCurl_SetPostData(Tcl_Interp *interp,struct curlObjData *curlDataPtr);
 void              TclCurl_ResetPostData(struct curlObjData *curlDataPtr);
 void              TclCurl_ResetFormArray(struct curl_forms *formArray);
-int               TclCurl_HandleHttpPost(Tcl_Interp *interp, struct curlObjData *curlData,
-                                         Tcl_Obj *const objv, int tableIndex, const TclCurlOptionDef *def);
+/* Internal helper used by the setopts handler table. */
+int               TclCurl_HandleHttpPost(TclCurlOptsArgs *args);
 
 #endif
