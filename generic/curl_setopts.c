@@ -490,11 +490,11 @@ TclCurl_SetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
         return TCL_ERROR;
     }
     TclCurlOptsArgs args = {
-        interp,
-        curlData,
-        objv,
-        tableIndex,
-        &curlOptionDefs[tableIndex]
+        .interp     = interp,
+        .curlData   = curlData,
+        .objv       = objv,
+        .tableIndex = tableIndex,
+        .def        = &curlOptionDefs[tableIndex]
     };
 
     return curlOptionDefs[tableIndex].handler(&args);
@@ -1252,7 +1252,6 @@ TclCurl_HandleIpResolve(TclCurlOptsArgs *args)
     long longNumber=0;
     int curlTableIndex;
 
-
     if (Tcl_GetIndexFromObj(args->interp, args->objv, ipresolve,
         "ip version",TCL_EXACT,&curlTableIndex)==TCL_ERROR) {
         return TCL_ERROR;
@@ -1270,8 +1269,8 @@ TclCurl_HandleIpResolve(TclCurlOptsArgs *args)
     }
     tmpObjPtr=Tcl_NewLongObj(longNumber);
     Tcl_IncrRefCount(tmpObjPtr);
-    if (SetoptLong(args->interp,curlHandle,CURLOPT_IPRESOLVE
-            ,args->tableIndex,tmpObjPtr)) {
+    if (SetoptLong(args->interp,curlHandle,CURLOPT_IPRESOLVE,
+                   args->tableIndex,tmpObjPtr)) {
         Tcl_DecrRefCount(tmpObjPtr);
         return TCL_ERROR;
     }
@@ -1285,7 +1284,6 @@ TclCurl_HandleFtpSsl(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
     Tcl_Obj *tmpObjPtr;
     long longNumber = TclCurl_FTPSSLMethod(args->interp,args->objv);
-
 
     if (longNumber == -1) {
         return TCL_ERROR;
@@ -1305,7 +1303,6 @@ TclCurl_HandleFtpSsl(TclCurlOptsArgs *args)
 static int
 TclCurl_HandleObsolete(TclCurlOptsArgs *args)
 {
-
     curlErrorSetOpt(args->interp,configTable,args->tableIndex,
             args->def->errorMessage ? args->def->errorMessage : "option is obsolete");
     return TCL_ERROR;
@@ -1319,9 +1316,8 @@ TclCurl_HandleFtpSslAuth(TclCurlOptsArgs *args)
     long longNumber=0;
     int intNumber;
 
-
     if (Tcl_GetIndexFromObj(args->interp, args->objv, ftpsslauth,
-        "ftpsslauth method ",TCL_EXACT,&intNumber)==TCL_ERROR) {
+                            "ftpsslauth method ",TCL_EXACT,&intNumber) == TCL_ERROR) {
         return TCL_ERROR;
     }
     switch(intNumber) {
@@ -1354,7 +1350,6 @@ TclCurl_HandleFtpFileMethod(TclCurlOptsArgs *args)
     long longNumber=0;
     int intNumber;
 
-
     if (Tcl_GetIndexFromObj(args->interp, args->objv, ftpfilemethod,
         "ftp file method ",TCL_EXACT,&intNumber)==TCL_ERROR) {
         return TCL_ERROR;
@@ -1362,13 +1357,13 @@ TclCurl_HandleFtpFileMethod(TclCurlOptsArgs *args)
     switch(intNumber) {
         case 0:
         case 1:
-            longNumber=1;
+            longNumber = 1;
             break;
         case 2:
-            longNumber=2;
+            longNumber = 2;
             break;
         case 3:
-            longNumber=3;
+            longNumber = 3;
             break;
     }
     tmpObjPtr=Tcl_NewLongObj(longNumber);
@@ -1390,35 +1385,34 @@ TclCurl_HandleSshAuthTypes(TclCurlOptsArgs *args)
     long longNumber=0;
     int intNumber;
 
-
     if (Tcl_GetIndexFromObj(args->interp, args->objv, sshauthtypes,
         "ssh auth type ",TCL_EXACT,&intNumber)==TCL_ERROR) {
         return TCL_ERROR;
     }
     switch(intNumber) {
         case 0:
-            longNumber=CURLSSH_AUTH_PUBLICKEY;
+            longNumber = CURLSSH_AUTH_PUBLICKEY;
             break;
         case 1:
-            longNumber=CURLSSH_AUTH_PASSWORD;
+            longNumber = CURLSSH_AUTH_PASSWORD;
             break;
         case 2:
-            longNumber=CURLSSH_AUTH_HOST;
+            longNumber = CURLSSH_AUTH_HOST;
             break;
         case 3:
-            longNumber=CURLSSH_AUTH_KEYBOARD;
+            longNumber = CURLSSH_AUTH_KEYBOARD;
             break;
         case 4:
-            longNumber=CURLSSH_AUTH_ANY;
+            longNumber = CURLSSH_AUTH_ANY;
             break;
         case 5:
-            longNumber=CURLSSH_AUTH_NONE;
+            longNumber = CURLSSH_AUTH_NONE;
             break;
         case 6:
-            longNumber=CURLSSH_AUTH_AGENT;
+            longNumber = CURLSSH_AUTH_AGENT;
             break;
         case 7:
-            longNumber=CURLSSH_AUTH_DEFAULT;
+            longNumber = CURLSSH_AUTH_DEFAULT;
             break;
     }
     tmpObjPtr=Tcl_NewLongObj(longNumber);
@@ -1439,7 +1433,6 @@ TclCurl_HandlePostRedir(TclCurlOptsArgs *args)
     Tcl_Obj *tmpObjPtr;
     long longNumber=0;
     int intNumber;
-
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, postredir,
         "Postredir option ",TCL_EXACT,&intNumber)==TCL_ERROR) {
@@ -1497,7 +1490,6 @@ TclCurl_HandleFtpSslCcc(TclCurlOptsArgs *args)
     Tcl_Obj *tmpObjPtr;
     long longNumber = TclCurl_FTPClearCommandChannelOpt(args->interp,args->objv);
 
-
     if (longNumber < 0) {
         return TCL_ERROR;
     }
@@ -1517,7 +1509,6 @@ TclCurl_HandleSshKeyFunction(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
 
-
     if (curl_easy_setopt(curlHandle,CURLOPT_SSH_KEYFUNCTION,curlsshkeycallback)) {
         return TCL_ERROR;
     }
@@ -1532,7 +1523,6 @@ static int
 TclCurl_HandleMailRcpt(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
-
 
     if (SetoptsList(args->interp,&args->curlData->mailrcpt,args->objv)) {
         curlErrorSetOpt(args->interp,configTable,args->tableIndex,"mailrcpt invalid");
@@ -1605,7 +1595,6 @@ TclCurl_HandleFnmatchProc(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
 
-
     args->curlData->fnmatchProc=curlstrdup(Tcl_GetString(args->objv));
     if (strcmp(args->curlData->fnmatchProc,"")) {
         if (curl_easy_setopt(curlHandle,CURLOPT_FNMATCH_FUNCTION,
@@ -1649,7 +1638,6 @@ TclCurl_HandleTlsAuthType(TclCurlOptsArgs *args)
     long longNumber=0;
     int intNumber;
 
-
     if (Tcl_GetIndexFromObj(args->interp, args->objv, tlsauth,
         "TSL auth option ",TCL_EXACT,&intNumber)==TCL_ERROR) {
         return TCL_ERROR;
@@ -1680,7 +1668,6 @@ TclCurl_HandleGssApiDelegation(TclCurlOptsArgs *args)
     long longNumber=0;
     int intNumber;
 
-
     if (Tcl_GetIndexFromObj(args->interp, args->objv, gssapidelegation,
         "GSS API delegation option ",TCL_EXACT,&intNumber)==TCL_ERROR) {
         return TCL_ERROR;
@@ -1708,7 +1695,6 @@ TclCurl_HandleTelnetOptions(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
 
-
     if (SetoptsList(args->interp,&args->curlData->telnetoptions,args->objv)) {
         curlErrorSetOpt(args->interp,configTable,args->tableIndex,"invalid list");
         return TCL_ERROR;
@@ -1725,7 +1711,6 @@ TclCurl_HandleTelnetOptions(TclCurlOptsArgs *args)
 static int
 TclCurl_HandleCainfoBlob(TclCurlOptsArgs *args)
 {
-
 #if CURL_AT_LEAST_VERSION(7, 77, 0)
     if (SetoptBlob(args->interp,args->curlData->curl,CURLOPT_CAINFO_BLOB,
             args->tableIndex,args->objv)) {

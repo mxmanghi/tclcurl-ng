@@ -15,6 +15,7 @@
 #include "config.h"
 #endif
 
+#include <stddef.h>
 #include <tcl.h>
 #include "tclcurl.h"
 
@@ -201,26 +202,38 @@ curlInitObjCmd (ClientData clientData,Tcl_Interp *interp,
     struct curlObjData  *curlData;
     Tcl_Obj             *handleObj;
 
-    curlData=(struct curlObjData *)Tcl_Alloc(sizeof(struct curlObjData));
-    if (curlData==NULL) {
+    curlData = (struct curlObjData *)Tcl_Alloc(sizeof(struct curlObjData));
+    if (curlData == NULL) {
         resultPtr=Tcl_NewStringObj("Couldn't allocate memory",-1);
         Tcl_SetObjResult(interp,resultPtr);
         return TCL_ERROR;
     }
 
     memset(curlData, 0, sizeof(struct curlObjData));
-    curlData->interp=interp;
+    curlData->interp = interp;
 
-    curlHandle=curl_easy_init();
-    if (curlHandle==NULL) {
+    /* This is required to be done when the package is loaded
+     * and before any thread is created. It's not recommended to
+     * assume curllib will call it implicitly */
+
+    curl_global_init(CURL_GLOBAL_DEFAULT); 
+
+    /* And then we call curl_easy_init() */
+
+    curlHandle = curl_easy_init();
+    if (curlHandle == NULL) {
         resultPtr=Tcl_NewStringObj("Couldn't open curl handle",-1);
         Tcl_SetObjResult(interp,resultPtr);
         return TCL_ERROR;
     }
 
-    handleObj=curlCreateObjCmd(interp,curlData);
+    handleObj = curlCreateObjCmd(interp,curlData);
 
-    curlData->curl=curlHandle;
+    /* This is the curl central data structure. In meany examples
+     * it referred to as 'easy' because returned by the curl_easy_init() 
+     * call */
+
+    curlData->curl = curlHandle;
 
     Tcl_SetObjResult(interp,handleObj);
 
@@ -247,7 +260,7 @@ int
 curlObjCmd (ClientData clientData, Tcl_Interp *interp,
     int objc,Tcl_Obj *const objv[]) {
 
-    struct curlObjData     *curlData=(struct curlObjData *)clientData;
+    struct curlObjData     *curlData = (struct curlObjData *)clientData;
     CURL                   *curlHandle=curlData->curl;
     int                    tableIndex;
 
@@ -425,8 +438,7 @@ curlseek(void *instream, curl_off_t offset, int origin)
  *----------------------------------------------------------------------
  */
 int
-curlPerform(Tcl_Interp *interp,CURL *curlHandle,
-            struct curlObjData *curlData) {
+curlPerform(Tcl_Interp *interp,CURL *curlHandle,struct curlObjData *curlData) {
     int         exitCode;
     Tcl_Obj     *resultPtr;
 
@@ -436,8 +448,8 @@ curlPerform(Tcl_Interp *interp,CURL *curlHandle,
     if (TclCurl_SetPostData(interp,curlData)) {
         return TCL_ERROR;
     }
-    exitCode=curl_easy_perform(curlHandle);
-    resultPtr=Tcl_NewIntObj(exitCode);
+    exitCode = curl_easy_perform(curlHandle);
+    resultPtr = Tcl_NewIntObj(exitCode);
     Tcl_SetObjResult(interp,resultPtr);
     curlCloseFiles(curlData);
     TclCurl_ResetPostData(curlData);
@@ -478,8 +490,7 @@ SetoptsList(Tcl_Interp *interp,struct curl_slist **slistPtr,Tcl_Obj *CONST objv)
         *slistPtr=NULL;
     }
 
-    if (Tcl_ListObjGetElements(interp,objv,&headerNumber,&headers)
-            ==TCL_ERROR) {
+    if (Tcl_ListObjGetElements(interp,objv,&headerNumber,&headers) == TCL_ERROR) {
         return 1;
     }
 
@@ -527,7 +538,7 @@ curlErrorSetOpt(Tcl_Interp *interp,const char **configTable, int option,
  *
  * Parameters:
  *  header: string with the header line.
- *  size and nmemb: it so happens size * nmemb if the size of the
+ *  size and nmemb: if so happens size * nmemb is the size of the
  *  header string.
  *  curlData: A pointer to the curlData structure for the transfer.
  *
@@ -833,40 +844,31 @@ curlChunkBgnProcInvoke (const void *transfer_info, void *curlDataPtr, int remain
 
     switch(fileinfoPtr->filetype) {
         case 0:
-            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype",
-                    "file",0);
+            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype","file",0);
             break;
         case 1:
-            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype",
-                    "directory",0);
+            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype","directory",0);
             break;
         case 2:
-            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype",
-                    "symlink",0);
+            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype","symlink",0);
             break;
         case 3:
-            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype",
-                    "device block",0);
+            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype","device block",0);
             break;
         case 4:
-            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype",
-                    "device char",0);
+            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype","device char",0);
             break;
         case 5:
-            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype",
-                    "named pipe",0);
+            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype","named pipe",0);
             break;
         case 6:
-            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype",
-                    "socket",0);
+            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype","socket",0);
             break;
         case 7:
-            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype",
-                    "door",0);
+            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype","door",0);
             break;
         case 8:
-            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype",
-                    "error",0);
+            Tcl_SetVar2(curlData->interp,curlData->chunkBgnVar,"filetype","error",0);
             break;
     }
 

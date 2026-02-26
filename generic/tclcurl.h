@@ -117,6 +117,9 @@ struct curlObjData {
     char                   *fnmatchProc;
     struct curl_slist      *resolve;
     struct curl_slist      *telnetoptions;
+#ifdef  CURL7_56_ADDPART
+    curl_mime*              mime;
+#endif
 };
 
 struct shcurlObjData {

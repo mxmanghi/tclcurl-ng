@@ -11,13 +11,14 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  */
+#define CURL7_56_ADDPART 1
 
 #include "tclcurl.h"
 #include "curl_mime.h"
 #include "curl_setopts.h"
 
 enum curlFormIndices {
-    NAME_HTTP_OPT,  CONTENTS_HTTP_OPT, FILE_HTTP_OPT, 
+    NAME_HTTP_OPT, CONTENTS_HTTP_OPT, FILE_HTTP_OPT, 
     CONTENTTYPE_HTTP_OPT, CONTENTHEADER_HTTP_OPT, FILENAME_HTTP_OPT,
     BUFFERNAME_HTTP_OPT, BUFFER_HTTP_OPT, FILECONTENT_HTTP_OPT
 };
@@ -49,8 +50,14 @@ TclCurl_SetPostData(Tcl_Interp *interp,struct curlObjData *curlDataPtr) {
 
     if (curlDataPtr->postListFirst != NULL) {
         if (curl_easy_setopt(curlDataPtr->curl,CURLOPT_MIMEPOST,curlDataPtr->postListFirst)) {
+#ifdef  CURL7_56_ADDPART
+            if (curlDataPtr->mime != NULL) {
+                curl_mime_free(curlDataPtr->mime);
+            }
+#else
             curl_formfree(curlDataPtr->postListFirst);
-            errorMsgObjPtr=Tcl_NewStringObj("Error setting the data to post",-1);
+#endif
+            errorMsgObjPtr = Tcl_NewStringObj("Error setting the data to post",-1);
             Tcl_SetObjResult(interp,errorMsgObjPtr);
             return TCL_ERROR;
         }
@@ -69,6 +76,10 @@ TclCurl_SetPostData(Tcl_Interp *interp,struct curlObjData *curlDataPtr) {
  *  curlData: A pointer to the struct with the transfer data.
  *----------------------------------------------------------------------
  */
+
+#ifdef  CURL7_56_ADDPART
+       void TclCurl_ResetPostData(struct curlObjData *curlDataPtr) { }
+#else
 void
 TclCurl_ResetPostData(struct curlObjData *curlDataPtr) {
     struct formArrayStruct *tmpPtr;
@@ -103,7 +114,7 @@ TclCurl_ResetPostData(struct curlObjData *curlDataPtr) {
  *  formArray: A pointer to the array to clean up.
  *----------------------------------------------------------------------
  */
-void
+static void
 TclCurl_ResetFormArray(struct curl_forms *formArray) {
     int i;
 
@@ -125,6 +136,7 @@ TclCurl_ResetFormArray(struct curl_forms *formArray) {
     }
     Tcl_Free((char *)formArray);
 }
+#endif
 
 /*----------------------------------------------------------------------
  *
@@ -136,6 +148,106 @@ TclCurl_ResetFormArray(struct curl_forms *formArray) {
  *  formArray: A pointer to the array to clean up.
  *----------------------------------------------------------------------
  */
+#ifdef  CURL7_56_ADDPART
+int TclCurl_HandleHttpPost(TclCurlOptsArgs *coa)
+{
+    //Tcl_Obj*        resultObjPtr;
+    curl_mime*      mime;
+    curl_mimepart*  part;
+    Tcl_Size        post_data_numel;
+    Tcl_Obj**       httpPostData;
+    int             curlTableIndex;
+    int             arg_p = 0;
+
+    if (Tcl_ListObjGetElements(coa->interp,coa->objv,&post_data_numel,&httpPostData) == TCL_ERROR) {
+        return TCL_ERROR;
+    }
+
+    mime = curl_mime_init(coa->curlData->curl);
+    part = curl_mime_addpart(mime);
+
+    while (arg_p < post_data_numel)
+    {
+        if (Tcl_GetIndexFromObj(coa->interp,httpPostData[arg_p],curlFormTable,
+                "CURLFORM option",TCL_EXACT,&curlTableIndex) == TCL_ERROR) {
+            /* TODO: add meaningful error information */
+            return TCL_ERROR;
+        }
+
+        switch (curlTableIndex) {
+            case NAME_HTTP_OPT:
+            {
+                Tcl_Size data_l;
+
+                curl_mime_name(part,Tcl_GetStringFromObj(httpPostData[++arg_p],&data_l));
+                break;
+            }
+            case CONTENTS_HTTP_OPT:
+            {
+                Tcl_Size    buffer_l;
+                const char* tmpStr;
+                size_t buffer_size;
+
+                tmpStr = Tcl_GetStringFromObj(httpPostData[++arg_p],&buffer_l);
+                if (TclCurl_TclSize2SizeT(buffer_l,&buffer_size) == 0) {
+                    curlErrorSetOpt(coa->interp,configTable,coa->tableIndex,"Inconsistent buffer size");
+                    return TCL_ERROR;
+                }
+                curl_mime_data(part,tmpStr,buffer_size);
+                break;
+            }
+            case FILE_HTTP_OPT:
+            {
+                Tcl_Size data_l;
+                curl_mime_filedata(part,Tcl_GetStringFromObj(httpPostData[++arg_p],&data_l));
+                break;
+            }
+            case CONTENTTYPE_HTTP_OPT:
+            {
+                Tcl_Size data_l;
+                curl_mime_type(part,Tcl_GetStringFromObj(httpPostData[++arg_p],&data_l));
+                break;
+            }
+            case CONTENTHEADER_HTTP_OPT:
+            {
+                break;
+            }
+            case BUFFERNAME_HTTP_OPT:
+            case FILENAME_HTTP_OPT:
+            {
+                Tcl_Size data_l;
+                curl_mime_filename(part,Tcl_GetStringFromObj(httpPostData[++arg_p],&data_l));
+                break;
+            }
+            case BUFFER_HTTP_OPT:
+            {
+                Tcl_Size    tcl_buffer_l;
+                size_t      buffer_size;
+                const char* tmpStr;
+
+                tmpStr = (const char *) Tcl_GetByteArrayFromObj(httpPostData[++arg_p],&tcl_buffer_l);
+                if (TclCurl_TclSize2SizeT(tcl_buffer_l,&buffer_size) == 0) {
+                    curlErrorSetOpt(coa->interp,configTable,coa->tableIndex,"Inconsistent buffer size");
+                    return TCL_ERROR;
+                }
+
+                curl_mime_data(part,tmpStr,buffer_size);
+                break;
+            }
+            case FILECONTENT_HTTP_OPT:
+            {
+                //Tcl_Size data_l;
+                //curl_mime_data_cb(part,curlstrdup(Tcl_GetStringFromObj(httpPostData[++arg_p],&data_l),data_l),
+                break;
+            }
+        }
+
+        arg_p++;
+    }
+
+    return TCL_OK;
+}
+#else
 int
 TclCurl_HandleHttpPost(TclCurlOptsArgs *args)
 {
@@ -260,3 +372,4 @@ TclCurl_HandleHttpPost(TclCurlOptsArgs *args)
     }
     return TCL_OK;
 }
+#endif
