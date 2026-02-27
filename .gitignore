@@ -10,3 +10,4 @@ pkgIndex.tcl
 tags
 *.swp
 autom4te.cache
+.gdb_history
