@@ -57,6 +57,7 @@ struct MemoryStruct {
     size_t size;
 };
 
+#ifdef CURL_PRE_7_56_DEPR
 /* 
  * Struct that will be used for a linked list with all the
  * data for a post
@@ -66,6 +67,7 @@ struct formArrayStruct {
     struct curl_slist       *formHeaderList;
     struct formArrayStruct  *next;
 };
+#endif
 
 struct curlObjData {
     CURL                   *curl;
@@ -78,7 +80,6 @@ struct curlObjData {
     struct curl_slist      *postquote;
     struct curl_httppost   *postListFirst;
     struct curl_httppost   *postListLast;
-    struct formArrayStruct *formArray;
     char                   *outFile;
     FILE                   *outHandle;
     int                     outFlag;
@@ -117,7 +118,9 @@ struct curlObjData {
     char                   *fnmatchProc;
     struct curl_slist      *resolve;
     struct curl_slist      *telnetoptions;
-#ifdef  CURL7_56_ADDPART
+#ifdef CURL_PRE_7_56_DEPR
+    struct formArrayStruct *formArray;
+#else
     curl_mime*              mime;
 #endif
 };
@@ -184,32 +187,21 @@ size_t curlsshkeycallback(CURL *easy,                        /* easy handle */
                           enum curl_khmatch,                 /* libcurl's view on the keys */
                           void *curlData);
 
-int curlDebugProcInvoke(CURL *curlHandle, curl_infotype infoType,
-        char * dataPtr, size_t size, void  *curlData);
-
-int curlVersion (ClientData clientData, Tcl_Interp *interp,
-    int objc,Tcl_Obj *const objv[]);
-
-int curlEscape(ClientData clientData, Tcl_Interp *interp,
-    int objc,Tcl_Obj *const objv[]);
-
-int curlUnescape(ClientData clientData, Tcl_Interp *interp,
-    int objc,Tcl_Obj *const objv[]);
-
-int curlVersionInfo (ClientData clientData, Tcl_Interp *interp,
-    int objc,Tcl_Obj *const objv[]);
-
-int curlCopyCurlData (struct curlObjData *curlDataOld,
-                      struct curlObjData *curlDataNew);
-
+int curlDebugProcInvoke(CURL *curlHandle, curl_infotype infoType, char * dataPtr, size_t size, void  *curlData);
+int curlVersion (ClientData clientData, Tcl_Interp *interp,int objc,Tcl_Obj *const objv[]);
+int curlEscape(ClientData clientData, Tcl_Interp *interp,int objc,Tcl_Obj *const objv[]);
+int curlUnescape(ClientData clientData, Tcl_Interp *interp,int objc,Tcl_Obj *const objv[]);
+int curlVersionInfo (ClientData clientData, Tcl_Interp *interp,int objc,Tcl_Obj *const objv[]);
+int curlCopyCurlData (struct curlObjData *curlDataOld,struct curlObjData *curlDataNew);
 int curlOpenFile(Tcl_Interp *interp,char *fileName, FILE **handle, int writing, int text);
-
 int  curlOpenFiles (Tcl_Interp *interp,struct curlObjData *curlData);
 void curlCloseFiles(struct curlObjData *curlData);
-
 int curlSetPostData(Tcl_Interp *interp,struct curlObjData *curlData);
 void curlResetPostData(struct curlObjData *curlDataPtr);
+
+#ifdef CURL_PRE_7_56_DEPR
 void curlResetFormArray(struct curl_forms *formArray);
+#endif
 
 void curlSetBodyVarName(Tcl_Interp *interp,struct curlObjData *curlDataPtr);
 char *curlstrdup (char *old);

@@ -483,11 +483,11 @@ curlPerform(Tcl_Interp *interp,CURL *curlHandle,struct curlObjData *curlData) {
 int
 SetoptsList(Tcl_Interp *interp,struct curl_slist **slistPtr,Tcl_Obj *CONST objv) {
     Tcl_Size      i,headerNumber;
-    Tcl_Obj     **headers;
+    Tcl_Obj**     headers;
 
-    if (slistPtr!=NULL) {
+    if (slistPtr != NULL) {
         curl_slist_free_all(*slistPtr);
-        *slistPtr=NULL;
+        *slistPtr = NULL;
     }
 
     if (Tcl_ListObjGetElements(interp,objv,&headerNumber,&headers) == TCL_ERROR) {
@@ -495,8 +495,8 @@ SetoptsList(Tcl_Interp *interp,struct curl_slist **slistPtr,Tcl_Obj *CONST objv)
     }
 
     for (i=0;i<headerNumber;i++) {
-       *slistPtr=curl_slist_append(*slistPtr,Tcl_GetString(headers[i]));
-        if (slistPtr==NULL) {
+       *slistPtr = curl_slist_append(*slistPtr,Tcl_GetString(headers[i]));
+        if (slistPtr == NULL) {
             return 1;
         }
     }
@@ -1590,10 +1590,8 @@ curlCopyCurlData (struct curlObjData *curlDataOld,
     curlDataNew->quote=NULL;
     curlDataNew->prequote=NULL;
     curlDataNew->postquote=NULL;
-    curlDataNew->formArray=NULL;
     curlDataNew->postListFirst=NULL;
     curlDataNew->postListLast=NULL;
-    curlDataNew->formArray=NULL;
     curlDataNew->outHandle=NULL;
     curlDataNew->outFlag=0;
     curlDataNew->inHandle=NULL;
@@ -1606,6 +1604,9 @@ curlCopyCurlData (struct curlObjData *curlDataOld,
     curlDataNew->mailrcpt=NULL;
     curlDataNew->resolve=NULL;
     curlDataNew->telnetoptions=NULL;
+#ifdef CURL_PRE_7_56_DEPR
+    curlDataNew->formArray=NULL;
+#endif
 
     /* The strings need a special treatment. */
 

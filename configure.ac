@@ -17,7 +17,7 @@ dnl	to configure the system for the local environment.
 # so you can encode the package version directly into the source files.
 #-----------------------------------------------------------------------
 
-AC_INIT([TclCurl],[7.23.0],[m4_esyscmd_s([cat VERSION])],[massimo.manghi@rivetweb.org],[tclcurl-ng])
+AC_INIT([TclCurl],[m4_esyscmd_s([cat VERSION])],[massimo.manghi@rivetweb.org],[tclcurl-ng])
 
 #--------------------------------------------------------------------
 # Call TEA_INIT as the first TEA_ macro to set up initial vars.
@@ -247,14 +247,100 @@ TEA_MAKE_LIB
 TEA_PROG_TCLSH
 #TEA_PROG_WISH
 
+#--------------------------------------------------------------------
+# Temporary support for old code that still uses deprecated options
+# and mechanisms
+#--------------------------------------------------------------------
+
+dnl ----------------------------------------------------------------------
+dnl CURL_ENABLE_DEPRECATED_CODE
+dnl
+dnl Usage (in configure.ac):
+dnl   AC_CONFIG_HEADERS([config.h])
+dnl   CURL_ENABLE_DEPRECATED_CODE
+dnl ----------------------------------------------------------------------
+AC_DEFUN([CURL_ENABLE_DEPRECATED_CODE], [
+  dnl Make sure symbols have descriptions even if conditionally defined
+  AH_TEMPLATE([CURL_PRE_7_56_DEPR],
+    [Define to 1 to enable deprecated code for CURL versions prior to 7.56.])
+  AH_TEMPLATE([CURL_PRE_7_84_DEPR],
+    [Define to 1 to enable deprecated code for CURL versions prior to 7.84.])
+  AH_TEMPLATE([CURL_PRE_7_11_1_DEPR],
+    [Define to 1 to enable deprecated code for CURL versions prior to 7.11.1.])
+
+  AC_ARG_ENABLE([deprecated-code],
+    [AS_HELP_STRING(
+      [--enable-deprecated-code=LIST],
+      [Enable deprecated code for selected CURL versions. LIST is a comma-separated list of: v7.56,v7.84,v7.11.1. Use --enable-deprecated-code (or =all) to enable all; default is none.]
+    )],
+    [curl_depr_list=$enableval],
+    [curl_depr_list=no]
+  )
+
+  curl_pre_7_56_depr=no
+  curl_pre_7_84_depr=no
+  curl_pre_7_11_1_depr=no
+
+  AS_CASE([$curl_depr_list],
+    [no|false|none], [:],
+    [yes|true|all], [
+      curl_pre_7_56_depr=yes
+      curl_pre_7_84_depr=yes
+      curl_pre_7_11_1_depr=yes
+    ],
+    [*], [
+      dnl Remove spaces/tabs around commas etc. (portable enough for configure)
+      curl_depr_list=`AS_ECHO(["$curl_depr_list"]) | tr -d '	 '`
+
+      dnl Empty list means "enable none"
+      if test "x$curl_depr_list" != x; then
+        curl_depr_words=`AS_ECHO(["$curl_depr_list"]) | tr ',' ' '`
+        for curl_ver in $curl_depr_words; do
+          dnl Accept optional leading "v"
+          curl_ver=${curl_ver#v}
+
+          AS_CASE([$curl_ver],
+            [7.56],   [curl_pre_7_56_depr=yes],
+            [7.84],   [curl_pre_7_84_depr=yes],
+            [7.11.1], [curl_pre_7_11_1_depr=yes],
+            [*],      [AC_MSG_ERROR(
+                         [Unsupported value '$curl_ver' for --enable-deprecated-code. Allowed: v7.56,v7.84,v7.11.1]
+                       )]
+          )
+        done
+      fi
+    ]
+  )
+
+  if test "x$curl_pre_7_56_depr" = xyes; then
+    AC_DEFINE([CURL_PRE_7_56_DEPR], [1])
+  fi
+  if test "x$curl_pre_7_84_depr" = xyes; then
+    AC_DEFINE([CURL_PRE_7_84_DEPR], [1])
+  fi
+  if test "x$curl_pre_7_11_1_depr" = xyes; then
+    AC_DEFINE([CURL_PRE_7_11_1_DEPR], [1])
+  fi
+
+  dnl Optional: show what was enabled
+  curl_depr_enabled=
+  test "x$curl_pre_7_56_depr" = xyes   && curl_depr_enabled="$curl_depr_enabled v7.56"
+  test "x$curl_pre_7_84_depr" = xyes   && curl_depr_enabled="$curl_depr_enabled v7.84"
+  test "x$curl_pre_7_11_1_depr" = xyes && curl_depr_enabled="$curl_depr_enabled v7.11.1"
+  test "x$curl_depr_enabled" = x && curl_depr_enabled="none"
+
+  AC_MSG_NOTICE([deprecated curl code enabled for: $curl_depr_enabled])
+])
+
 # Tcl9 defines MODULE_SCOPE, but autotools override it, so we try
 # to prevent to have warnings for preprocessor symbols being redefined
 
-AH_BOTTOM([[
-#ifdef MODULE_SCOPE
+AH_BOTTOM([#ifdef MODULE_SCOPE
 # undef MODULE_SCOPE
 #endif
-]])
+])
+
+CURL_ENABLE_DEPRECATED_CODE
 
 #--------------------------------------------------------------------
 # Finally, substitute all of the various values into the Makefile.

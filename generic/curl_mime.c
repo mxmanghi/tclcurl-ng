@@ -11,7 +11,6 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  */
-#define CURL7_56_ADDPART 1
 
 #include "tclcurl.h"
 #include "curl_mime.h"
@@ -50,12 +49,12 @@ TclCurl_SetPostData(Tcl_Interp *interp,struct curlObjData *curlDataPtr) {
 
     if (curlDataPtr->postListFirst != NULL) {
         if (curl_easy_setopt(curlDataPtr->curl,CURLOPT_MIMEPOST,curlDataPtr->postListFirst)) {
-#ifdef  CURL7_56_ADDPART
+#ifdef  CURL_PRE_7_56_DEPR
+            curl_formfree(curlDataPtr->postListFirst);
+#else
             if (curlDataPtr->mime != NULL) {
                 curl_mime_free(curlDataPtr->mime);
             }
-#else
-            curl_formfree(curlDataPtr->postListFirst);
 #endif
             errorMsgObjPtr = Tcl_NewStringObj("Error setting the data to post",-1);
             Tcl_SetObjResult(interp,errorMsgObjPtr);
@@ -77,9 +76,7 @@ TclCurl_SetPostData(Tcl_Interp *interp,struct curlObjData *curlDataPtr) {
  *----------------------------------------------------------------------
  */
 
-#ifdef  CURL7_56_ADDPART
-       void TclCurl_ResetPostData(struct curlObjData *curlDataPtr) { }
-#else
+#ifdef CURL_PRE_7_56_DEPR
 void
 TclCurl_ResetPostData(struct curlObjData *curlDataPtr) {
     struct formArrayStruct *tmpPtr;
@@ -136,6 +133,8 @@ TclCurl_ResetFormArray(struct curl_forms *formArray) {
     }
     Tcl_Free((char *)formArray);
 }
+#else
+void TclCurl_ResetPostData(struct curlObjData *curlDataPtr) { }
 #endif
 
 /*----------------------------------------------------------------------
@@ -148,11 +147,10 @@ TclCurl_ResetFormArray(struct curl_forms *formArray) {
  *  formArray: A pointer to the array to clean up.
  *----------------------------------------------------------------------
  */
-#ifdef  CURL7_56_ADDPART
+#ifndef CURL_PRE_7_56_DEPR
 int TclCurl_HandleHttpPost(TclCurlOptsArgs *coa)
 {
-    //Tcl_Obj*        resultObjPtr;
-    curl_mime*      mime;
+    //Tcl_Obj*      resultObjPtr;
     curl_mimepart*  part;
     Tcl_Size        post_data_numel;
     Tcl_Obj**       httpPostData;
@@ -163,8 +161,8 @@ int TclCurl_HandleHttpPost(TclCurlOptsArgs *coa)
         return TCL_ERROR;
     }
 
-    mime = curl_mime_init(coa->curlData->curl);
-    part = curl_mime_addpart(mime);
+    coa->curlData->mime = curl_mime_init(coa->curlData->curl);
+    part = curl_mime_addpart(coa->curlData->mime);
 
     while (arg_p < post_data_numel)
     {
@@ -210,6 +208,14 @@ int TclCurl_HandleHttpPost(TclCurlOptsArgs *coa)
             }
             case CONTENTHEADER_HTTP_OPT:
             {
+                struct curl_slist* curl_content_headers_l = NULL;
+
+                if(SetoptsList(coa->interp,&curl_content_headers_l,httpPostData[++arg_p])) {
+                    curlErrorSetOpt(coa->interp,configTable,coa->tableIndex,"Header list invalid");
+                    return TCL_ERROR;
+                }
+
+                curl_mime_headers(part,curl_content_headers_l,1);
                 break;
             }
             case BUFFERNAME_HTTP_OPT:

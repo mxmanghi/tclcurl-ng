@@ -16,7 +16,7 @@
 #endif
 
 /*
- * The optionTable array is built straight from the X-macro defined
+ * The optionTable array is built straight from the X-macro
  * table data defined in curl_setopts.h
  */
 
@@ -1702,7 +1702,7 @@ TclCurl_HandleTelnetOptions(TclCurlOptsArgs *args)
     if (curl_easy_setopt(curlHandle,CURLOPT_TELNETOPTIONS,args->curlData->telnetoptions)) {
         curlErrorSetOpt(args->interp,configTable,args->tableIndex,"telnetoptions list invalid");
         curl_slist_free_all(args->curlData->telnetoptions);
-        args->curlData->telnetoptions=NULL;
+        args->curlData->telnetoptions = NULL;
         return TCL_ERROR;
     }
     return TCL_OK;

@@ -1,5 +1,5 @@
 /*
- *
+ * curl_setopts.h
  *
  */
 
@@ -7,6 +7,20 @@
 #define __curl_setopts_h__
 
 #include "curl_mime.h"
+
+#ifdef CURL_PRE_7_84_DEPR
+#define TCLCURL_OPTION_LIST_PRE_7_84_DEPR(entry) entry
+#else
+#define TCLCURL_OPTION_LIST_PRE_7_84_DEPR(entry) \
+
+#endif
+
+#ifdef CURL_PRE_7_11_1_DEPR
+#define TCLCURL_OPTION_LIST_PRE_7_11_1_DEPR(entry) entry
+#else
+#define TCLCURL_OPTION_LIST_PRE_7_11_1_DEPR(entry) \
+
+#endif
 
 #define TCLCURL_OPTION_LIST(X) \
     X(TCLCURLOPT_URL,"CURLOPT_URL","-url",TclCurl_HandleSetoptChar,CURLOPT_URL,NULL) \
@@ -66,8 +80,8 @@
     X(TCLCURLOPT_MAXREDIRS,"CURLOPT_MAXREDIRS","-maxredirs",TclCurl_HandleSetoptLong,CURLOPT_MAXREDIRS,NULL) \
     X(TCLCURLOPT_MAXCONNECTS,"CURLOPT_MAXCONNECTS","-maxconnects",TclCurl_HandleSetoptLong, CURLOPT_MAXCONNECTS, NULL) \
     X(TCLCURLOPT_CLOSEPOLICY, "CURLOPT_CLOSEPOLICY", "-closepolicy", TclCurl_HandleObsolete, 0, "option is obsolete") \
-    X(TCLCURLOPT_RANDOM_FILE, "CURLOPT_RANDOM_FILE", "-randomfile", TclCurl_HandleSetoptChar, CURLOPT_RANDOM_FILE, NULL) \
-    X(TCLCURLOPT_EGDSOCKET, "CURLOPT_EGDSOCKET", "-egdsocket", TclCurl_HandleSetoptChar, CURLOPT_EGDSOCKET, NULL) \
+    TCLCURL_OPTION_LIST_PRE_7_84_DEPR(X(TCLCURLOPT_RANDOM_FILE, "CURLOPT_RANDOM_FILE", "-randomfile", TclCurl_HandleSetoptChar, CURLOPT_RANDOM_FILE, NULL)) \
+    TCLCURL_OPTION_LIST_PRE_7_84_DEPR(X(TCLCURLOPT_EGDSOCKET, "CURLOPT_EGDSOCKET", "-egdsocket", TclCurl_HandleSetoptChar, CURLOPT_EGDSOCKET, NULL)) \
     X(TCLCURLOPT_CONNECTTIMEOUT, "CURLOPT_CONNECTTIMEOUT", "-connecttimeout", TclCurl_HandleSetoptLong, CURLOPT_CONNECTTIMEOUT, NULL) \
     X(TCLCURLOPT_NOPROGRESS, "CURLOPT_NOPROGRESS", "-noprogress", TclCurl_HandleSetoptLong, CURLOPT_NOPROGRESS, NULL) \
     X(TCLCURLOPT_HEADERVAR, "CURLOPT_HEADERVAR", "-headervar", TclCurl_HandleHeaderVar, 0, NULL) \
@@ -90,7 +104,7 @@
     X(TCLCURLOPT_PREQUOTE, "CURLOPT_PREQUOTE", "-prequote", TclCurl_HandlePrequoteList, 0, NULL) \
     X(TCLCURLOPT_DEBUGPROC, "CURLOPT_DEBUGPROC", "-debugproc", TclCurl_HandleDebugProc, 0, NULL) \
     X(TCLCURLOPT_DNS_CACHE_TIMEOUT, "CURLOPT_DNS_CACHE_TIMEOUT", "-dnscachetimeout", TclCurl_HandleSetoptLong, CURLOPT_DNS_CACHE_TIMEOUT, NULL) \
-    X(TCLCURLOPT_DNS_USE_GLOBAL_CACHE,"CURLOPT_DNS_USE_GLOBAL_CACHE","-dnsuseglobalcache",TclCurl_HandleSetoptLong,CURLOPT_DNS_USE_GLOBAL_CACHE,NULL) \
+    TCLCURL_OPTION_LIST_PRE_7_11_1_DEPR(X(TCLCURLOPT_DNS_USE_GLOBAL_CACHE,"CURLOPT_DNS_USE_GLOBAL_CACHE","-dnsuseglobalcache",TclCurl_HandleSetoptLong,CURLOPT_DNS_USE_GLOBAL_CACHE,NULL)) \
     X(TCLCURLOPT_COOKIESESSION, "CURLOPT_COOKIESESSION", "-cookiesession", TclCurl_HandleSetoptLong, CURLOPT_COOKIESESSION, NULL) \
     X(TCLCURLOPT_CAPATH, "CURLOPT_CAPATH", "-capath", TclCurl_HandleSetoptChar, CURLOPT_CAPATH, NULL) \
     X(TCLCURLOPT_BUFFERSIZE, "CURLOPT_BUFFERSIZE", "-buffersize", TclCurl_HandleSetoptLong, CURLOPT_BUFFERSIZE, NULL) \
