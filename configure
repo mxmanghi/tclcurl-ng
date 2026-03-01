@@ -9424,7 +9424,7 @@ fi
   curl_pre_7_11_1_depr=no
 
   case $curl_depr_list in #(
-  no|false) :
+  no|false|none) :
     : ;; #(
   yes|true|all) :
 

@@ -47,20 +47,26 @@ int
 TclCurl_SetPostData(Tcl_Interp *interp,struct curlObjData *curlDataPtr) {
     Tcl_Obj *errorMsgObjPtr;
 
+#ifdef CURL_PRE_7_56_DEPR
     if (curlDataPtr->postListFirst != NULL) {
         if (curl_easy_setopt(curlDataPtr->curl,CURLOPT_MIMEPOST,curlDataPtr->postListFirst)) {
-#ifdef  CURL_PRE_7_56_DEPR
             curl_formfree(curlDataPtr->postListFirst);
-#else
-            if (curlDataPtr->mime != NULL) {
-                curl_mime_free(curlDataPtr->mime);
-            }
-#endif
             errorMsgObjPtr = Tcl_NewStringObj("Error setting the data to post",-1);
             Tcl_SetObjResult(interp,errorMsgObjPtr);
             return TCL_ERROR;
         }
     }
+#else
+    if (curlDataPtr->mime != NULL) {
+        if (curl_easy_setopt(curlDataPtr->curl,CURLOPT_MIMEPOST,curlDataPtr->mime)) {
+            curl_mime_free(curlDataPtr->mime);
+            curlDataPtr->mime = NULL;
+            errorMsgObjPtr = Tcl_NewStringObj("Error setting the data to post",-1);
+            Tcl_SetObjResult(interp,errorMsgObjPtr);
+            return TCL_ERROR;
+        }
+    }
+#endif
     return TCL_OK;
 }
 
@@ -134,7 +140,14 @@ TclCurl_ResetFormArray(struct curl_forms *formArray) {
     Tcl_Free((char *)formArray);
 }
 #else
-void TclCurl_ResetPostData(struct curlObjData *curlDataPtr) { }
+void
+TclCurl_ResetPostData(struct curlObjData *curlDataPtr) {
+    if (curlDataPtr->mime != NULL) {
+        curl_mime_free(curlDataPtr->mime);
+        curlDataPtr->mime = NULL;
+    }
+    curl_easy_setopt(curlDataPtr->curl,CURLOPT_MIMEPOST,NULL);
+}
 #endif
 
 /*----------------------------------------------------------------------
@@ -161,8 +174,18 @@ int TclCurl_HandleHttpPost(TclCurlOptsArgs *coa)
         return TCL_ERROR;
     }
 
-    coa->curlData->mime = curl_mime_init(coa->curlData->curl);
+    if (coa->curlData->mime == NULL) {
+        coa->curlData->mime = curl_mime_init(coa->curlData->curl);
+        if (coa->curlData->mime == NULL) {
+            curlErrorSetOpt(coa->interp,configTable,coa->tableIndex,"Could not initialize MIME data");
+            return TCL_ERROR;
+        }
+    }
     part = curl_mime_addpart(coa->curlData->mime);
+    if (part == NULL) {
+        curlErrorSetOpt(coa->interp,configTable,coa->tableIndex,"Could not append MIME part");
+        return TCL_ERROR;
+    }
 
     while (arg_p < post_data_numel)
     {

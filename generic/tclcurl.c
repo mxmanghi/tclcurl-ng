@@ -1213,6 +1213,11 @@ curlFreeSpace(struct curlObjData *curlData) {
     Tcl_Free(curlData->fnmatchProc);
     curl_slist_free_all(curlData->resolve);
     curl_slist_free_all(curlData->telnetoptions);
+#ifndef CURL_PRE_7_56_DEPR
+    if (curlData->mime != NULL) {
+        curl_mime_free(curlData->mime);
+    }
+#endif
 
     Tcl_Free(curlData->command);
 }
@@ -1606,6 +1611,8 @@ curlCopyCurlData (struct curlObjData *curlDataOld,
     curlDataNew->telnetoptions=NULL;
 #ifdef CURL_PRE_7_56_DEPR
     curlDataNew->formArray=NULL;
+#else
+    curlDataNew->mime=NULL;
 #endif
 
     /* The strings need a special treatment. */
