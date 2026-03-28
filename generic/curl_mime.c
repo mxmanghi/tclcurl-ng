@@ -163,7 +163,6 @@ TclCurl_ResetPostData(struct curlObjData *curlDataPtr) {
 #ifndef CURL_PRE_7_56_DEPR
 int TclCurl_HandleHttpPost(TclCurlOptsArgs *coa)
 {
-    //Tcl_Obj*      resultObjPtr;
     curl_mimepart*  part;
     Tcl_Size        post_data_numel;
     Tcl_Obj**       httpPostData;

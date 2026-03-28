@@ -1,25 +1,29 @@
+2026-03-28 Massimo Manghi <massimo.manghi@rivetweb.org>
+	* generic/curl_setopts.c: adhere to better code standards by removing empty lines
+
+
 2026-02-01 Massimo Manghi <massimo.manghi@rivetweb.org>
-    * generic/tclcurl.c: fundamental revisions. Code subdivided into modules, adoption
-    of X-macro patterns in order to have option tables controlled by data rather than
-    long switch...case construct, removing obsolete macros
+	* generic/tclcurl.c: fundamental revisions. Code subdivided into modules, adoption
+	of X-macro patterns in order to have option tables controlled by data rather than
+	long switch...case construct, removing obsolete macros
 
 2011-10-03 Andres Garcia <fandom@telefonica.net>
 
-    * Release version 7.22.0
+	* Release version 7.22.0
 
 2011-10-01 Andres Garcia <fandom@telefonica.net>
 
-    * generic/tclcurl.c: Fix 'bodyvar' bug.
+	* generic/tclcurl.c: Fix 'bodyvar' bug.
 
 2011-09-29 Andres Garcia <fandom@telefonica.net>
 
-    * generic/tclcurl.h,
-      generic/tclcurl.c: Added support for CURLAUTH_NTLM_WB, and CURLOPT_TELNETOPTIONS.
+	* generic/tclcurl.h,
+	  generic/tclcurl.c: Added support for CURLAUTH_NTLM_WB, and CURLOPT_TELNETOPTIONS.
 
 2011-09-29 Andres Garcia <fandom@telefonica.net>
 
-    * generic/tclcurl.h,
-      generic/tclcurl.c,
+	* generic/tclcurl.h,
+	  generic/tclcurl.c,
       tests/getInfo.tcl: Added support for the 'getinfo' options CURLINFO_PRIMARY_PORT,
       CURLINFO_LOCAL_IP and CURLINFO_LOCAL_PORT
 
