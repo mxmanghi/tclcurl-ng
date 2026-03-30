@@ -4,11 +4,17 @@ package require tcltest
 
 ::tcltest::configure -testdir [file dirname [file normalize [info script]]]
 
+source [file join [file dirname [file normalize [info script]]] support.tcl]
+
+::tclcurl::test::loadPackage
+
+namespace import ::tcltest::*
+
 # The following will be upleveled and run whenever a test calls
 # ::tcltest::loadTestedCommands
 ::tcltest::configure -load {
-
-	namespace import ::tcltest::*
+    ::tclcurl::test::loadPackage
+    namespace import ::tcltest::*
 }
 
 ::tcltest::skipFiles [list]
@@ -21,11 +27,26 @@ proc tcltest::cleanupTestsHook {} {
         set ::exitCode [expr {$numTests(Failed) > 0}]
 }
 
-
+set tcltestArgv {}
+for {set i 0} {$i < [llength $argv]} {incr i} {
+        set arg [lindex $argv $i]
+        if {$arg eq "-httpserver"} {
+                incr i
+                if {$i >= [llength $argv]} {
+                        error "missing path after -httpserver"
+                }
+                ::tclcurl::test::setHttpServerScript [lindex $argv $i]
+                continue
+        }
+        lappend tcltestArgv $arg
+}
 
 # Allow command line arguments to be passed to the configure command
 # This supports only running a single test or a single test file
-::tcltest::configure {*}$argv
+if {[lsearch -exact $tcltestArgv -verbose] < 0} {
+        ::tcltest::configure -verbose {start error}
+}
+::tcltest::configure {*}$tcltestArgv
 
 ::tcltest::runAllTests
 
@@ -35,4 +56,3 @@ if {$exitCode == 1} {
 } else {
         puts "====== SUCCESS ====="
 }
-

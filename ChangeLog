@@ -1,6 +1,12 @@
+2026-03-30 Massimo Manghi <massimo.manghi@rivetweb.org>
+    * tests/legacy/: moving old test file into this directory while I'm trying to
+    implement a new test suite
+    * tests/all.tcl: now a real hub for tests
+    * tests/http_server.tcl: A tiny webserver taylored for the test suite
+    * tests/http.tcl: initial set of HTTP features being tested
+
 2026-03-28 Massimo Manghi <massimo.manghi@rivetweb.org>
 	* generic/curl_setopts.c: adhere to better code standards by removing empty lines
-
 
 2026-02-01 Massimo Manghi <massimo.manghi@rivetweb.org>
 	* generic/tclcurl.c: fundamental revisions. Code subdivided into modules, adoption
