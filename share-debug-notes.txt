@@ -1,0 +1,74 @@
+Shared cURL handle debugging note
+
+Date: 2026-03-31
+
+Problem reported
+
+- `curlShareUnLockFunc` was reached during `perform` on a shared DNS object, but the corresponding mutex had never been locked.
+- The suspected cause was that `curlShareLockFunc` was never being invoked for that path.
+
+What was confirmed
+
+- In `generic/tclcurl.c`, `curl::shareinit` registered `CURLSHOPT_LOCKFUNC` twice.
+- The second registration used `curlShareUnLockFunc`, so it overwrote the actual lock callback.
+- That means libcurl could call the unlock callback without TclCurl ever having installed the lock callback correctly.
+
+Code changes already made in this workspace
+
+- Fixed share callback registration in `generic/tclcurl.c`:
+  - `CURLSHOPT_LOCKFUNC -> curlShareLockFunc`
+  - `CURLSHOPT_UNLOCKFUNC -> curlShareUnLockFunc`
+- Added share ownership tracking between easy handles and share handles:
+  - `struct curlObjData` now tracks the attached share token and next linked user
+  - `struct shcurlObjData` now tracks the list of attached easy handles
+- Added detach logic so easy handles release the share association on cleanup/reset
+- Updated `-share` option handling in `generic/curl_setopts.c` to keep Tcl-side ownership tracking in sync with libcurl's `CURLOPT_SHARE`
+- Prevented `$share cleanup` while the share is still attached to one or more easy handles
+- Added regression test in `tests/http.test` for rejecting cleanup of an in-use share handle
+
+Important verification result
+
+- `make` succeeded after the edits.
+- Running `tclsh tests/all.tcl -file http.test` inside the sandbox skipped all HTTP tests because no local test server was reachable there.
+- After starting the local test server outside the sandbox and rerunning the HTTP tests outside the sandbox, execution reached `http-1.8` and then segfaulted.
+
+Critical finding about the segfault
+
+- The gdb backtrace showed the crash was not using the freshly built local extension.
+- The reproducer was loading the system-installed TclCurl:
+  - `/usr/lib/tcltk/TclCurl7.22.1/libTclCurl7.22.1.so`
+- The backtrace ended in:
+  - `curlPerform()` from the installed TclCurl
+  - then libcurl crashing in pthread mutex unlock
+- This happened because the reproducer used `/usr/bin/tclsh` (Tcl 8.6), while the local build tree currently provides:
+  - `/tmp/tcl/bin/tclsh9.0`
+  - `libtcl9TclCurl8.0.0.so`
+- `tests/support.tcl` only loads build-tree libraries matching the running Tcl major version, so Tcl 8.6 fell back to the installed package instead of the local patched build.
+
+Exact next step
+
+- Re-run the minimal reproduction and/or `tests/all.tcl -file http.test` with `/tmp/tcl/bin/tclsh9.0` so the patched local build is actually loaded.
+
+Useful commands
+
+- Start server:
+  - `tclsh tests/testserver.tcl`
+- Run the HTTP tests against the local server with Tcl 9:
+  - `env TCLCURL_TEST_HTTP_BASE_URL=http://127.0.0.1:8990/ /tmp/tcl/bin/tclsh9.0 tests/all.tcl -file http.test`
+- Run the minimal repro with Tcl 9:
+  - `env TCLCURL_TEST_HTTP_BASE_URL=http://127.0.0.1:8990/ /tmp/tcl/bin/tclsh9.0 tests/repro_share.tcl`
+
+Files changed during this debugging session
+
+- `generic/tclcurl.h`
+- `generic/tclcurl.c`
+- `generic/curl_setopts.c`
+- `tests/http.test`
+- `tests/repro_share.tcl`
+
+Note
+
+- The repo also had unrelated pre-existing modifications in:
+  - `tests/TESTING.md`
+  - `tests/all.tcl`
+  - `tests/support.tcl`

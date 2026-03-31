@@ -5,6 +5,8 @@ The repository now has two distinct kinds of files under `tests/`:
 - `*.test`: real `tcltest` test cases that are executed by `tests/all.tcl`
 - `legacy/*.tcl`: legacy example scripts that are useful as references, but are not part of the automated suite
 
+*Last update: 2026-03-31*
+
 ## Running the suite
 
 `tests/all.tcl` now tries to load TclCurl from the build tree first and falls back to an installed package if needed.
@@ -20,7 +22,8 @@ For the HTTP test integration, set these variables before running `make test` or
 
 - `TCLCURL_TEST_HTTP_BASE_URL`: base URL for the running curl HTTP server, default `http://127.0.0.1:8990/`
 - `TCLCURL_TEST_BASE_URL`: generic fallback when the protocol-specific variable is not set
-- `TCLCURL_TEST_HTTP_SERVER_SCRIPT`: path to the Tcl test server framework script, used when no `-httpserver` CLI override is given; default `tests/testserver.tcl`
+- `TCLCURL_TEST_HTTP_SERVER_SCRIPT`: path to the Tcl test server framework script, 
+                                     used when no `-httpserver` CLI override is given; default `tests/testserver.tcl`
 
 You can run the default Tcl test server framework directly with:
 
@@ -68,4 +71,5 @@ The curl Perl tests include scenarios that need more than a single HTTP base URL
 - cases that need specific response scripts from `curl/tests/data`
 - feature-conditional cases such as HTTP/2, HTTP/3, TLS auth, or compression variants that depend on the local libcurl build
 
-Those are good candidates for a second support layer that can map named curl test assets from `TCLCURL_CURL_ROOT/tests/http` or `tests/data` into Tcl fixtures instead of hard-coding endpoint paths in each test.
+Those are good candidates for a second support layer that can map named curl test assets from `CURL_ROOT/tests/http` or 
+`tests/data` into Tcl fixtures instead of hard-coding endpoint paths in each test.

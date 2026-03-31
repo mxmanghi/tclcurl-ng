@@ -365,22 +365,33 @@ SetoptBlob(Tcl_Interp *interp,CURL *curlHandle,
  *----------------------------------------------------------------------
  */
 int
-SetoptSHandle(Tcl_Interp *interp,CURL *curlHandle,
+SetoptSHandle(Tcl_Interp *interp,struct curlObjData *curlData,
         CURLoption opt,int tableIndex,Tcl_Obj *tclObj) {
     char                    *shandleName;
     Tcl_CmdInfo             *infoPtr=(Tcl_CmdInfo *)Tcl_Alloc(sizeof(Tcl_CmdInfo));
     struct shcurlObjData    *shandleDataPtr;
+    CURL                    *curlHandle = curlData->curl;
 
     shandleName=Tcl_GetString(tclObj);
     if (Tcl_GetCommandInfo(interp,shandleName,infoPtr) == 0) {
+        Tcl_Free((char *)infoPtr);
         return 1;
     }
     shandleDataPtr=(struct shcurlObjData *)(infoPtr->objClientData);
-    Tcl_Free((char *)infoPtr);
     if (curl_easy_setopt(curlHandle,opt,shandleDataPtr->shandle)) {
+        Tcl_Free((char *)infoPtr);
         curlErrorSetOpt(interp,configTable,tableIndex,shandleName);
         return 1;
     }
+    Tcl_Free((char *)infoPtr);
+
+    if (curlData->shareToken != shandleDataPtr->token) {
+        curlDetachShareHandle(curlData);
+        curlData->shareToken = shandleDataPtr->token;
+        curlData->nextSharedHandle = shandleDataPtr->users;
+        shandleDataPtr->users = curlData;
+    }
+
     return 0;
 }
 
@@ -545,9 +556,7 @@ TclCurl_HandleSetoptCurlOffT(TclCurlOptsArgs *args)
 static int
 TclCurl_HandleSetoptSHandle(TclCurlOptsArgs *args)
 {
-    CURL *curlHandle = args->curlData->curl;
-
-    if (SetoptSHandle(args->interp, curlHandle, args->def->curlOpt, args->tableIndex, args->objv)) {
+    if (SetoptSHandle(args->interp, args->curlData, args->def->curlOpt, args->tableIndex, args->objv)) {
         return TCL_ERROR;
     }
     return TCL_OK;

@@ -19,12 +19,12 @@ namespace import ::tcltest::*
 
 ::tcltest::skipFiles [list]
 
-
 # Hook to determine if any of the tests failed. Then we can exit with
 # proper exit code: 0=all passed, 1=one or more failed
+
 proc tcltest::cleanupTestsHook {} {
-        variable numTests
-        set ::exitCode [expr {$numTests(Failed) > 0}]
+    variable numTests
+    set ::exitCode [expr {$numTests(Failed) > 0}]
 }
 
 set tcltestArgv {}
@@ -51,8 +51,8 @@ if {[lsearch -exact $tcltestArgv -verbose] < 0} {
 ::tcltest::runAllTests
 
 if {$exitCode == 1} {
-        puts "====== FAIL ====="
-        exit $exitCode
+    puts "====== FAIL ====="
+    exit $exitCode
 } else {
-        puts "====== SUCCESS ====="
+    puts "====== SUCCESS ====="
 }

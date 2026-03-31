@@ -84,6 +84,55 @@ static const char* const commandTable[TCLCURL_CMD_COUNT] = {
 #undef X
 };
 
+static struct shcurlObjData *
+curlGetShareDataFromToken(Tcl_Command token)
+{
+    Tcl_CmdInfo info;
+
+    if ((token == NULL) || !Tcl_GetCommandInfoFromToken(token, &info)) {
+        return NULL;
+    }
+
+    return (struct shcurlObjData *) info.objClientData;
+}
+
+static void
+curlLinkEasyToShare(struct curlObjData *curlData, struct shcurlObjData *shcurlData)
+{
+    curlData->shareToken = shcurlData->token;
+    curlData->nextSharedHandle = shcurlData->users;
+    shcurlData->users = curlData;
+}
+
+void
+curlDetachShareHandle(struct curlObjData *curlData)
+{
+    struct shcurlObjData *shcurlData;
+    struct curlObjData **linkPtr;
+
+    if (curlData->shareToken == NULL) {
+        curlData->nextSharedHandle = NULL;
+        return;
+    }
+
+    if (curlData->curl != NULL) {
+        curl_easy_setopt(curlData->curl, CURLOPT_SHARE, NULL);
+    }
+
+    shcurlData = curlGetShareDataFromToken(curlData->shareToken);
+    if (shcurlData != NULL) {
+        for (linkPtr = &shcurlData->users; *linkPtr != NULL; linkPtr = &(*linkPtr)->nextSharedHandle) {
+            if (*linkPtr == curlData) {
+                *linkPtr = curlData->nextSharedHandle;
+                break;
+            }
+        }
+    }
+
+    curlData->shareToken = NULL;
+    curlData->nextSharedHandle = NULL;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -392,6 +441,7 @@ curlDeleteCmd(ClientData clientData) {
     struct curlObjData     *curlData=(struct curlObjData *)clientData;
     CURL                   *curlHandle=curlData->curl;
 
+    curlDetachShareHandle(curlData);
     curl_easy_cleanup(curlHandle);
     curlFreeSpace(curlData);
 
@@ -1260,10 +1310,21 @@ curlDupHandle(Tcl_Interp *interp, struct curlObjData *curlData,
     newCurlData=(struct curlObjData *)Tcl_Alloc(sizeof(struct curlObjData));
 
     curlCopyCurlData(curlData,newCurlData);
-
-    handleObj=curlCreateObjCmd(interp,newCurlData);
-
     newCurlData->curl=newCurlHandle;
+    if (newCurlData->shareToken != NULL) {
+        struct shcurlObjData *shcurlData = curlGetShareDataFromToken(newCurlData->shareToken);
+
+        if (shcurlData == NULL) {
+            curl_easy_cleanup(newCurlHandle);
+            curlFreeSpace(newCurlData);
+            Tcl_Free((char *) newCurlData);
+            result=Tcl_NewStringObj("Couldn't duplicate handle with deleted share handle.",-1);
+            Tcl_SetObjResult(interp,result);
+            return TCL_ERROR;
+        }
+        curlLinkEasyToShare(newCurlData, shcurlData);
+    }
+    handleObj=curlCreateObjCmd(interp,newCurlData);
 
     Tcl_SetObjResult(interp,handleObj);
 
@@ -1297,15 +1358,17 @@ curlResetHandle(Tcl_Interp *interp, struct curlObjData *curlData)  {
 
     tmpPtr->curl       = curlData->curl;
     tmpPtr->token      = curlData->token;
-    tmpPtr->shareToken = curlData->shareToken;
     tmpPtr->interp     = curlData->interp;
+    tmpPtr->shareToken = NULL;
+    tmpPtr->nextSharedHandle = NULL;
+
+    curlDetachShareHandle(curlData);
 
     curlFreeSpace(curlData);
     memset(curlData, 0, sizeof(struct curlObjData));
 
     curlData->curl       = tmpPtr->curl;
     curlData->token      = tmpPtr->token;
-    curlData->shareToken = tmpPtr->shareToken;
     curlData->interp     = tmpPtr->interp;
 
     curl_easy_reset(curlData->curl);
@@ -1897,7 +1960,7 @@ curlShareInitObjCmd (ClientData clientData, Tcl_Interp *interp,
         int objc,Tcl_Obj *const objv[]) {
 
     Tcl_Obj               *resultPtr;
-    CURL                  *shcurlHandle;
+    CURLSH                *shcurlHandle;
     struct shcurlObjData  *shcurlData;
     Tcl_Obj               *shandleObj;
 
@@ -1925,7 +1988,7 @@ curlShareInitObjCmd (ClientData clientData, Tcl_Interp *interp,
 
 #ifdef TCL_THREADS
     curl_share_setopt(shcurlHandle, CURLSHOPT_LOCKFUNC, curlShareLockFunc);
-    curl_share_setopt(shcurlHandle, CURLSHOPT_LOCKFUNC, curlShareUnLockFunc);
+    curl_share_setopt(shcurlHandle, CURLSHOPT_UNLOCKFUNC, curlShareUnLockFunc);
 #endif
 
     return TCL_OK;
@@ -2023,10 +2086,10 @@ curlShareUnLockFunc(CURL *handle, curl_lock_data data, void *userptr) {
  */
 int
 curlShareObjCmd (ClientData clientData, Tcl_Interp *interp,
-    int objc,Tcl_Obj *const objv[]) {
+                 int objc,Tcl_Obj *const objv[]) {
 
-    struct shcurlObjData     *shcurlData=(struct shcurlObjData *)clientData;
-    CURLSH                   *shcurlHandle=shcurlData->shandle;
+    struct shcurlObjData     *shcurlData = (struct shcurlObjData *)clientData;
+    CURLSH                   *shcurlHandle = shcurlData->shandle;
     int                       tableIndex, dataIndex;
     int                       dataToLock=0;
 
@@ -2047,18 +2110,18 @@ curlShareObjCmd (ClientData clientData, Tcl_Interp *interp,
                 return TCL_ERROR;
             }
             if (Tcl_GetIndexFromObj(interp, objv[2], lockData,
-                "data to lock ",TCL_EXACT,&dataIndex)==TCL_ERROR) {
+                                    "data to lock ",TCL_EXACT,&dataIndex) == TCL_ERROR) {
                 return TCL_ERROR;
             }
-            switch(dataIndex) {
+            switch (dataIndex) {
                 case 0:
-                    dataToLock=CURL_LOCK_DATA_COOKIE;
+                    dataToLock = CURL_LOCK_DATA_COOKIE;
                     break;
                 case 1:
-                    dataToLock=CURL_LOCK_DATA_DNS;
+                    dataToLock = CURL_LOCK_DATA_DNS;
                     break;
             }
-            if (tableIndex==0) {
+            if (tableIndex == 0) {
                 curl_share_setopt(shcurlHandle, CURLSHOPT_SHARE,   dataToLock);
             } else {
                 curl_share_setopt(shcurlHandle, CURLSHOPT_UNSHARE, dataToLock);
@@ -2067,6 +2130,11 @@ curlShareObjCmd (ClientData clientData, Tcl_Interp *interp,
         case 2:
             if (objc != 2) {
                 Tcl_WrongNumArgs(interp,2,objv,"");
+                return TCL_ERROR;
+            }
+            if (shcurlData->users != NULL) {
+                Tcl_SetObjResult(interp,
+                    Tcl_NewStringObj("Share handle is still attached to one or more easy handles.", -1));
                 return TCL_ERROR;
             }
             Tcl_DeleteCommandFromToken(interp,shcurlData->token);
@@ -2094,6 +2162,18 @@ int
 curlCleanUpShareCmd(ClientData clientData) {
     struct shcurlObjData     *shcurlData=(struct shcurlObjData *)clientData;
     CURLSH                   *shcurlHandle=shcurlData->shandle;
+    struct curlObjData       *curlData = shcurlData->users;
+
+    while (curlData != NULL) {
+        struct curlObjData *next = curlData->nextSharedHandle;
+
+        curlData->shareToken = NULL;
+        curlData->nextSharedHandle = NULL;
+        if (curlData->curl != NULL) {
+            curl_easy_setopt(curlData->curl, CURLOPT_SHARE, NULL);
+        }
+        curlData = next;
+    }
 
     curl_share_cleanup(shcurlHandle);
     Tcl_Free((char *)shcurlData);

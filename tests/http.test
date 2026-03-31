@@ -91,14 +91,14 @@ test http-1.7 {-failonerror turns a missing resource into a Tcl error} -constrai
 } -result {1 1}
 
 test http-1.8 {share handle can be attached to two easy handles} -constraints http_server -body {
-    set share [curl::shareinit]
-    set first [curl::init]
+    set share  [curl::shareinit]
+    set first  [curl::init]
     set second [curl::init]
-    set firstBody {}
+    set firstBody  {}
     set secondBody {}
     set code [catch {
         $share share dns
-        $first configure -url [::tclcurl::test::server::base_url] -share $share -bodyvar firstBody -noprogress 1
+        $first  configure -url [::tclcurl::test::server::base_url] -share $share -bodyvar firstBody  -noprogress 1
         $second configure -url [::tclcurl::test::server::base_url] -share $share -bodyvar secondBody -noprogress 1
         $first perform
         $second perform
@@ -109,5 +109,18 @@ test http-1.8 {share handle can be attached to two easy handles} -constraints ht
     catch {$share cleanup}
     return -options $options $result
 } -result {1 1}
+
+test http-1.9 {share handle cleanup is rejected while an easy handle still uses it} -constraints http_server -body {
+    set share  [curl::shareinit]
+    set handle [curl::init]
+    set code [catch {
+        $share share dns
+        $handle configure -url [::tclcurl::test::server::base_url] -share $share -noprogress 1
+        $share cleanup
+    } result]
+    catch {$handle cleanup}
+    catch {$share cleanup}
+    list $code $result
+} -result {1 {Share handle is still attached to one or more easy handles.}}
 
 cleanupTests

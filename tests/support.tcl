@@ -71,7 +71,8 @@ proc ::tclcurl::test::server::set_http_server_script {path} {
 proc ::tclcurl::test::server::http_server_script {} {
     variable configured_http_server_script
 
-    if {[info exists configured_http_server_script] && $configured_http_server_script ne {}} {
+    if {[info exists configured_http_server_script] && \
+        ($configured_http_server_script ne {})} {
         return $configured_http_server_script
     }
 
@@ -81,17 +82,14 @@ proc ::tclcurl::test::server::http_server_script {} {
 }
 
 proc ::tclcurl::test::server::base_url {{path {}}} {
-    set base [::tclcurl::test::env_or_default TCLCURL_TEST_HTTP_BASE_URL \
-        [::tclcurl::test::env_or_default TCLCURL_TEST_BASE_URL http://127.0.0.1:8990]]
+    set base [::tclcurl::test::env_or_default TCLCURL_TEST_HTTP_BASE_URL "http://127.0.0.1:8090"]
     set base [string trimright $base /]
-    if {$path eq {}} {
-        return "${base}/"
-    }
+    if {$path eq {}} { return "${base}/" }
     return "${base}/[string trimleft $path /]"
 }
 
 proc ::tclcurl::test::curl_root {} {
-    return [env_or_default TCLCURL_CURL_ROOT {}]
+    return [env_or_default CURL_ROOT {}]
 }
 
 proc ::tclcurl::test::curl_http_dir {} {
@@ -144,6 +142,7 @@ proc ::tclcurl::test::with_easy_handle {varName body} {
     return -options $options $result
 }
 
-::tcltest::testConstraint curl_http_dir [expr {[::tclcurl::test::curl_http_dir] ne {} && [file isdirectory [::tclcurl::test::curl_http_dir]]}]
+::tcltest::testConstraint curl_http_dir [expr {[::tclcurl::test::curl_http_dir] ne {} && \
+                                               [file isdirectory [::tclcurl::test::curl_http_dir]]}]
 ::tcltest::testConstraint curl_server_built [::tclcurl::test::curl_server_built]
 ::tcltest::testConstraint http_server [::tclcurl::test::server::http_server_available]

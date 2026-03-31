@@ -73,6 +73,7 @@ struct curlObjData {
     CURL                   *curl;
     Tcl_Command             token;
     Tcl_Command             shareToken;
+    struct curlObjData     *nextSharedHandle;
     Tcl_Interp             *interp;
     struct curl_slist      *headerList;
     struct curl_slist      *quote;
@@ -128,6 +129,7 @@ struct curlObjData {
 struct shcurlObjData {
     Tcl_Command           token;
     CURLSH               *shandle;
+    struct curlObjData   *users;
 };
 
 EXTERN int Tclcurl_Init(Tcl_Interp *interp);
@@ -152,7 +154,7 @@ int curlSetOpts(Tcl_Interp *interp, struct curlObjData *curlData,Tcl_Obj *const 
 //int SetoptCurlOffT(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
 //int SetoptChar(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
 //int SetoptBlob(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
-int SetoptSHandle(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
+int SetoptSHandle(Tcl_Interp *interp,struct curlObjData *curlData,CURLoption opt,int tableIndex,Tcl_Obj *tclObj);
 int SetoptsList(Tcl_Interp *interp,struct curl_slist **slistPtr,Tcl_Obj *const objv);
 
 //CURLcode curlGetInfo(Tcl_Interp *interp,CURL *curlHandle,int tableIndex);
@@ -205,6 +207,7 @@ void curlResetFormArray(struct curl_forms *formArray);
 
 void curlSetBodyVarName(Tcl_Interp *interp,struct curlObjData *curlDataPtr);
 char *curlstrdup (char *old);
+void curlDetachShareHandle(struct curlObjData *curlData);
 
 Tcl_Obj* curlCreateShareObjCmd (Tcl_Interp *interp,struct shcurlObjData  *shcurlData);
 int curlShareInitObjCmd (ClientData clientData, Tcl_Interp *interp,
