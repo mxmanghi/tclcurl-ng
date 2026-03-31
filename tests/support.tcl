@@ -5,17 +5,20 @@
 package require tcltest
 
 namespace eval ::tclcurl::test {
-    variable cachedServerAvailability
-    variable cachedServerUrl
-    variable configuredHttpServerScript
 }
 
-proc ::tclcurl::test::repoRoot {} {
+namespace eval ::tclcurl::test::server {
+    variable cached_availability
+    variable cached_url
+    variable configured_http_server_script
+}
+
+proc ::tclcurl::test::repo_root {} {
     return [file dirname [file dirname [file normalize [info script]]]]
 }
 
-proc ::tclcurl::test::buildLibraryCandidates {} {
-    set root [repoRoot]
+proc ::tclcurl::test::build_library_candidates {} {
+    set root [repo_root]
     lassign [split $::tcl_version "."] tcl_major tcl_minor
 
     if {$tcl_major == 8} {
@@ -35,10 +38,10 @@ proc ::tclcurl::test::buildLibraryCandidates {} {
     return ""
 }
 
-proc ::tclcurl::test::loadPackage {} {
-    foreach libraryPath [buildLibraryCandidates] {
+proc ::tclcurl::test::load_package {} {
+    foreach libraryPath [build_library_candidates] {
         if {![catch {load $libraryPath Tclcurl}]} {
-            set scriptPath [file join [repoRoot] generic tclcurl.tcl]
+            set scriptPath [file join [repo_root] generic tclcurl.tcl]
             if {[file exists $scriptPath]} {
                 source $scriptPath
             }
@@ -52,33 +55,34 @@ proc ::tclcurl::test::loadPackage {} {
     error "unable to load TclCurl from the installed packages or the build tree"
 }
 
-proc ::tclcurl::test::envOrDefault {name defaultValue} {
+proc ::tclcurl::test::env_or_default {name defaultValue} {
     if {[info exists ::env($name)] && $::env($name) ne {}} {
         return $::env($name)
     }
     return $defaultValue
 }
 
-proc ::tclcurl::test::setHttpServerScript {path} {
-    variable configuredHttpServerScript
-    set configuredHttpServerScript [file normalize $path]
-    return $configuredHttpServerScript
+proc ::tclcurl::test::server::set_http_server_script {path} {
+    variable configured_http_server_script
+    set configured_http_server_script [file normalize $path]
+    return $configured_http_server_script
 }
 
-proc ::tclcurl::test::httpServerScript {} {
-    variable configuredHttpServerScript
+proc ::tclcurl::test::server::http_server_script {} {
+    variable configured_http_server_script
 
-    if {[info exists configuredHttpServerScript] && $configuredHttpServerScript ne {}} {
-        return $configuredHttpServerScript
+    if {[info exists configured_http_server_script] && $configured_http_server_script ne {}} {
+        return $configured_http_server_script
     }
 
-    set defaultScript [file join [repoRoot] tests http_server.tcl]
-    set scriptPath [envOrDefault TCLCURL_TEST_HTTP_SERVER_SCRIPT $defaultScript]
+    set defaultScript [file join [::tclcurl::test::repo_root] tests testserver.tcl]
+    set scriptPath [::tclcurl::test::env_or_default TCLCURL_TEST_HTTP_SERVER_SCRIPT $defaultScript]
     return [file normalize $scriptPath]
 }
 
-proc ::tclcurl::test::baseUrl {{path {}}} {
-    set base [envOrDefault TCLCURL_TEST_HTTP_BASE_URL [envOrDefault TCLCURL_TEST_BASE_URL http://127.0.0.1:8990]]
+proc ::tclcurl::test::server::base_url {{path {}}} {
+    set base [::tclcurl::test::env_or_default TCLCURL_TEST_HTTP_BASE_URL \
+        [::tclcurl::test::env_or_default TCLCURL_TEST_BASE_URL http://127.0.0.1:8990]]
     set base [string trimright $base /]
     if {$path eq {}} {
         return "${base}/"
@@ -86,24 +90,24 @@ proc ::tclcurl::test::baseUrl {{path {}}} {
     return "${base}/[string trimleft $path /]"
 }
 
-proc ::tclcurl::test::curlRoot {} {
-    return [envOrDefault TCLCURL_CURL_ROOT {}]
+proc ::tclcurl::test::curl_root {} {
+    return [env_or_default TCLCURL_CURL_ROOT {}]
 }
 
-proc ::tclcurl::test::curlHttpDir {} {
-    set root [curlRoot]
+proc ::tclcurl::test::curl_http_dir {} {
+    set root [curl_root]
     if {$root eq {}} { return $root }
     return [file join $root tests http]
 }
 
-proc ::tclcurl::test::curlServerBuilt {} {
-    set root [curlRoot]
+proc ::tclcurl::test::curl_server_built {} {
+    set root [curl_root]
     if {$root eq {}} { return 0 }
 
     return [file isdirectory [file join $root tests server]]
 }
 
-proc ::tclcurl::test::urlEndpointAvailable {url} {
+proc ::tclcurl::test::server::url_endpoint_available {url} {
     if {![regexp {^https?://([^/:]+)(?::([0-9]+))?(/.*)?$} $url -> host port]} {
         return 0
     }
@@ -114,23 +118,23 @@ proc ::tclcurl::test::urlEndpointAvailable {url} {
     return 1
 }
 
-proc ::tclcurl::test::httpServerAvailable {} {
-    variable cachedServerAvailability
-    variable cachedServerUrl
+proc ::tclcurl::test::server::http_server_available {} {
+    variable cached_availability
+    variable cached_url
 
-    set url [baseUrl]
-    if {[info exists cachedServerAvailability] && \
-        [info exists cachedServerUrl] && \
-         $cachedServerUrl eq $url} {
-        return $cachedServerAvailability
+    set url [base_url]
+    if {[info exists cached_availability] && \
+        [info exists cached_url] && \
+         $cached_url eq $url} {
+        return $cached_availability
     }
 
-    set cachedServerUrl $url
-    set cachedServerAvailability [urlEndpointAvailable $url]
-    return $cachedServerAvailability
+    set cached_url $url
+    set cached_availability [url_endpoint_available $url]
+    return $cached_availability
 }
 
-proc ::tclcurl::test::withEasyHandle {varName body} {
+proc ::tclcurl::test::with_easy_handle {varName body} {
     upvar 1 $varName handle
 
     set handle [curl::init]
@@ -140,6 +144,6 @@ proc ::tclcurl::test::withEasyHandle {varName body} {
     return -options $options $result
 }
 
-::tcltest::testConstraint curl_http_dir [expr {[::tclcurl::test::curlHttpDir] ne {} && [file isdirectory [::tclcurl::test::curlHttpDir]]}]
-::tcltest::testConstraint curl_server_built [::tclcurl::test::curlServerBuilt]
-::tcltest::testConstraint http_server [::tclcurl::test::httpServerAvailable]
+::tcltest::testConstraint curl_http_dir [expr {[::tclcurl::test::curl_http_dir] ne {} && [file isdirectory [::tclcurl::test::curl_http_dir]]}]
+::tcltest::testConstraint curl_server_built [::tclcurl::test::curl_server_built]
+::tcltest::testConstraint http_server [::tclcurl::test::server::http_server_available]

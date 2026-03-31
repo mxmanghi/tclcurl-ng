@@ -20,18 +20,18 @@ For the HTTP test integration, set these variables before running `make test` or
 
 - `TCLCURL_TEST_HTTP_BASE_URL`: base URL for the running curl HTTP server, default `http://127.0.0.1:8990/`
 - `TCLCURL_TEST_BASE_URL`: generic fallback when the protocol-specific variable is not set
-- `TCLCURL_TEST_HTTP_SERVER_SCRIPT`: path to the Tcl HTTP test server script, used when no `-httpserver` CLI override is given; default `tests/http_server.tcl`
+- `TCLCURL_TEST_HTTP_SERVER_SCRIPT`: path to the Tcl test server framework script, used when no `-httpserver` CLI override is given; default `tests/testserver.tcl`
 
-You can run the default Tcl HTTP test server directly with:
+You can run the default Tcl test server framework directly with:
 
-- `tclsh tests/http_server.tcl`
-- `tclsh tests/http_server.tcl -host 127.0.0.1 -port 8990`
+- `tclsh tests/testserver.tcl`
+- `tclsh tests/testserver.tcl -host 127.0.0.1 -service http:8990`
 
 When the Tcl HTTP test server is wired in, the server script path precedence is:
 
 - `-httpserver /path/to/server.tcl`
 - `TCLCURL_TEST_HTTP_SERVER_SCRIPT`
-- `tests/http_server.tcl`
+- `tests/testserver.tcl`
 
 If the configured HTTP server is not reachable, the server-backed cases are skipped.
 

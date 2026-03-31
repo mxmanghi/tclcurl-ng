@@ -6,14 +6,14 @@ package require tcltest
 
 source [file join [file dirname [file normalize [info script]]] support.tcl]
 
-::tclcurl::test::loadPackage
+::tclcurl::test::load_package
 
 namespace import ::tcltest::*
 
 # The following will be upleveled and run whenever a test calls
 # ::tcltest::loadTestedCommands
 ::tcltest::configure -load {
-    ::tclcurl::test::loadPackage
+    ::tclcurl::test::load_package
     namespace import ::tcltest::*
 }
 
@@ -35,7 +35,7 @@ for {set i 0} {$i < [llength $argv]} {incr i} {
                 if {$i >= [llength $argv]} {
                         error "missing path after -httpserver"
                 }
-                ::tclcurl::test::setHttpServerScript [lindex $argv $i]
+                ::tclcurl::test::server::set_http_server_script [lindex $argv $i]
                 continue
         }
         lappend tcltestArgv $arg

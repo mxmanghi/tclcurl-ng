@@ -3,7 +3,7 @@ namespace import ::tcltest::*
 
 source [file join [file dirname [file normalize [info script]]] support.tcl]
 
-::tclcurl::test::loadPackage
+::tclcurl::test::load_package
 
 proc ::tclcurl::test::captureWriteProc {chunk} {
     append ::tclcurl::test::writeBuffer $chunk
@@ -12,8 +12,8 @@ proc ::tclcurl::test::captureWriteProc {chunk} {
 
 test http-1.1 {GET into -bodyvar returns a body and 200 response code} -constraints http_server -body {
     set body {}
-    ::tclcurl::test::withEasyHandle handle {
-        $handle configure -url [::tclcurl::test::baseUrl] -bodyvar body -noprogress 1
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] -bodyvar body -noprogress 1
         set rc [$handle perform]
         list $rc [$handle getinfo responsecode] [expr {[string length $body] > 0}]
     }
@@ -21,8 +21,8 @@ test http-1.1 {GET into -bodyvar returns a body and 200 response code} -constrai
 
 test http-1.2 {HEAD populates -headervar and reports 200} -constraints http_server -body {
     catch {unset headers}
-    ::tclcurl::test::withEasyHandle handle {
-        $handle configure -url [::tclcurl::test::baseUrl] -nobody 1 -header 1 -headervar headers -noprogress 1
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] -nobody 1 -header 1 -headervar headers -noprogress 1
         set rc [$handle perform]
         list $rc [$handle getinfo responsecode] [expr {[array size headers] > 0}]
     }
@@ -30,8 +30,8 @@ test http-1.2 {HEAD populates -headervar and reports 200} -constraints http_serv
 
 test http-1.3 {-writeproc receives body data} -constraints http_server -body {
     set ::tclcurl::test::writeBuffer {}
-    ::tclcurl::test::withEasyHandle handle {
-        $handle configure -url [::tclcurl::test::baseUrl] -writeproc ::tclcurl::test::captureWriteProc -noprogress 1
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] -writeproc ::tclcurl::test::captureWriteProc -noprogress 1
         set rc [$handle perform]
         list $rc [$handle getinfo responsecode] [expr {[string length $::tclcurl::test::writeBuffer] > 0}]
     }
@@ -41,11 +41,11 @@ test http-1.3 {-writeproc receives body data} -constraints http_server -body {
 
 test http-1.4 {getinfo exposes transfer metadata after a successful request} -constraints http_server -body {
     set body {}
-    ::tclcurl::test::withEasyHandle handle {
-        $handle configure -url [::tclcurl::test::baseUrl] -bodyvar body -noprogress 1
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] -bodyvar body -noprogress 1
         $handle perform
         list \
-            [string match [::tclcurl::test::baseUrl]* [$handle getinfo effectiveurl]] \
+            [string match [::tclcurl::test::server::base_url]* [$handle getinfo effectiveurl]] \
             [expr {[$handle getinfo headersize] > 0}] \
             [expr {[$handle getinfo sizedownload] > 0}]
     }
@@ -53,13 +53,13 @@ test http-1.4 {getinfo exposes transfer metadata after a successful request} -co
 
 test http-1.5 {reset allows the same easy handle to be reused} -constraints http_server -body {
     set body {}
-    ::tclcurl::test::withEasyHandle handle {
-        $handle configure -url [::tclcurl::test::baseUrl] -bodyvar body -noprogress 1
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] -bodyvar body -noprogress 1
         $handle perform
         set firstLength [string length $body]
         set body {}
         $handle reset
-        $handle configure -url [::tclcurl::test::baseUrl] -bodyvar body -noprogress 1
+        $handle configure -url [::tclcurl::test::server::base_url] -bodyvar body -noprogress 1
         set rc [$handle perform]
         list $rc [expr {$firstLength > 0}] [expr {[string length $body] > 0}]
     }
@@ -71,7 +71,7 @@ test http-1.6 {duphandle keeps a reusable request configuration} -constraints ht
     set primary [curl::init]
     set duplicate {}
     set code [catch {
-        $primary configure -url [::tclcurl::test::baseUrl] -bodyvar body -noprogress 1
+        $primary configure -url [::tclcurl::test::server::base_url] -bodyvar body -noprogress 1
         set duplicate [$primary duphandle]
         $duplicate configure -bodyvar dupBody
         set rc [$duplicate perform]
@@ -84,8 +84,8 @@ test http-1.6 {duphandle keeps a reusable request configuration} -constraints ht
 
 test http-1.7 {-failonerror turns a missing resource into a Tcl error} -constraints http_server -body {
     set errbuf {}
-    ::tclcurl::test::withEasyHandle handle {
-        $handle configure -url [::tclcurl::test::baseUrl tclcurl-missing-resource] -failonerror 1 -errorbuffer errbuf -noprogress 1
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url tclcurl-missing-resource] -failonerror 1 -errorbuffer errbuf -noprogress 1
         list [catch {$handle perform}] [expr {[string length $errbuf] > 0}]
     }
 } -result {1 1}
@@ -98,8 +98,8 @@ test http-1.8 {share handle can be attached to two easy handles} -constraints ht
     set secondBody {}
     set code [catch {
         $share share dns
-        $first configure -url [::tclcurl::test::baseUrl] -share $share -bodyvar firstBody -noprogress 1
-        $second configure -url [::tclcurl::test::baseUrl] -share $share -bodyvar secondBody -noprogress 1
+        $first configure -url [::tclcurl::test::server::base_url] -share $share -bodyvar firstBody -noprogress 1
+        $second configure -url [::tclcurl::test::server::base_url] -share $share -bodyvar secondBody -noprogress 1
         $first perform
         $second perform
         list [expr {[string length $firstBody] > 0}] [expr {[string length $secondBody] > 0}]

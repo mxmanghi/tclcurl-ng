@@ -1,138 +1,111 @@
-#!/usr/bin/env tclsh
+namespace eval ::tclcurl::testserver {}
 
-namespace eval ::tclcurl::httpd {
-    variable config
-    array set config {
-        host 127.0.0.1
-        port 8990
-        quiet 0
+oo::class create ::tclcurl::testserver::http_service {
+    superclass ::tclcurl::testserver::service
+
+    variable request_data
+
+    constructor args {
+        array set request_data {}
+        next {*}$args
     }
-}
 
-proc ::tclcurl::httpd::usage {} {
-    puts stderr "usage: tclsh tests/http_server.tcl ?-host 127.0.0.1? ?-port 8990? ?-quiet?"
-}
+    destructor {
+        foreach chan [array names request_data] {
+            catch {close $chan}
+        }
+        next
+    }
 
-proc ::tclcurl::httpd::parseArgs {argv} {
-    variable config
+    method start {} {
+        set listener [socket -server [list [self] accept] \
+            -myaddr [my host] [my port]]
+        my set_listener $listener
+        my log "listening on [my endpoint]"
+        return $listener
+    }
 
-    for {set i 0} {$i < [llength $argv]} {incr i} {
-        set arg [lindex $argv $i]
-        switch -- $arg {
-            -host {
-                incr i
-                if {$i >= [llength $argv]} {
-                    error "missing value after -host"
-                }
-                set config(host) [lindex $argv $i]
+    method accept {chan host port} {
+        chan configure $chan -blocking 0 -buffering none -translation binary
+        chan event $chan readable [list [self] read_request $chan]
+    }
+
+    method read_request {chan} {
+        if {[eof $chan]} {
+            my close_client $chan
+            return
+        }
+
+        set chunk [read $chan]
+        if {$chunk eq {}} {
+            return
+        }
+
+        append request_data($chan) $chunk
+
+        if {[string first "\r\n\r\n" $request_data($chan)] < 0} {
+            return
+        }
+
+        set request $request_data($chan)
+        unset request_data($chan)
+        chan event $chan readable {}
+        my respond $chan $request
+    }
+
+    method respond {chan request} {
+        set request_line [lindex [split $request "\r\n"] 0]
+        if {![regexp {^([A-Z]+) ([^ ]+) HTTP/([0-9.]+)$} $request_line -> method target version]} {
+            my send_response $chan 400 "Bad Request" "bad request\n" 0
+            return
+        }
+
+        set path [lindex [split $target ?] 0]
+        set response [my route_request $method $path $target $version $request]
+        my send_response $chan \
+            [dict get $response status] \
+            [dict get $response reason] \
+            [dict get $response body] \
+            [expr {$method eq "HEAD"}]
+    }
+
+    method route_request {method path target version request} {
+        switch -- $path {
+            / {
+                set body "tclcurl test server\n"
+                return [dict create status 200 reason OK body $body]
             }
-            -port {
-                incr i
-                if {$i >= [llength $argv]} {
-                    error "missing value after -port"
-                }
-                set config(port) [lindex $argv $i]
-                if {![string is integer -strict $config(port)] || $config(port) < 1 || $config(port) > 65535} {
-                    error "invalid port: $config(port)"
-                }
-            }
-            -quiet {
-                set config(quiet) 1
-            }
-            -h -
-            -help -
-            --help {
-                usage
-                exit 0
+            /tclcurl-missing-resource {
+                set body "not found\n"
+                return [dict create status 404 reason "Not Found" body $body]
             }
             default {
-                error "unknown argument: $arg"
+                set body "path=$path\n"
+                return [dict create status 200 reason OK body $body]
             }
         }
     }
-}
 
-proc ::tclcurl::httpd::log {message} {
-    variable config
-    if {!$config(quiet)} {
-        puts stderr $message
+    method send_response {chan status reason body head_only} {
+        set headers [list \
+            "HTTP/1.1 $status $reason" \
+            "Content-Type: text/plain" \
+            "Content-Length: [string length $body]" \
+            "Connection: close"]
+
+        puts -nonewline $chan [join $headers "\r\n"]
+        puts -nonewline $chan "\r\n\r\n"
+        if {!$head_only} {
+            puts -nonewline $chan $body
+        }
+        flush $chan
+        my close_client $chan
     }
-}
 
-proc ::tclcurl::httpd::accept {chan host port} {
-    fconfigure $chan -blocking 0 -buffering none -translation binary
-    fileevent $chan readable [list ::tclcurl::httpd::readRequest $chan]
-}
-
-proc ::tclcurl::httpd::readRequest {chan} {
-    if {[eof $chan]} {
+    method close_client {chan} {
+        catch {unset request_data($chan)}
         catch {close $chan}
-        return
-    }
-
-    set chunk [read $chan]
-    if {$chunk eq {}} {
-        return
-    }
-
-    append ::tclcurl::httpd::request($chan) $chunk
-
-    if {[string first "\r\n\r\n" $::tclcurl::httpd::request($chan)] < 0} {
-        return
-    }
-
-    set request $::tclcurl::httpd::request($chan)
-    unset ::tclcurl::httpd::request($chan)
-    fileevent $chan readable {}
-    respond $chan $request
-}
-
-proc ::tclcurl::httpd::respond {chan request} {
-    set requestLine [lindex [split $request "\r\n"] 0]
-    if {![regexp {^([A-Z]+) ([^ ]+) HTTP/([0-9.]+)$} $requestLine -> method target version]} {
-        sendResponse $chan 400 "Bad Request" "bad request\n" 0
-        return
-    }
-
-    set path [lindex [split $target ?] 0]
-    switch -- $path {
-        / {
-            set body "tclcurl test server\n"
-            sendResponse $chan 200 "OK" $body [expr {$method eq "HEAD"}]
-        }
-        /tclcurl-missing-resource {
-            set body "not found\n"
-            sendResponse $chan 404 "Not Found" $body [expr {$method eq "HEAD"}]
-        }
-        default {
-            set body "path=$path\n"
-            sendResponse $chan 200 "OK" $body [expr {$method eq "HEAD"}]
-        }
     }
 }
 
-proc ::tclcurl::httpd::sendResponse {chan status reason body headOnly} {
-    set headers [list \
-        "HTTP/1.1 $status $reason" \
-        "Content-Type: text/plain" \
-        "Content-Length: [string length $body]" \
-        "Connection: close"]
-
-    puts -nonewline $chan [join $headers "\r\n"]
-    puts -nonewline $chan "\r\n\r\n"
-    if {!$headOnly} {
-        puts -nonewline $chan $body
-    }
-    flush $chan
-    catch {close $chan}
-}
-
-if {[catch {::tclcurl::httpd::parseArgs $argv} message]} {
-    puts stderr $message
-    ::tclcurl::httpd::usage
-    exit 1
-}
-
-set listener [socket -server ::tclcurl::httpd::accept -myaddr $::tclcurl::httpd::config(host) $::tclcurl::httpd::config(port)]
-::tclcurl::httpd::log "listening on http://$::tclcurl::httpd::config(host):$::tclcurl::httpd::config(port)/"
-vwait ::tclcurl::httpd::forever
+::tclcurl::testserver register_service_class http ::tclcurl::testserver::http_service
