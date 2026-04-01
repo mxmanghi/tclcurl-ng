@@ -1,8 +1,10 @@
 #!/usr/bin/tclsh
 
-package require TclCurl
 package require tcltest
 namespace import ::tcltest::*
+source [file join [file dirname [file normalize [info script]]] support.tcl]
+::tclcurl::test::load_package
+package require TclCurl
 
 
 test 1.01 {: Test that -version returns something} -body {

@@ -62,6 +62,16 @@ oo::class create ::tclcurl::testserver::http_service {
 
         set path [lindex [split $target ?] 0]
         set response [my route_request $method $path $target $version $request]
+        if {[dict exists $response status_line]} {
+            my send_response $chan \
+                [dict get $response status] \
+                [dict get $response reason] \
+                [dict get $response body] \
+                [expr {$method eq "HEAD"}] \
+                [dict get $response status_line]
+            return
+        }
+
         my send_response $chan \
             [dict get $response status] \
             [dict get $response reason] \
@@ -75,6 +85,14 @@ oo::class create ::tclcurl::testserver::http_service {
                 set body "tclcurl test server\n"
                 return [dict create status 200 reason OK body $body]
             }
+            /tclcurl-http200alias {
+                set body "http200aliases=matched\n"
+                return [dict create \
+                    status 200 \
+                    reason OK \
+                    body $body \
+                    status_line "yummy/4.5 200 OK"]
+            }
             /tclcurl-missing-resource {
                 set body "not found\n"
                 return [dict create status 404 reason "Not Found" body $body]
@@ -86,9 +104,13 @@ oo::class create ::tclcurl::testserver::http_service {
         }
     }
 
-    method send_response {chan status reason body head_only} {
+    method send_response {chan status reason body head_only {status_line {}}} {
+        if {$status_line eq {}} {
+            set status_line "HTTP/1.1 $status $reason"
+        }
+
         set headers [list \
-            "HTTP/1.1 $status $reason" \
+            $status_line \
             "Content-Type: text/plain" \
             "Content-Length: [string length $body]" \
             "Connection: close"]
