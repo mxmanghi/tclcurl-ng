@@ -109,17 +109,14 @@ const static char *timeCond[] = {
  *----------------------------------------------------------------------
  */
 int
-curlSetOptsTransfer(Tcl_Interp *interp, struct curlObjData *curlData,
-        int objc, Tcl_Obj *const objv[]) {
+curlSetOptsTransfer(Tcl_Interp *interp,struct curlObjData *curlData,int objc,Tcl_Obj *const objv[]) {
+    int optionTableIndex;
 
-    int tableIndex;
-
-    if (Tcl_GetIndexFromObj(interp, objv[2], optionTable, "option", 
-            TCL_EXACT, &tableIndex)==TCL_ERROR) {
+    if (Tcl_GetIndexFromObj(interp,objv[2],optionTable,"option",TCL_EXACT,&optionTableIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
 
-    return  TclCurl_SetOpts(interp,curlData,objv[3],tableIndex);
+    return  TclCurl_SetOpts(interp,curlData,objv[3],optionTableIndex);
 }
 
 /*
@@ -144,21 +141,21 @@ int
 curlConfigTransfer(Tcl_Interp *interp, struct curlObjData *curlData,
                    int objc, Tcl_Obj *const objv[]) {
 
-    int              tableIndex;
+    int              configOptionIndex;
     int              i,j;
     Tcl_Obj         *resultPtr;
 
     for(i=2,j=3;i<objc;i=i+2,j=j+2) {
         if (Tcl_GetIndexFromObj(interp, objv[i],
-                                configTable, "option", TCL_EXACT, &tableIndex) == TCL_ERROR) {
+                                configTable, "option", TCL_EXACT, &configOptionIndex) == TCL_ERROR) {
             return TCL_ERROR;
         }
         if (i == objc-1) {
-            resultPtr=Tcl_ObjPrintf("Empty value for %s",configTable[tableIndex]);
+            resultPtr=Tcl_ObjPrintf("Empty value for %s",configTable[configOptionIndex]);
             Tcl_SetObjResult(interp,resultPtr);            
             return TCL_ERROR;
         }
-        if (TclCurl_SetOpts(interp,curlData,objv[j],tableIndex)==TCL_ERROR) {
+        if (TclCurl_SetOpts(interp,curlData,objv[j],configOptionIndex)==TCL_ERROR) {
             return TCL_ERROR;
         }
     }
@@ -186,15 +183,15 @@ curlConfigTransfer(Tcl_Interp *interp, struct curlObjData *curlData,
  */
 static int
 SetoptInt(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
-        int tableIndex,Tcl_Obj *tclObj) {
+        int configOptionIndex,Tcl_Obj *tclObj) {
     int intNumber;
 
     if (Tcl_GetIntFromObj(interp,tclObj,&intNumber)) {
-        curlErrorSetOpt(interp,configTable,tableIndex,Tcl_GetString(tclObj));
+        curlErrorSetOpt(interp,configTable,configOptionIndex,Tcl_GetString(tclObj));
         return 1;
     }
     if (curl_easy_setopt(curlHandle,opt,intNumber)) {
-        curlErrorSetOpt(interp,configTable,tableIndex,Tcl_GetString(tclObj));
+        curlErrorSetOpt(interp,configTable,configOptionIndex,Tcl_GetString(tclObj));
         return 1;
     }
     return 0;
@@ -220,16 +217,15 @@ SetoptInt(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
  *----------------------------------------------------------------------
  */
 static int
-SetoptLong(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
-        int tableIndex,Tcl_Obj *tclObj) {
-    long         longNumber;
+SetoptLong(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,int configOptionIndex,Tcl_Obj *tclObj) {
+    long longNumber;
 
     if (Tcl_GetLongFromObj(interp,tclObj,&longNumber)) {
-        curlErrorSetOpt(interp,configTable,tableIndex,Tcl_GetString(tclObj));
+        curlErrorSetOpt(interp,configTable,configOptionIndex,Tcl_GetString(tclObj));
         return 1;
     }
     if (curl_easy_setopt(curlHandle,opt,longNumber)) {
-        curlErrorSetOpt(interp,configTable,tableIndex,Tcl_GetString(tclObj));
+        curlErrorSetOpt(interp,configTable,configOptionIndex,Tcl_GetString(tclObj));
         return 1;
     }
 
@@ -257,16 +253,16 @@ SetoptLong(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
  */
 int
 SetoptCurlOffT(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
-        int tableIndex,Tcl_Obj *tclObj) {
+        int configOptionIndex,Tcl_Obj *tclObj) {
     Tcl_WideInt wideNumber;
 
     if (Tcl_GetWideIntFromObj(interp,tclObj,&wideNumber)) {
-        curlErrorSetOpt(interp,configTable,tableIndex,Tcl_GetString(tclObj));
+        curlErrorSetOpt(interp,configTable,configOptionIndex,Tcl_GetString(tclObj));
         return 1;
     }
 
     if (curl_easy_setopt(curlHandle,opt,(curl_off_t)wideNumber)) {
-        curlErrorSetOpt(interp,configTable,tableIndex,Tcl_GetString(tclObj));
+        curlErrorSetOpt(interp,configTable,configOptionIndex,Tcl_GetString(tclObj));
         return 1;
     }
 
@@ -294,12 +290,12 @@ SetoptCurlOffT(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
  */
 static int
 SetoptChar(Tcl_Interp *interp,CURL *curlHandle,
-        CURLoption opt,int tableIndex,Tcl_Obj *tclObj) {
+        CURLoption opt,int configOptionIndex,Tcl_Obj *tclObj) {
     char    *optionPtr;
 
     optionPtr=curlstrdup(Tcl_GetString(tclObj));
     if (curl_easy_setopt(curlHandle,opt,optionPtr)) {
-        curlErrorSetOpt(interp,configTable,tableIndex,optionPtr);
+        curlErrorSetOpt(interp,configTable,configOptionIndex,optionPtr);
         Tcl_Free(optionPtr);
         return 1;
     }
@@ -328,7 +324,7 @@ SetoptChar(Tcl_Interp *interp,CURL *curlHandle,
  */
 static int
 SetoptBlob(Tcl_Interp *interp,CURL *curlHandle,
-        CURLoption opt,int tableIndex,Tcl_Obj *tclObj) {
+        CURLoption opt,int configOptionIndex,Tcl_Obj *tclObj) {
     struct curl_blob   optionBlob;
     Tcl_Size           len;
 
@@ -337,7 +333,7 @@ SetoptBlob(Tcl_Interp *interp,CURL *curlHandle,
         optionBlob.len = len;
         optionBlob.flags = CURL_BLOB_COPY;
         if (curl_easy_setopt(curlHandle,opt,&optionBlob)) {
-            curlErrorSetOpt(interp,configTable,tableIndex,"...");
+            curlErrorSetOpt(interp,configTable,configOptionIndex,"...");
             return 1;
         }
     }
@@ -366,7 +362,7 @@ SetoptBlob(Tcl_Interp *interp,CURL *curlHandle,
  */
 int
 SetoptSHandle(Tcl_Interp *interp,struct curlObjData *curlData,
-        CURLoption opt,int tableIndex,Tcl_Obj *tclObj) {
+        CURLoption opt,int configOptionIndex,Tcl_Obj *tclObj) {
     char                    *shandleName;
     Tcl_CmdInfo             *infoPtr=(Tcl_CmdInfo *)Tcl_Alloc(sizeof(Tcl_CmdInfo));
     struct shcurlObjData    *shandleDataPtr;
@@ -380,7 +376,7 @@ SetoptSHandle(Tcl_Interp *interp,struct curlObjData *curlData,
     shandleDataPtr=(struct shcurlObjData *)(infoPtr->objClientData);
     if (curl_easy_setopt(curlHandle,opt,shandleDataPtr->shandle)) {
         Tcl_Free((char *)infoPtr);
-        curlErrorSetOpt(interp,configTable,tableIndex,shandleName);
+        curlErrorSetOpt(interp,configTable,configOptionIndex,shandleName);
         return 1;
     }
     Tcl_Free((char *)infoPtr);
@@ -484,7 +480,7 @@ static const TclCurlOptionDef curlOptionDefs[] = {
  *    interp: Pointer to the interpreter we are using.
  *    curlHandle: the curl handle for which the option is set.
  *    objv: A pointer to the object where the data to set is stored.
- *    tableIndex: The index of the option in the options table.
+ *    curlOptsIndex: The index of the option in the TclCurl option table.
  *
  * Results:
  *  A standard Tcl result.
@@ -493,20 +489,20 @@ static const TclCurlOptionDef curlOptionDefs[] = {
 
 int
 TclCurl_SetOpts(Tcl_Interp *interp, struct curlObjData *curlData,
-                Tcl_Obj *const objv, int tableIndex)
+                Tcl_Obj *const objv, int curlOptsIndex)
 {
-    if (tableIndex < 0 || tableIndex >= TCLCURLOPT_COUNT) {
+    if (curlOptsIndex < 0 || curlOptsIndex >= TCLCURLOPT_COUNT) {
         return TCL_ERROR;
     }
     TclCurlOptsArgs args = {
-        .interp     = interp,
-        .curlData   = curlData,
-        .objv       = objv,
-        .tableIndex = tableIndex,
-        .def        = &curlOptionDefs[tableIndex]
+        .interp        = interp,
+        .curlData      = curlData,
+        .objv          = objv,
+        .curlOptsIndex = curlOptsIndex,
+        .def           = &curlOptionDefs[curlOptsIndex]
     };
 
-    return curlOptionDefs[tableIndex].handler(&args);
+    return curlOptionDefs[curlOptsIndex].handler(&args);
 }
 
 static int
@@ -514,7 +510,7 @@ TclCurl_HandleSetoptChar(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
 
-    if (SetoptChar(args->interp, curlHandle, args->def->curlOpt, args->tableIndex, args->objv)) {
+    if (SetoptChar(args->interp, curlHandle, args->def->curlOpt, args->curlOptsIndex, args->objv)) {
         return TCL_ERROR;
     }
     return TCL_OK;
@@ -525,7 +521,7 @@ TclCurl_HandleSetoptInt(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
 
-    if (SetoptInt(args->interp, curlHandle, args->def->curlOpt, args->tableIndex, args->objv)) {
+    if (SetoptInt(args->interp, curlHandle, args->def->curlOpt, args->curlOptsIndex, args->objv)) {
         return TCL_ERROR;
     }
     return TCL_OK;
@@ -536,7 +532,7 @@ TclCurl_HandleSetoptLong(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
 
-    if (SetoptLong(args->interp, curlHandle, args->def->curlOpt, args->tableIndex, args->objv)) {
+    if (SetoptLong(args->interp, curlHandle, args->def->curlOpt, args->curlOptsIndex, args->objv)) {
         return TCL_ERROR;
     }
     return TCL_OK;
@@ -547,7 +543,7 @@ TclCurl_HandleSetoptCurlOffT(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
 
-    if (SetoptCurlOffT(args->interp, curlHandle, args->def->curlOpt, args->tableIndex, args->objv)) {
+    if (SetoptCurlOffT(args->interp, curlHandle, args->def->curlOpt, args->curlOptsIndex, args->objv)) {
         return TCL_ERROR;
     }
     return TCL_OK;
@@ -556,7 +552,7 @@ TclCurl_HandleSetoptCurlOffT(TclCurlOptsArgs *args)
 static int
 TclCurl_HandleSetoptSHandle(TclCurlOptsArgs *args)
 {
-    if (SetoptSHandle(args->interp, args->curlData, args->def->curlOpt, args->tableIndex, args->objv)) {
+    if (SetoptSHandle(args->interp, args->curlData, args->def->curlOpt, args->curlOptsIndex, args->objv)) {
         return TCL_ERROR;
     }
     return TCL_OK;
@@ -614,14 +610,14 @@ static int
 TclCurl_HandleNetrc(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
-    int  curlTableIndex;
+    int  netrcIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, netrcTable,
-            "netrc option",TCL_EXACT,&curlTableIndex)==TCL_ERROR) {
+            "netrc option",TCL_EXACT,&netrcIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
-    if (curl_easy_setopt(curlHandle,CURLOPT_NETRC,curlTableIndex)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,netrcTable[curlTableIndex]);
+    if (curl_easy_setopt(curlHandle,CURLOPT_NETRC,netrcIndex)) {
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,netrcTable[netrcIndex]);
         return 1;
     }
     return TCL_OK;
@@ -632,7 +628,7 @@ TclCurl_HandleTransferText(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
 
-    if (SetoptInt(args->interp, curlHandle, args->def->curlOpt, args->tableIndex, args->objv)) {
+    if (SetoptInt(args->interp, curlHandle, args->def->curlOpt, args->curlOptsIndex, args->objv)) {
         return TCL_ERROR;
     }
     Tcl_GetIntFromObj(args->interp,args->objv,&args->curlData->transferText);
@@ -661,7 +657,7 @@ TclCurl_HandleHttpHeaderList(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
 
     if(SetoptsList(args->interp,&args->curlData->headerList,args->objv)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"Header list invalid");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"Header list invalid");
         return TCL_ERROR;
     }
     if (curl_easy_setopt(curlHandle,CURLOPT_HTTPHEADER,args->curlData->headerList)) {
@@ -678,13 +674,13 @@ TclCurl_HandleSslVersion(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
     Tcl_Obj *tmpObjPtr;
     long longNumber=0;
-    int intNumber;
+    int  sslVersionIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, sslversion,
-        "sslversion ",TCL_EXACT,&intNumber)==TCL_ERROR) {
+        "sslversion ",TCL_EXACT,&sslVersionIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
-    switch(intNumber) {
+    switch(sslVersionIndex) {
         case 0:
             longNumber=CURL_SSLVERSION_DEFAULT;
             break;
@@ -727,7 +723,7 @@ TclCurl_HandleSslVersion(TclCurlOptsArgs *args)
     tmpObjPtr=Tcl_NewLongObj(longNumber);
     Tcl_IncrRefCount(tmpObjPtr);
     if (SetoptLong(args->interp,curlHandle,CURLOPT_SSLVERSION,
-                args->tableIndex,tmpObjPtr)) {
+                args->curlOptsIndex,tmpObjPtr)) {
         Tcl_DecrRefCount(tmpObjPtr);
         return TCL_ERROR;
     }
@@ -741,11 +737,11 @@ TclCurl_HandleQuoteList(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
 
     if(SetoptsList(args->interp,&args->curlData->quote,args->objv)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"quote list invalid");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"quote list invalid");
         return TCL_ERROR;
     }
     if (curl_easy_setopt(curlHandle,CURLOPT_QUOTE,args->curlData->quote)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"quote list invalid");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"quote list invalid");
         curl_slist_free_all(args->curlData->quote);
         args->curlData->quote=NULL;
         return TCL_ERROR;
@@ -759,11 +755,11 @@ TclCurl_HandlePostQuoteList(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
 
     if(SetoptsList(args->interp,&args->curlData->postquote,args->objv)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"postquote invalid");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"postquote invalid");
         return TCL_ERROR;
     }
     if (curl_easy_setopt(curlHandle,CURLOPT_POSTQUOTE,args->curlData->postquote)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"postquote invalid");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"postquote invalid");
         curl_slist_free_all(args->curlData->postquote);
         args->curlData->postquote=NULL;
         return TCL_ERROR;
@@ -805,13 +801,13 @@ TclCurl_HandleTimeCondition(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
     long longNumber=0;
-    int intNumber;
+    int  timeConditionIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, timeCond,
-        "time cond option",TCL_EXACT, &intNumber)==TCL_ERROR) {
+        "time cond option",TCL_EXACT, &timeConditionIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
-    if (intNumber==0) {
+    if (timeConditionIndex==0) {
         longNumber=CURL_TIMECOND_IFMODSINCE;
     } else {
         longNumber=CURL_TIMECOND_IFUNMODSINCE;
@@ -992,16 +988,16 @@ TclCurl_HandleHttpVersion(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
     char* tmpStr = NULL;
-    int versionIndex;
+    int httpVersionIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, httpVersionTable,
-        "http version",TCL_EXACT,&versionIndex)==TCL_ERROR) {
+        "http version",TCL_EXACT,&httpVersionIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
     if (curl_easy_setopt(curlHandle,CURLOPT_HTTP_VERSION,
-                versionIndex)) {
+                httpVersionIndex)) {
         tmpStr=curlstrdup(Tcl_GetString(args->objv));
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,tmpStr);
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,tmpStr);
         Tcl_Free(tmpStr);
         return TCL_ERROR;
     }
@@ -1014,11 +1010,11 @@ TclCurl_HandlePrequoteList(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
 
     if(SetoptsList(args->interp,&args->curlData->prequote,args->objv)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"prequote invalid");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"prequote invalid");
         return TCL_ERROR;
     }
     if (curl_easy_setopt(curlHandle,CURLOPT_PREQUOTE,args->curlData->prequote)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"prequote invalid");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"prequote invalid");
         curl_slist_free_all(args->curlData->prequote);
         args->curlData->prequote=NULL;
         return TCL_ERROR;
@@ -1046,19 +1042,19 @@ static int
 TclCurl_HandleEncoding(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
-    int encodingIndex;
+    int encodingTableIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, encodingTable,
-        "encoding",TCL_EXACT,&encodingIndex)==TCL_ERROR) {
+        "encoding",TCL_EXACT,&encodingTableIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
-    if (encodingIndex==2) {
+    if (encodingTableIndex==2) {
         if (curl_easy_setopt(curlHandle,CURLOPT_ACCEPT_ENCODING,"")) {
-            curlErrorSetOpt(args->interp,configTable,args->tableIndex,"all");
+            curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"all");
             return 1;
         }
     } else {
-        if (SetoptChar(args->interp,curlHandle,CURLOPT_ACCEPT_ENCODING,args->tableIndex,args->objv)) {
+        if (SetoptChar(args->interp,curlHandle,CURLOPT_ACCEPT_ENCODING,args->curlOptsIndex,args->objv)) {
             return TCL_ERROR;
         }
     }
@@ -1069,13 +1065,13 @@ static int
 TclCurl_HandleProxyType(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
-    int proxyIndex;
+    int proxyTypeIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, proxyTypeTable,
-        "proxy type",TCL_EXACT,&proxyIndex)==TCL_ERROR) {
+        "proxy type",TCL_EXACT,&proxyTypeIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
-    switch(proxyIndex) {
+    switch(proxyTypeIndex) {
         case 0:
             curl_easy_setopt(curlHandle,CURLOPT_PROXYTYPE,
                     CURLPROXY_HTTP);
@@ -1110,11 +1106,11 @@ TclCurl_HandleHttp200Aliases(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
 
     if(SetoptsList(args->interp,&args->curlData->http200aliases,args->objv)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"http200aliases invalid");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"http200aliases invalid");
         return TCL_ERROR;
     }
     if (curl_easy_setopt(curlHandle,CURLOPT_HTTP200ALIASES,args->curlData->http200aliases)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"http200aliases invalid");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"http200aliases invalid");
         curl_slist_free_all(args->curlData->http200aliases);
         args->curlData->http200aliases=NULL;
         return TCL_ERROR;
@@ -1136,14 +1132,14 @@ TclCurl_HandleHttpAuth(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
     Tcl_Obj *tmpObjPtr;
     long longNumber=0;
-    int intNumber;
+    int httpAuthMethodIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, httpAuthMethods,
-        "authentication method",TCL_EXACT,&intNumber)==TCL_ERROR) {
+        "authentication method",TCL_EXACT,&httpAuthMethodIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
     args->curlData->anyAuthFlag=0;
-    switch(intNumber) {
+    switch(httpAuthMethodIndex) {
         case 0:
             longNumber=CURLAUTH_BASIC;
             break;
@@ -1173,7 +1169,7 @@ TclCurl_HandleHttpAuth(TclCurlOptsArgs *args)
     tmpObjPtr=Tcl_NewLongObj(longNumber);
     Tcl_IncrRefCount(tmpObjPtr);
     if (SetoptLong(args->interp,curlHandle,CURLOPT_HTTPAUTH
-            ,args->tableIndex,tmpObjPtr)) {
+            ,args->curlOptsIndex,tmpObjPtr)) {
         Tcl_DecrRefCount(tmpObjPtr);
         return TCL_ERROR;
     }
@@ -1187,13 +1183,13 @@ TclCurl_HandleProxyAuth(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
     Tcl_Obj *tmpObjPtr;
     long longNumber=0;
-    int intNumber;
+    int proxyAuthMethodIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, httpAuthMethods,
-        "authentication method",TCL_EXACT,&intNumber)==TCL_ERROR) {
+        "authentication method",TCL_EXACT,&proxyAuthMethodIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
-    switch(intNumber) {
+    switch(proxyAuthMethodIndex) {
         case 0:
             longNumber=CURLAUTH_BASIC;
             break;
@@ -1217,7 +1213,7 @@ TclCurl_HandleProxyAuth(TclCurlOptsArgs *args)
     tmpObjPtr=Tcl_NewLongObj(longNumber);
     Tcl_IncrRefCount(tmpObjPtr);
     if (SetoptLong(args->interp,curlHandle,CURLOPT_PROXYAUTH
-            ,args->tableIndex,tmpObjPtr)) {
+            ,args->curlOptsIndex,tmpObjPtr)) {
         Tcl_DecrRefCount(tmpObjPtr);
         return TCL_ERROR;
     }
@@ -1231,13 +1227,13 @@ TclCurl_HandleIpResolve(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
     Tcl_Obj *tmpObjPtr;
     long longNumber=0;
-    int curlTableIndex;
+    int ipResolveIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, ipresolve,
-        "ip version",TCL_EXACT,&curlTableIndex)==TCL_ERROR) {
+        "ip version",TCL_EXACT,&ipResolveIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
-    switch(curlTableIndex) {
+    switch(ipResolveIndex) {
         case 0:
             longNumber=CURL_IPRESOLVE_WHATEVER;
             break;
@@ -1251,7 +1247,7 @@ TclCurl_HandleIpResolve(TclCurlOptsArgs *args)
     tmpObjPtr=Tcl_NewLongObj(longNumber);
     Tcl_IncrRefCount(tmpObjPtr);
     if (SetoptLong(args->interp,curlHandle,CURLOPT_IPRESOLVE,
-                   args->tableIndex,tmpObjPtr)) {
+                   args->curlOptsIndex,tmpObjPtr)) {
         Tcl_DecrRefCount(tmpObjPtr);
         return TCL_ERROR;
     }
@@ -1273,7 +1269,7 @@ TclCurl_HandleFtpSsl(TclCurlOptsArgs *args)
     tmpObjPtr=Tcl_NewLongObj(longNumber);
     Tcl_IncrRefCount(tmpObjPtr);
     if (SetoptLong(args->interp,curlHandle,CURLOPT_USE_SSL,
-                args->tableIndex,tmpObjPtr)) {
+                args->curlOptsIndex,tmpObjPtr)) {
         Tcl_DecrRefCount(tmpObjPtr);
         return TCL_ERROR;
     }
@@ -1284,7 +1280,7 @@ TclCurl_HandleFtpSsl(TclCurlOptsArgs *args)
 static int
 TclCurl_HandleObsolete(TclCurlOptsArgs *args)
 {
-    curlErrorSetOpt(args->interp,configTable,args->tableIndex,
+    curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,
             args->def->errorMessage ? args->def->errorMessage : "option is obsolete");
     return TCL_ERROR;
 }
@@ -1295,13 +1291,13 @@ TclCurl_HandleFtpSslAuth(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
     Tcl_Obj *tmpObjPtr;
     long longNumber=0;
-    int intNumber;
+    int ftpSslAuthIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, ftpsslauth,
-                            "ftpsslauth method ",TCL_EXACT,&intNumber) == TCL_ERROR) {
+                            "ftpsslauth method ",TCL_EXACT,&ftpSslAuthIndex) == TCL_ERROR) {
         return TCL_ERROR;
     }
-    switch(intNumber) {
+    switch(ftpSslAuthIndex) {
         case 0:
             longNumber=CURLFTPAUTH_DEFAULT;
             break;
@@ -1315,7 +1311,7 @@ TclCurl_HandleFtpSslAuth(TclCurlOptsArgs *args)
     tmpObjPtr=Tcl_NewLongObj(longNumber);
     Tcl_IncrRefCount(tmpObjPtr);
     if (SetoptLong(args->interp,curlHandle,CURLOPT_FTPSSLAUTH,
-                args->tableIndex,tmpObjPtr)) {
+                args->curlOptsIndex,tmpObjPtr)) {
         Tcl_DecrRefCount(tmpObjPtr);
         return TCL_ERROR;
     }
@@ -1329,13 +1325,13 @@ TclCurl_HandleFtpFileMethod(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
     Tcl_Obj *tmpObjPtr;
     long longNumber=0;
-    int intNumber;
+    int ftpFileMethodIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, ftpfilemethod,
-        "ftp file method ",TCL_EXACT,&intNumber)==TCL_ERROR) {
+        "ftp file method ",TCL_EXACT,&ftpFileMethodIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
-    switch(intNumber) {
+    switch(ftpFileMethodIndex) {
         case 0:
         case 1:
             longNumber = 1;
@@ -1350,7 +1346,7 @@ TclCurl_HandleFtpFileMethod(TclCurlOptsArgs *args)
     tmpObjPtr=Tcl_NewLongObj(longNumber);
     Tcl_IncrRefCount(tmpObjPtr);
     if (SetoptLong(args->interp,curlHandle,CURLOPT_FTP_FILEMETHOD,
-                args->tableIndex,tmpObjPtr)) {
+                args->curlOptsIndex,tmpObjPtr)) {
         Tcl_DecrRefCount(tmpObjPtr);
         return TCL_ERROR;
     }
@@ -1364,13 +1360,13 @@ TclCurl_HandleSshAuthTypes(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
     Tcl_Obj *tmpObjPtr;
     long longNumber=0;
-    int intNumber;
+    int sshAuthTypeIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, sshauthtypes,
-        "ssh auth type ",TCL_EXACT,&intNumber)==TCL_ERROR) {
+        "ssh auth type ",TCL_EXACT,&sshAuthTypeIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
-    switch(intNumber) {
+    switch(sshAuthTypeIndex) {
         case 0:
             longNumber = CURLSSH_AUTH_PUBLICKEY;
             break;
@@ -1399,7 +1395,7 @@ TclCurl_HandleSshAuthTypes(TclCurlOptsArgs *args)
     tmpObjPtr=Tcl_NewLongObj(longNumber);
     Tcl_IncrRefCount(tmpObjPtr);
     if (SetoptLong(args->interp,curlHandle,CURLOPT_SSH_AUTH_TYPES,
-                args->tableIndex,tmpObjPtr)) {
+                args->curlOptsIndex,tmpObjPtr)) {
         Tcl_DecrRefCount(tmpObjPtr);
         return TCL_ERROR;
     }
@@ -1413,13 +1409,13 @@ TclCurl_HandlePostRedir(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
     Tcl_Obj *tmpObjPtr;
     long longNumber=0;
-    int intNumber;
+    int postRedirIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, postredir,
-        "Postredir option ",TCL_EXACT,&intNumber)==TCL_ERROR) {
+        "Postredir option ",TCL_EXACT,&postRedirIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
-    switch(intNumber) {
+    switch(postRedirIndex) {
         case 0:
             longNumber=CURL_REDIR_POST_301;
             break;
@@ -1435,8 +1431,7 @@ TclCurl_HandlePostRedir(TclCurlOptsArgs *args)
     }
     tmpObjPtr=Tcl_NewLongObj(longNumber);
     Tcl_IncrRefCount(tmpObjPtr);
-    if (SetoptLong(args->interp,curlHandle,CURLOPT_POSTREDIR,
-                args->tableIndex,tmpObjPtr)) {
+    if (SetoptLong(args->interp,curlHandle,CURLOPT_POSTREDIR,args->curlOptsIndex,tmpObjPtr)) {
         Tcl_DecrRefCount(tmpObjPtr);
         return TCL_ERROR;
     }
@@ -1477,7 +1472,7 @@ TclCurl_HandleFtpSslCcc(TclCurlOptsArgs *args)
 
     tmpObjPtr = Tcl_NewLongObj(longNumber);
     Tcl_IncrRefCount(tmpObjPtr);
-    if (SetoptLong(args->interp,curlHandle,CURLOPT_FTP_SSL_CCC,args->tableIndex,tmpObjPtr)) {
+    if (SetoptLong(args->interp,curlHandle,CURLOPT_FTP_SSL_CCC,args->curlOptsIndex,tmpObjPtr)) {
         Tcl_DecrRefCount(tmpObjPtr);
         return TCL_ERROR;
     }
@@ -1506,11 +1501,11 @@ TclCurl_HandleMailRcpt(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
 
     if (SetoptsList(args->interp,&args->curlData->mailrcpt,args->objv)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"mailrcpt invalid");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"mailrcpt invalid");
         return TCL_ERROR;
     }
     if (curl_easy_setopt(curlHandle,CURLOPT_MAIL_RCPT,args->curlData->mailrcpt)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"mailrcpt invalid");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"mailrcpt invalid");
         curl_slist_free_all(args->curlData->mailrcpt);
         args->curlData->mailrcpt=NULL;
         return TCL_ERROR;
@@ -1544,7 +1539,7 @@ TclCurl_HandleChunkBgnVar(TclCurlOptsArgs *args)
 {
     args->curlData->chunkBgnVar=curlstrdup(Tcl_GetString(args->objv));
     if (!strcmp(args->curlData->chunkBgnVar,"")) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"invalid var name");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"invalid var name");
         return TCL_ERROR;
     }
     return TCL_OK;
@@ -1595,11 +1590,11 @@ TclCurl_HandleResolveList(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
 
     if (SetoptsList(args->interp,&args->curlData->resolve,args->objv)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"invalid list");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"invalid list");
         return TCL_ERROR;
     }
     if (curl_easy_setopt(curlHandle,CURLOPT_RESOLVE,args->curlData->resolve)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"resolve list invalid");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"resolve list invalid");
         curl_slist_free_all(args->curlData->resolve);
         args->curlData->resolve=NULL;
         return TCL_ERROR;
@@ -1613,13 +1608,13 @@ TclCurl_HandleTlsAuthType(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
     Tcl_Obj *tmpObjPtr;
     long longNumber=0;
-    int intNumber;
+    int tlsAuthTypeIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, tlsauth,
-        "TSL auth option ",TCL_EXACT,&intNumber)==TCL_ERROR) {
+        "TSL auth option ",TCL_EXACT,&tlsAuthTypeIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
-    switch(intNumber) {
+    switch(tlsAuthTypeIndex) {
         case 0:
             longNumber=CURL_TLSAUTH_NONE;
             break;
@@ -1629,7 +1624,7 @@ TclCurl_HandleTlsAuthType(TclCurlOptsArgs *args)
     tmpObjPtr=Tcl_NewLongObj(longNumber);
     Tcl_IncrRefCount(tmpObjPtr);
     if (SetoptLong(args->interp,curlHandle,CURLOPT_TLSAUTH_TYPE,
-                args->tableIndex,tmpObjPtr)) {
+                args->curlOptsIndex,tmpObjPtr)) {
         Tcl_DecrRefCount(tmpObjPtr);
         return TCL_ERROR;
     }
@@ -1643,13 +1638,13 @@ TclCurl_HandleGssApiDelegation(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
     Tcl_Obj *tmpObjPtr;
     long longNumber=0;
-    int intNumber;
+    int gssApiDelegationIndex;
 
     if (Tcl_GetIndexFromObj(args->interp, args->objv, gssapidelegation,
-        "GSS API delegation option ",TCL_EXACT,&intNumber)==TCL_ERROR) {
+        "GSS API delegation option ",TCL_EXACT,&gssApiDelegationIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
-    switch(intNumber) {
+    switch(gssApiDelegationIndex) {
         case 0:
             longNumber=CURLGSSAPI_DELEGATION_FLAG;
             break;
@@ -1659,7 +1654,7 @@ TclCurl_HandleGssApiDelegation(TclCurlOptsArgs *args)
     tmpObjPtr=Tcl_NewLongObj(longNumber);
     Tcl_IncrRefCount(tmpObjPtr);
     if (SetoptLong(args->interp,curlHandle,CURLOPT_GSSAPI_DELEGATION,
-                args->tableIndex,tmpObjPtr)) {
+                args->curlOptsIndex,tmpObjPtr)) {
         Tcl_DecrRefCount(tmpObjPtr);
         return TCL_ERROR;
     }
@@ -1673,11 +1668,11 @@ TclCurl_HandleTelnetOptions(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
 
     if (SetoptsList(args->interp,&args->curlData->telnetoptions,args->objv)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"invalid list");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"invalid list");
         return TCL_ERROR;
     }
     if (curl_easy_setopt(curlHandle,CURLOPT_TELNETOPTIONS,args->curlData->telnetoptions)) {
-        curlErrorSetOpt(args->interp,configTable,args->tableIndex,"telnetoptions list invalid");
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,"telnetoptions list invalid");
         curl_slist_free_all(args->curlData->telnetoptions);
         args->curlData->telnetoptions = NULL;
         return TCL_ERROR;
@@ -1690,7 +1685,7 @@ TclCurl_HandleCainfoBlob(TclCurlOptsArgs *args)
 {
 #if CURL_AT_LEAST_VERSION(7, 77, 0)
     if (SetoptBlob(args->interp,args->curlData->curl,CURLOPT_CAINFO_BLOB,
-            args->tableIndex,args->objv)) {
+            args->curlOptsIndex,args->objv)) {
         return TCL_ERROR;
     }
     return TCL_OK;

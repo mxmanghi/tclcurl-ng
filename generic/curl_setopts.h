@@ -125,8 +125,8 @@
     X(TCLCURLOPT_FTP_SSL, "CURLOPT_FTP_SSL", "-ftpssl", TclCurl_HandleFtpSsl, CURLOPT_USE_SSL, NULL) \
     X(TCLCURLOPT_SHARE, "CURLOPT_SHARE", "-share", TclCurl_HandleSetoptSHandle, CURLOPT_SHARE, NULL) \
     X(TCLCURLOPT_PORT, "CURLOPT_PORT", "-port", TclCurl_HandleSetoptLong, CURLOPT_PORT, NULL) \
-    X(TCLCURLOPT_TCP_NODELAY, "CURLOPT_TCP_NODELAY", "-tcpnodelay", TclCurl_HandleSetoptLong, CURLOPT_TCP_NODELAY, NULL) \
-    X(TCLCURLOPT_AUTOREFERER, "CURLOPT_AUTOREFERER", "-autoreferer", TclCurl_HandleSetoptLong, CURLOPT_AUTOREFERER, NULL) \
+    X(TCLCURLOPT_TCP_NODELAY, "CURLOPT_TCP_NODELAY", "-tcpnodelay",TclCurl_HandleSetoptLong,CURLOPT_TCP_NODELAY, NULL) \
+    X(TCLCURLOPT_AUTOREFERER, "CURLOPT_AUTOREFERER", "-autoreferer",TclCurl_HandleSetoptLong,CURLOPT_AUTOREFERER, NULL) \
     X(TCLCURLOPT_SOURCE_HOST, "CURLOPT_SOURCE_HOST", "-sourcehost", TclCurl_HandleObsolete, 0, "option is obsolete") \
     X(TCLCURLOPT_SOURCE_USERPWD, "CURLOPT_SOURCE_USERPWD", "-sourceuserpwd", TclCurl_HandleObsolete, 0, "option is obsolete") \
     X(TCLCURLOPT_SOURCE_PATH, "CURLOPT_SOURCE_PATH", "-sourcepath", TclCurl_HandleObsolete, 0, "option is obsolete") \
@@ -198,14 +198,13 @@
     X(TCLCURLOPT_GSSAPI_DELEGATION, "CURLOPT_GSSAPI_DELEGATION", "-gssapidelegation", TclCurl_HandleGssApiDelegation, 0, NULL) \
     X(TCLCURLOPT_NOPROXY, "CURLOPT_NOPROXY", "-noproxy", TclCurl_HandleSetoptChar, CURLOPT_NOPROXY, NULL) \
     X(TCLCURLOPT_TELNETOPTIONS, "CURLOPT_TELNETOPTIONS", "-telnetoptions", TclCurl_HandleTelnetOptions, 0, NULL) \
-    X(TCLCURLOPT_CAINFO_BLOB, "CURLOPT_CAINFO_BLOB", "-cainfoblob", TclCurl_HandleCainfoBlob, 0, NULL)
+    X(TCLCURLOPT_CAINFO_BLOB,"CURLOPT_CAINFO_BLOB","-cainfoblob",TclCurl_HandleCainfoBlob,0,NULL)
 
 enum curlOptionsIndices {
 #define TCLCURLOPT_ENUM_ENTRY(option, optname, configname, handler, curlopt, message) option,
     TCLCURL_OPTION_LIST(TCLCURLOPT_ENUM_ENTRY)
 #undef TCLCURLOPT_ENUM_ENTRY
     TCLCURLOPT_COUNT
-
 };
 
 const static char *configTable[] = {
@@ -219,11 +218,11 @@ typedef struct TclCurlOptionDef TclCurlOptionDef;
 typedef struct TclCurlOptsArgs  TclCurlOptsArgs;
 
 struct TclCurlOptsArgs {
-    Tcl_Interp            *interp;
-    struct curlObjData    *curlData;
-    Tcl_Obj *const         objv;
-    int                   tableIndex;
-    const TclCurlOptionDef *def;
+    Tcl_Interp*             interp;
+    struct curlObjData*     curlData;
+    Tcl_Obj *const          objv;
+    int                     curlOptsIndex;
+    const TclCurlOptionDef* def;
 };
 
 typedef int (*TclCurlOptionHandler)(TclCurlOptsArgs *args);
