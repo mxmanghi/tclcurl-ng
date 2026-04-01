@@ -56,7 +56,7 @@ If the configured HTTP server is not reachable, the server-backed cases are skip
 
 Based on the current TclCurl option surface in `generic/curl_setopts.h`, the strongest next targets for migration are:
 
-- cookies: `-cookie`, `-cookiefile`, `-cookiejar`, `-cookielist`, `-cookiesession`
+- cookies: `-cookiesession`
 - request bodies: `-post`, `-postfields`, `-httppost`, `-upload`, `-readproc`
 - header handling: `-httpheader`, `-writeheader`, `-header`, `-http200aliases`
 - transfer controls: `-range`, `-resumefrom`, `-timeout`, `-timeoutms`, `-connecttimeout`, `-buffersize`

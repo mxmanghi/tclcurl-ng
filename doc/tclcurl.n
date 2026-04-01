@@ -766,18 +766,20 @@ to 0 will make libcurl refuse any redirect. Set it to \-1 for an infinite
 number of redirects (which is the default)
 
 .TP
-.B -post301
-Controls how TclCurl acts on redirects after POSTs that get a 301 or 302 response back.
-A "301" as parameter tells the TclCurl to respect RFC 2616/10.3.2 and not convert POST
-requests into GET requests when following a 301 redirection. Passing a "302" makes
-TclCurl maintain the request method after a 302 redirect. "all" is a convenience string
-that activates both behaviours.
+.B -postredir
+Controls how TclCurl acts on redirects after POSTs that get a 301, 302 or 303 response back.
+A "301" parameter tells TclCurl to keep POST requests as POST when following a 301 redirect.
+Passing a "302" makes TclCurl maintain the request method after a 302 redirect, while "303"
+does the same for a 303 redirect. "all" is a convenience string that activates all three
+behaviours.
 
 The non-RFC behaviour is ubiquitous in web browsers, so the extension does the conversion
 by default to maintain consistency. However, a server may require a POST to remain a POST
 after such a redirection.
 
 This option is meaningful only when setting \fB-followlocation\fP
+
+The legacy alias \fB-post301\fP is accepted for compatibility and uses the same values.
 
 .TP
 .B -put
