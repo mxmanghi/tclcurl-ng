@@ -5,6 +5,7 @@
  * so that Tcl interpreters can access libcurl.
  *
  * Copyright (c) 2001-2011 Andres Garcia Garcia.
+ * Copyright (c) 2024-2026 Massimo Manghi
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.

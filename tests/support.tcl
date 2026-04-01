@@ -82,7 +82,7 @@ proc ::tclcurl::test::server::http_server_script {} {
 }
 
 proc ::tclcurl::test::server::base_url {{path {}}} {
-    set base [::tclcurl::test::env_or_default TCLCURL_TEST_HTTP_BASE_URL "http://127.0.0.1:8090"]
+    set base [::tclcurl::test::env_or_default TCLCURL_TEST_HTTP_BASE_URL "http://127.0.0.1:8990"]
     set base [string trimright $base /]
     if {$path eq {}} { return "${base}/" }
     return "${base}/[string trimleft $path /]"

@@ -163,11 +163,11 @@ proc ::tclcurl::testserver::create_service {protocol host port quiet} {
     set class_name [service_class $protocol]
     set object_name ::tclcurl::testserver::service[incr next_service_id]
 
-    return [$class_name create $object_name \
-        -protocol $protocol \
-        -host $host \
-        -port $port \
-        -quiet $quiet]
+    return [$class_name create  $object_name \
+                                -protocol $protocol \
+                                -host     $host \
+                                -port     $port \
+                                -quiet    $quiet]
 }
 
 proc ::tclcurl::testserver::start_services {config} {

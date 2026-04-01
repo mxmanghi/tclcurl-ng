@@ -3,9 +3,7 @@
 package require tcltest
 
 ::tcltest::configure -testdir [file dirname [file normalize [info script]]]
-
 source [file join [file dirname [file normalize [info script]]] support.tcl]
-
 ::tclcurl::test::load_package
 
 namespace import ::tcltest::*
