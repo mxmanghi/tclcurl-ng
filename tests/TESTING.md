@@ -49,12 +49,13 @@ If the configured HTTP server is not reachable, the server-backed cases are skip
 - easy handle lifecycle operations such as `reset` and `duphandle`
 - HTTP error handling through `-failonerror` and `-errorbuffer`
 - share handle wiring for DNS sharing
+- redirect handling through `-followlocation`, `-maxredirs`, `-autoreferer`, and `-postredir`
+- cookie state through `-cookiefile` and cookie sharing via `share cookies`
 
 ## Migration candidates from `curl/tests/http`
 
 Based on the current TclCurl option surface in `generic/curl_setopts.h`, the strongest next targets for migration are:
 
-- redirects: `-followlocation`, `-maxredirs`, `-autoreferer`, `-postredir`
 - cookies: `-cookie`, `-cookiefile`, `-cookiejar`, `-cookielist`, `-cookiesession`
 - request bodies: `-post`, `-postfields`, `-httppost`, `-upload`, `-readproc`
 - header handling: `-httpheader`, `-writeheader`, `-header`, `-http200aliases`

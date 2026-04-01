@@ -225,4 +225,5 @@ if {[file normalize $argv0] eq [file normalize [info script]]} {
         ::tclcurl::testserver::usage
         exit 1
     }
+    puts stderr "Server exits..."
 }

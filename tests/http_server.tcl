@@ -1,5 +1,9 @@
 namespace eval ::tclcurl::testserver {}
 
+proc ::tclcurl::testserver::http_header_lines {header_block} {
+    return [regexp -all -inline {[^\r\n]+} $header_block]
+}
+
 oo::class create ::tclcurl::testserver::http_service {
     superclass ::tclcurl::testserver::service
 
@@ -43,47 +47,111 @@ oo::class create ::tclcurl::testserver::http_service {
 
         append request_data($chan) $chunk
 
-        if {[string first "\r\n\r\n" $request_data($chan)] < 0} {
+        set request [my complete_request $request_data($chan)]
+        if {$request eq {}} {
             return
         }
 
-        set request $request_data($chan)
         unset request_data($chan)
         chan event $chan readable {}
         my respond $chan $request
     }
 
+    method complete_request {request_data} {
+        set header_end [string first "\r\n\r\n" $request_data]
+        if {$header_end < 0} {
+            return {}
+        }
+
+        set content_length 0
+        set header_block [string range $request_data 0 [expr {$header_end - 1}]]
+        foreach header_line [lrange [::tclcurl::testserver::http_header_lines $header_block] 1 end] {
+            if {[regexp -nocase {^Content-Length:\s*([0-9]+)$} $header_line -> parsed_length]} {
+                set content_length $parsed_length
+                break
+            }
+        }
+
+        set request_length [expr {$header_end + 4 + $content_length}]
+        if {[string length $request_data] < $request_length} {
+            return {}
+        }
+
+        return [string range $request_data 0 [expr {$request_length - 1}]]
+    }
+
     method respond {chan request} {
         set request_line [lindex [split $request "\r\n"] 0]
         if {![regexp {^([A-Z]+) ([^ ]+) HTTP/([0-9.]+)$} $request_line -> method target version]} {
-            my send_response $chan 400 "Bad Request" "bad request\n" 0
+            set response [my build_response_dict [dict create \
+                status 400 \
+                reason "Bad Request" \
+                body "bad request\n" \
+                head_only 0]]
+            my send_response $chan $response
             return
         }
 
         set path [lindex [split $target ?] 0]
-        set response [my route_request $method $path $target $version $request]
-        if {[dict exists $response status_line]} {
-            my send_response $chan \
-                [dict get $response status] \
-                [dict get $response reason] \
-                [dict get $response body] \
-                [expr {$method eq "HEAD"}] \
-                [dict get $response status_line]
-            return
-        }
-
-        my send_response $chan \
-            [dict get $response status] \
-            [dict get $response reason] \
-            [dict get $response body] \
-            [expr {$method eq "HEAD"}]
+        set headers [my parse_headers $request]
+        set response [my route_request $method $path $target $version $headers $request]
+        dict set response head_only [expr {$method eq "HEAD"}]
+        set response [my build_response_dict $response]
+        my send_response $chan $response
     }
 
-    method route_request {method path target version request} {
+    method parse_headers {request} {
+        set header_end [string first "\r\n\r\n" $request]
+        if {$header_end < 0} {
+            return [dict create]
+        }
+
+        set header_block [string range $request 0 [expr {$header_end - 1}]]
+        set header_lines [::tclcurl::testserver::http_header_lines $header_block]
+        set headers [dict create]
+
+        foreach header_line [lrange $header_lines 1 end] {
+            if {![regexp {^([^:]+):\s*(.*)$} $header_line -> name value]} {
+                continue
+            }
+            dict set headers [string tolower $name] $value
+        }
+
+        return $headers
+    }
+
+    method redirect_response {location {reason "Found"}} {
+        set body "redirect=$location\n"
+        return [dict create \
+            status 302 \
+            reason $reason \
+            body $body \
+            headers [list "Location: $location"]]
+    }
+
+    method route_request {method path target version headers request} {
+        if {[regexp {^/redir_([0-9]+)$} $path -> redirect_step]} {
+            if {$redirect_step < 5} {
+                return [my redirect_response "/redir_[incr redirect_step]"]
+            }
+
+            set body "path=$path\nmethod=$method\n"
+            return [dict create status 200 reason OK body $body headers {}]
+        }
+
+        if {[regexp {^/cookie-set/([^/]+)/([^/]+)$} $path -> cookie_name cookie_value]} {
+            set body "set-cookie=$cookie_name=$cookie_value\n"
+            return [dict create         \
+                         status 200     \
+                         reason OK      \
+                         body $body     \
+                         headers [list "Set-Cookie: $cookie_name=$cookie_value; Path=/"]]
+        }
+
         switch -- $path {
             / {
                 set body "tclcurl test server\n"
-                return [dict create status 200 reason OK body $body]
+                return [dict create status 200 reason OK body $body headers {}]
             }
             /tclcurl-http200alias {
                 set body "http200aliases=matched\n"
@@ -91,31 +159,89 @@ oo::class create ::tclcurl::testserver::http_service {
                     status 200 \
                     reason OK \
                     body $body \
+                    headers {} \
                     status_line "yummy/4.5 200 OK"]
             }
             /tclcurl-missing-resource {
                 set body "not found\n"
-                return [dict create status 404 reason "Not Found" body $body]
+                return [dict create status 404 reason "Not Found" body $body headers {}]
+            }
+            /autoreferer-start {
+                return [my redirect_response "/autoreferer-target"]
+            }
+            /autoreferer-target {
+                set referer {}
+                if {[dict exists $headers referer]} {
+                    set referer [dict get $headers referer]
+                }
+                set body "method=$method\nreferer=$referer\n"
+                return [dict create status 200 reason OK body $body headers {}]
+            }
+            /postredir-301 {
+                if {$method eq "POST"} {
+                    return [dict create \
+                        status 301 \
+                        reason "Moved Permanently" \
+                        body "redirect=/postredir-target\n" \
+                        headers [list "Location: /postredir-target"]]
+                }
+                set body "method=$method\n"
+                return [dict create status 200 reason OK body $body headers {}]
+            }
+            /postredir-target {
+                set body "method=$method\n"
+                return [dict create status 200 reason OK body $body headers {}]
+            }
+            /cookie-echo {
+                set cookie_header {}
+                if {[dict exists $headers cookie]} {
+                    set cookie_header [dict get $headers cookie]
+                }
+                set body "cookie=$cookie_header\n"
+                return [dict create status 200 reason OK body $body headers {}]
+            }
+            /shutdown {
+                # Let's have also a method to have the server orderly stop operations
+                set ::tclcurl::testserver::forever "no more"
+                return [dict create status 200 reason OK body "server orderly shutdown\n" headers {}]
             }
             default {
                 set body "path=$path\n"
-                return [dict create status 200 reason OK body $body]
+                return [dict create status 200 reason OK body $body headers {}]
             }
         }
     }
 
-    method send_response {chan status reason body head_only {status_line {}}} {
+    method build_response_dict {response} {
+        set completed_response [dict create \
+            status 200 \
+            reason OK \
+            body {} \
+            head_only 0 \
+            headers {} \
+            status_line {}]
+
+        dict for {key value} $response {
+            dict set completed_response $key $value
+        }
+
+        return $completed_response
+    }
+
+    method send_response {chan response} {
+        dict with response {}
         if {$status_line eq {}} {
             set status_line "HTTP/1.1 $status $reason"
         }
 
-        set headers [list \
+        set response_headers [list \
             $status_line \
             "Content-Type: text/plain" \
             "Content-Length: [string length $body]" \
             "Connection: close"]
+        set response_headers [concat $response_headers $headers]
 
-        puts -nonewline $chan [join $headers "\r\n"]
+        puts -nonewline $chan [join $response_headers "\r\n"]
         puts -nonewline $chan "\r\n\r\n"
         if {!$head_only} {
             puts -nonewline $chan $body
