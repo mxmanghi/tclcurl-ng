@@ -176,13 +176,13 @@ int TclCurl_HandleHttpPost(TclCurlOptsArgs *coa)
     if (coa->curlData->mime == NULL) {
         coa->curlData->mime = curl_mime_init(coa->curlData->curl);
         if (coa->curlData->mime == NULL) {
-            curlErrorSetOpt(coa->interp,configTable,coa->tableIndex,"Could not initialize MIME data");
+            curlErrorSetOpt(coa->interp,configTable,coa->curlOptsIndex,"Could not initialize MIME data");
             return TCL_ERROR;
         }
     }
     part = curl_mime_addpart(coa->curlData->mime);
     if (part == NULL) {
-        curlErrorSetOpt(coa->interp,configTable,coa->tableIndex,"Could not append MIME part");
+        curlErrorSetOpt(coa->interp,configTable,coa->curlOptsIndex,"Could not append MIME part");
         return TCL_ERROR;
     }
 
@@ -210,7 +210,7 @@ int TclCurl_HandleHttpPost(TclCurlOptsArgs *coa)
 
                 tmpStr = Tcl_GetStringFromObj(httpPostData[++arg_p],&buffer_l);
                 if (TclCurl_TclSize2SizeT(buffer_l,&buffer_size) == 0) {
-                    curlErrorSetOpt(coa->interp,configTable,coa->tableIndex,"Inconsistent buffer size");
+                    curlErrorSetOpt(coa->interp,configTable,coa->curlOptsIndex,"Inconsistent buffer size");
                     return TCL_ERROR;
                 }
                 curl_mime_data(part,tmpStr,buffer_size);
@@ -233,7 +233,7 @@ int TclCurl_HandleHttpPost(TclCurlOptsArgs *coa)
                 struct curl_slist* curl_content_headers_l = NULL;
 
                 if(SetoptsList(coa->interp,&curl_content_headers_l,httpPostData[++arg_p])) {
-                    curlErrorSetOpt(coa->interp,configTable,coa->tableIndex,"Header list invalid");
+                    curlErrorSetOpt(coa->interp,configTable,coa->curlOptsIndex,"Header list invalid");
                     return TCL_ERROR;
                 }
 
@@ -255,7 +255,7 @@ int TclCurl_HandleHttpPost(TclCurlOptsArgs *coa)
 
                 tmpStr = (const char *) Tcl_GetByteArrayFromObj(httpPostData[++arg_p],&tcl_buffer_l);
                 if (TclCurl_TclSize2SizeT(tcl_buffer_l,&buffer_size) == 0) {
-                    curlErrorSetOpt(coa->interp,configTable,coa->tableIndex,"Inconsistent buffer size");
+                    curlErrorSetOpt(coa->interp,configTable,coa->curlOptsIndex,"Inconsistent buffer size");
                     return TCL_ERROR;
                 }
 
