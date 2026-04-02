@@ -51,26 +51,26 @@ proc ::tclcurl::test::shutdown_http_server {} {
 set tcltestArgv {}
 set exitServer 0
 for {set i 0} {$i < [llength $argv]} {incr i} {
-        set arg [lindex $argv $i]
-        if {$arg eq "-httpserver"} {
-                incr i
-                if {$i >= [llength $argv]} {
-                        error "missing path after -httpserver"
-                }
-                ::tclcurl::test::server::set_http_server_script [lindex $argv $i]
-                continue
+    set arg [lindex $argv $i]
+    if {$arg eq "-httpserver"} {
+        incr i
+        if {$i >= [llength $argv]} {
+                error "missing path after -httpserver"
         }
-        if {$arg eq "-exitserver"} {
-                set exitServer 1
-                continue
-        }
-        lappend tcltestArgv $arg
+        ::tclcurl::test::server::set_http_server_script [lindex $argv $i]
+        continue
+    }
+    if {$arg eq "-exitserver"} {
+        set exitServer 1
+        continue
+    }
+    lappend tcltestArgv $arg
 }
 
 # Allow command line arguments to be passed to the configure command
 # This supports only running a single test or a single test file
 if {[lsearch -exact $tcltestArgv -verbose] < 0} {
-        ::tcltest::configure -verbose {start error}
+    ::tcltest::configure -verbose {start error}
 }
 ::tcltest::configure {*}$tcltestArgv
 

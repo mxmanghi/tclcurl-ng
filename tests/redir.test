@@ -44,9 +44,8 @@ test redir-1.2 {-maxredirs 4 rejects the fifth redirect} -constraints http_serve
             -maxredirs 4 \
             -errorbuffer errbuf \
             -noprogress 1
-        list \
-            [catch {$handle perform}] \
-            [expr {[string length $errbuf] > 0}]
+        list [catch {$handle perform}] \
+             [expr {[string length $errbuf] > 0}]
     }
 } -result {1 1}
 
@@ -54,26 +53,26 @@ test redir-1.3 {-autoreferer sets Referer on the redirected request} -constraint
     set body {}
     set startUrl [::tclcurl::test::server::base_url autoreferer-start]
     ::tclcurl::test::with_easy_handle handle {
-        $handle configure   -url $startUrl      \
-                            -followlocation 1   \
-                            -autoreferer 1      \
-                            -bodyvar body       \
-                            -noprogress 1
+        $handle configure -url $startUrl      \
+                          -followlocation 1   \
+                          -autoreferer 1      \
+                          -bodyvar body       \
+                          -noprogress 1
         set rc [$handle perform]
-        #puts "-->>\n[string trim $body]\n<<--"
         list $rc [expr {[::tclcurl::test::normalizedBody $body] eq "method=GET\nreferer=$startUrl"}]
     }
 } -result {0 1}
 
 test redir-1.4 {without -postredir a POST 301 redirect is retried as GET} -constraints http_server -body {
     set body {}
+    set start_url [::tclcurl::test::server::base_url postredir-301]
+    puts "issuing curl request for $start_url"
     ::tclcurl::test::with_easy_handle handle {
-        $handle configure \
-            -url [::tclcurl::test::server::base_url postredir-301] \
-            -post 1 \
-            -followlocation 1 \
-            -bodyvar body \
-            -noprogress 1
+        $handle configure -url  $start_url  \
+                          -post 1 \
+                          -followlocation 1 \
+                          -bodyvar body \
+                          -noprogress 1
         set rc [$handle perform]
         list $rc [expr {[::tclcurl::test::normalizedBody $body] eq "method=GET"}]
     }

@@ -174,7 +174,7 @@ test http-1.10 {share handle cleanup is rejected while an easy handle still uses
 
 test http-2.1 {-post with -postfields sends application/x-www-form-urlencoded data} -constraints http_server -body {
     set body {}
-    set payload "firstName=Andres&lastName=Garcia&city=Buenos+Aires"
+    set payload "firstName=Massimo&lastName=Manghi&city=Parma+Italy"
     ::tclcurl::test::with_easy_handle handle {
         $handle configure -url [::tclcurl::test::server::base_url request-inspect] \
                           -post 1 \
@@ -258,23 +258,21 @@ test http-2.4 {-upload with -readproc streams the same binary payload} -constrai
     }
     ::tclcurl::test::readproc_reset $payload
     ::tclcurl::test::with_easy_handle handle {
-        $handle configure \
-            -url [::tclcurl::test::server::base_url request-inspect] \
-            -upload 1 \
-            -readproc ::tclcurl::test::readproc_chunk \
-            -infilesize [string length $payload] \
-            -bodyvar body \
-            -httpheader [list "Expect:"] \
-            -noprogress 1
+        $handle configure   -url [::tclcurl::test::server::base_url request-inspect] \
+                            -upload 1 \
+                            -readproc ::tclcurl::test::readproc_chunk \
+                            -infilesize [string length $payload] \
+                            -bodyvar body \
+                            -httpheader [list "Expect:"] \
+                            -noprogress 1
         set rc [$handle perform]
         set response [::tclcurl::test::parse_server_response $body]
-        list \
-            $rc \
-            [$handle getinfo responsecode] \
-            [dict get $response method] \
-            [dict get $response content-length] \
-            [expr {[dict get $response body-sha256] eq [::tclcurl::test::sha256_hex $payload]}] \
-            [expr {$::tclcurl::test::readproc(calls) > 0}]
+        list    $rc \
+                [$handle getinfo responsecode] \
+                [dict get $response method] \
+                [dict get $response content-length] \
+                [expr {[dict get $response body-sha256] eq [::tclcurl::test::sha256_hex $payload]}] \
+                [expr {$::tclcurl::test::readproc(calls) > 0}]
     }
 } -cleanup {
     unset -nocomplain ::tclcurl::test::readproc

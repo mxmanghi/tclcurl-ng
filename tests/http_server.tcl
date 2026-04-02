@@ -52,7 +52,6 @@ oo::class create ::tclcurl::testserver::http_service {
         }
 
         append request_data($chan) $chunk
-
         set request [my complete_request $request_data($chan)]
         if {$request eq {}} {
             return
@@ -65,9 +64,7 @@ oo::class create ::tclcurl::testserver::http_service {
 
     method complete_request {request_data} {
         set header_end [string first "\r\n\r\n" $request_data]
-        if {$header_end < 0} {
-            return {}
-        }
+        if {$header_end < 0} { return {} }
 
         set headers [my parse_headers $request_data]
         if {[string tolower [my header_value $headers transfer-encoding]] eq "chunked"} {
@@ -158,6 +155,12 @@ oo::class create ::tclcurl::testserver::http_service {
     method parse_chunked_body {body} {
         set decoded {}
         set cursor 0
+
+        # libcurl can emit "Transfer-Encoding: chunked" for an empty POST
+        # request without sending an explicit terminating zero-size chunk.
+        if {$body eq {}} {
+            return [dict create complete 1 decoded_body {} consumed_length 0]
+        }
 
         while 1 {
             set line_end [string first "\r\n" $body $cursor]

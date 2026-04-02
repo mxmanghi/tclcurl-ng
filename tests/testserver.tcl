@@ -31,11 +31,11 @@ oo::class create ::tclcurl::testserver::service {
             error "missing -port"
         }
 
-        set protocol $options(-protocol)
-        set host $options(-host)
-        set port $options(-port)
-        set quiet $options(-quiet)
-        set listener {}
+        set protocol    $options(-protocol)
+        set host        $options(-host)
+        set port        $options(-port)
+        set quiet       $options(-quiet)
+        set listener    {}
     }
 
     destructor {
@@ -86,6 +86,7 @@ proc ::tclcurl::testserver::usage {} {
 }
 
 proc ::tclcurl::testserver::register_service_class {protocol class_name} {
+
     variable service_classes
     set service_classes($protocol) $class_name
     namespace ensemble configure ::tclcurl::testserver -map [command_map]
