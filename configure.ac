@@ -267,11 +267,13 @@ AC_DEFUN([CURL_ENABLE_DEPRECATED_CODE], [
     [Define to 1 to enable deprecated code for CURL versions prior to 7.84.])
   AH_TEMPLATE([CURL_PRE_7_11_1_DEPR],
     [Define to 1 to enable deprecated code for CURL versions prior to 7.11.1.])
+  AH_TEMPLATE([CURL_PRE_8_17_0_DEPR],
+    [Define to 1 to enable deprecated code for CURL versions prior to 8.17.0.])
 
   AC_ARG_ENABLE([deprecated-code],
     [AS_HELP_STRING(
       [--enable-deprecated-code=LIST],
-      [Enable deprecated code for selected CURL versions. LIST is a comma-separated list of: v7.56,v7.84,v7.11.1. Use --enable-deprecated-code (or =all) to enable all; default is none.]
+      [Enable deprecated code for selected CURL versions. LIST is a comma-separated list of: v7.56,v7.84,v7.11.1,v8.17.0. Use --enable-deprecated-code (or =all) to enable all; default is none.]
     )],
     [curl_depr_list=$enableval],
     [curl_depr_list=no]
@@ -280,6 +282,7 @@ AC_DEFUN([CURL_ENABLE_DEPRECATED_CODE], [
   curl_pre_7_56_depr=no
   curl_pre_7_84_depr=no
   curl_pre_7_11_1_depr=no
+  curl_pre_8_17_0_depr=no
 
   AS_CASE([$curl_depr_list],
     [no|false|none], [:],
@@ -287,6 +290,7 @@ AC_DEFUN([CURL_ENABLE_DEPRECATED_CODE], [
       curl_pre_7_56_depr=yes
       curl_pre_7_84_depr=yes
       curl_pre_7_11_1_depr=yes
+      curl_pre_8_17_0_depr=yes
     ],
     [*], [
       dnl Remove spaces/tabs around commas etc. (portable enough for configure)
@@ -303,8 +307,9 @@ AC_DEFUN([CURL_ENABLE_DEPRECATED_CODE], [
             [7.56],   [curl_pre_7_56_depr=yes],
             [7.84],   [curl_pre_7_84_depr=yes],
             [7.11.1], [curl_pre_7_11_1_depr=yes],
+            [8.17.0], [curl_pre_8_17_0_depr=yes],
             [*],      [AC_MSG_ERROR(
-                         [Unsupported value '$curl_ver' for --enable-deprecated-code. Allowed: v7.56,v7.84,v7.11.1]
+                         [Unsupported value '$curl_ver' for --enable-deprecated-code. Allowed: v7.56,v7.84,v7.11.1,v8.17.0]
                        )]
           )
         done
@@ -321,12 +326,16 @@ AC_DEFUN([CURL_ENABLE_DEPRECATED_CODE], [
   if test "x$curl_pre_7_11_1_depr" = xyes; then
     AC_DEFINE([CURL_PRE_7_11_1_DEPR], [1])
   fi
+  if test "x$curl_pre_8_17_0_depr" = xyes; then
+    AC_DEFINE([CURL_PRE_8_17_0_DEPR], [1])
+  fi
 
   dnl Optional: show what was enabled
   curl_depr_enabled=
   test "x$curl_pre_7_56_depr" = xyes   && curl_depr_enabled="$curl_depr_enabled v7.56"
   test "x$curl_pre_7_84_depr" = xyes   && curl_depr_enabled="$curl_depr_enabled v7.84"
   test "x$curl_pre_7_11_1_depr" = xyes && curl_depr_enabled="$curl_depr_enabled v7.11.1"
+  test "x$curl_pre_8_17_0_depr" = xyes && curl_depr_enabled="$curl_depr_enabled v8.17.0"
   test "x$curl_depr_enabled" = x && curl_depr_enabled="none"
 
   AC_MSG_NOTICE([deprecated curl code enabled for: $curl_depr_enabled])

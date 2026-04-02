@@ -1412,8 +1412,9 @@ Optional Features:
   --enable-deprecated-code=LIST
                           Enable deprecated code for selected CURL versions.
                           LIST is a comma-separated list of:
-                          v7.56,v7.84,v7.11.1. Use --enable-deprecated-code
-                          (or =all) to enable all; default is none.
+                          v7.56,v7.84,v7.11.1,v8.17.0. Use
+                          --enable-deprecated-code (or =all) to enable all;
+                          default is none.
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -9408,6 +9409,7 @@ printf "%s\n" "${TCLSH_PROG}" >&6; }
 
 
 
+
   # Check whether --enable-deprecated-code was given.
 if test ${enable_deprecated_code+y}
 then :
@@ -9422,6 +9424,7 @@ fi
   curl_pre_7_56_depr=no
   curl_pre_7_84_depr=no
   curl_pre_7_11_1_depr=no
+  curl_pre_8_17_0_depr=no
 
   case $curl_depr_list in #(
   no|false|none) :
@@ -9431,6 +9434,7 @@ fi
       curl_pre_7_56_depr=yes
       curl_pre_7_84_depr=yes
       curl_pre_7_11_1_depr=yes
+      curl_pre_8_17_0_depr=yes
      ;; #(
   *) :
 
@@ -9448,8 +9452,10 @@ fi
     curl_pre_7_84_depr=yes ;; #(
   7.11.1) :
     curl_pre_7_11_1_depr=yes ;; #(
+  8.17.0) :
+    curl_pre_8_17_0_depr=yes ;; #(
   *) :
-    as_fn_error $? "Unsupported value '$curl_ver' for --enable-deprecated-code. Allowed: v7.56,v7.84,v7.11.1
+    as_fn_error $? "Unsupported value '$curl_ver' for --enable-deprecated-code. Allowed: v7.56,v7.84,v7.11.1,v8.17.0
                        " "$LINENO" 5
            ;; #(
   *) :
@@ -9475,11 +9481,16 @@ esac
     printf "%s\n" "#define CURL_PRE_7_11_1_DEPR 1" >>confdefs.h
 
   fi
+  if test "x$curl_pre_8_17_0_depr" = xyes; then
+    printf "%s\n" "#define CURL_PRE_8_17_0_DEPR 1" >>confdefs.h
+
+  fi
 
     curl_depr_enabled=
   test "x$curl_pre_7_56_depr" = xyes   && curl_depr_enabled="$curl_depr_enabled v7.56"
   test "x$curl_pre_7_84_depr" = xyes   && curl_depr_enabled="$curl_depr_enabled v7.84"
   test "x$curl_pre_7_11_1_depr" = xyes && curl_depr_enabled="$curl_depr_enabled v7.11.1"
+  test "x$curl_pre_8_17_0_depr" = xyes && curl_depr_enabled="$curl_depr_enabled v8.17.0"
   test "x$curl_depr_enabled" = x && curl_depr_enabled="none"
 
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: deprecated curl code enabled for: $curl_depr_enabled" >&5

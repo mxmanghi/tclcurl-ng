@@ -290,7 +290,7 @@ SetoptCurlOffT(Tcl_Interp *interp,CURL *curlHandle,CURLoption opt,
  */
 static int
 SetoptChar(Tcl_Interp *interp,CURL *curlHandle,
-        CURLoption opt,int configOptionIndex,Tcl_Obj *tclObj) {
+           CURLoption opt,int configOptionIndex,Tcl_Obj *tclObj) {
     char    *optionPtr;
 
     optionPtr=curlstrdup(Tcl_GetString(tclObj));

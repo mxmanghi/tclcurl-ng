@@ -56,7 +56,6 @@ If the configured HTTP server is not reachable, the server-backed cases are skip
 
 Based on the current TclCurl option surface in `generic/curl_setopts.h`, the strongest next targets for migration are:
 
-- cookies: `-cookiesession`
 - request bodies: `-post`, `-postfields`, `-httppost`, `-upload`, `-readproc`
 - header handling: `-httpheader`, `-writeheader`, `-header`, `-http200aliases`
 - transfer controls: `-range`, `-resumefrom`, `-timeout`, `-timeoutms`, `-connecttimeout`, `-buffersize`
@@ -70,7 +69,8 @@ The curl Perl tests include scenarios that need more than a single HTTP base URL
 
 - tests that depend on proxy, HTTPS, FTP, SMTP, POP3, or authentication-specific server setups
 - cases that need specific response scripts from `curl/tests/data`
-- feature-conditional cases such as HTTP/2, HTTP/3, TLS auth, or compression variants that depend on the local libcurl build
+- feature-conditional cases such as HTTP/2, HTTP/3, TLS auth, or compression variants that depend on the
+  local libcurl build
 
 Those are good candidates for a second support layer that can map named curl test assets from `CURL_ROOT/tests/http` or 
 `tests/data` into Tcl fixtures instead of hard-coding endpoint paths in each test.

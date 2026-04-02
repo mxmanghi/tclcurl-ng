@@ -4,6 +4,10 @@ proc ::tclcurl::testserver::http_header_lines {header_block} {
     return [regexp -all -inline {[^\r\n]+} $header_block]
 }
 
+proc ::tclcurl::testserver::escape_response_value {value} {
+    return [string map [list "\\" "\\\\" "\n" "\\n" "\r" "\\r"] $value]
+}
+
 oo::class create ::tclcurl::testserver::http_service {
     superclass ::tclcurl::testserver::service
 
@@ -120,13 +124,28 @@ oo::class create ::tclcurl::testserver::http_service {
         return $headers
     }
 
+    method request_body {request} {
+        set header_end [string first "\r\n\r\n" $request]
+        if {$header_end < 0} {
+            return {}
+        }
+
+        return [string range $request [expr {$header_end + 4}] end]
+    }
+
+    method header_value {headers name} {
+        if {[dict exists $headers $name]} {
+            return [dict get $headers $name]
+        }
+        return {}
+    }
+
     method redirect_response {location {reason "Found"}} {
         set body "redirect=$location\n"
-        return [dict create \
-            status 302 \
-            reason $reason \
-            body $body \
-            headers [list "Location: $location"]]
+        return [dict create status 302      \
+                            reason $reason  \
+                            body $body      \
+                            headers [list "Location: $location"]]
     }
 
     method route_request {method path target version headers request} {
@@ -141,11 +160,10 @@ oo::class create ::tclcurl::testserver::http_service {
 
         if {[regexp {^/cookie-set/([^/]+)/([^/]+)$} $path -> cookie_name cookie_value]} {
             set body "set-cookie=$cookie_name=$cookie_value\n"
-            return [dict create         \
-                         status 200     \
-                         reason OK      \
-                         body $body     \
-                         headers [list "Set-Cookie: $cookie_name=$cookie_value; Path=/"]]
+            return [dict create status     200     \
+                                reason     OK      \
+                                body       $body   \
+                                headers [list "Set-Cookie: $cookie_name=$cookie_value; Path=/"]]
         }
 
         switch -- $path {
@@ -179,11 +197,10 @@ oo::class create ::tclcurl::testserver::http_service {
             }
             /postredir-301 {
                 if {$method eq "POST"} {
-                    return [dict create \
-                        status 301 \
-                        reason "Moved Permanently" \
-                        body "redirect=/postredir-target\n" \
-                        headers [list "Location: /postredir-target"]]
+                    return [dict create status 301                  \
+                                        reason "Moved Permanently"  \
+                                        body   "redirect=/postredir-target\n" \
+                                        headers [list "Location: /postredir-target"]]
                 }
                 set body "method=$method\n"
                 return [dict create status 200 reason OK body $body headers {}]
@@ -198,6 +215,18 @@ oo::class create ::tclcurl::testserver::http_service {
                     set cookie_header [dict get $headers cookie]
                 }
                 set body "cookie=$cookie_header\n"
+                return [dict create status 200 reason OK body $body headers {}]
+            }
+            /request-inspect {
+                set request_body [my request_body $request]
+                set body [join [list \
+                    "method=[::tclcurl::testserver::escape_response_value $method]" \
+                    "path=[::tclcurl::testserver::escape_response_value $path]" \
+                    "content-type=[::tclcurl::testserver::escape_response_value [my header_value $headers content-type]]" \
+                    "content-length=[::tclcurl::testserver::escape_response_value [my header_value $headers content-length]]" \
+                    "body-length=[string length $request_body]" \
+                    "body-hex=[binary encode hex $request_body]"] "\n"]
+                append body "\n"
                 return [dict create status 200 reason OK body $body headers {}]
             }
             /shutdown {

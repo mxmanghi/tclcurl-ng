@@ -10,6 +10,37 @@ proc ::tclcurl::test::captureWriteProc {chunk} {
     return
 }
 
+proc ::tclcurl::test::parse_server_response {body} {
+    set parsed [dict create]
+    foreach line [split [string trim $body] "\n"] {
+        if {$line eq {}} {
+            continue
+        }
+        set separator [string first "=" $line]
+        if {$separator < 0} {
+            continue
+        }
+        dict set parsed \
+            [string range $line 0 [expr {$separator - 1}]] \
+            [string range $line [expr {$separator + 1}] end]
+    }
+    return $parsed
+}
+
+proc ::tclcurl::test::readproc_reset {data} {
+    set ::tclcurl::test::readproc(data) $data
+    set ::tclcurl::test::readproc(offset) 0
+    set ::tclcurl::test::readproc(calls) 0
+}
+
+proc ::tclcurl::test::readproc_chunk {size} {
+    incr ::tclcurl::test::readproc(calls)
+    set offset $::tclcurl::test::readproc(offset)
+    set chunk [string range $::tclcurl::test::readproc(data) $offset [expr {$offset + $size - 1}]]
+    incr ::tclcurl::test::readproc(offset) [string length $chunk]
+    return $chunk
+}
+
 test http-1.1 {GET into -bodyvar returns a body and 200 response code} -constraints http_server -body {
     set body {}
     ::tclcurl::test::with_easy_handle handle {
@@ -135,5 +166,117 @@ test http-1.10 {share handle cleanup is rejected while an easy handle still uses
     catch {$share cleanup}
     list $code $result
 } -result {1 {Share handle is still attached to one or more easy handles.}}
+
+test http-2.1 {-post with -postfields sends application/x-www-form-urlencoded data} -constraints http_server -body {
+    set body {}
+    set payload "firstName=Andres&lastName=Garcia&city=Buenos+Aires"
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure \
+            -url [::tclcurl::test::server::base_url request-inspect] \
+            -post 1 \
+            -postfields $payload \
+            -bodyvar body \
+            -httpheader [list "Expect:"] \
+            -noprogress 1
+        set rc [$handle perform]
+        set response [::tclcurl::test::parse_server_response $body]
+        list $rc \
+             [$handle getinfo responsecode]      \
+             [dict get $response method]         \
+             [dict get $response content-type]   \
+             [expr {[dict get $response content-length] == [string length $payload]}] \
+             [expr {[dict get $response body-hex] eq [binary encode hex $payload]}]
+    }
+} -result {0 200 POST application/x-www-form-urlencoded 1 1}
+
+test http-2.2 {-post can stream request data through -readproc} -constraints http_server -body {
+    set body {}
+    set payload "upload=from-readproc&mode=form-urlencoded"
+    ::tclcurl::test::readproc_reset $payload
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure \
+            -url [::tclcurl::test::server::base_url request-inspect] \
+            -post 1 \
+            -readproc ::tclcurl::test::readproc_chunk \
+            -infilesize [string length $payload] \
+            -bodyvar body \
+            -httpheader [list "Expect:"] \
+            -noprogress 1
+        set rc [$handle perform]
+        set response [::tclcurl::test::parse_server_response $body]
+        #puts "body hex: [dict get $response body-hex]"
+        #puts "payload hex: [binary encode hex $payload]"
+        list $rc \
+             [$handle getinfo responsecode] \
+             [dict get $response method] \
+             [dict get $response content-type] \
+             [expr {[dict get $response body-hex] eq [binary encode hex $payload]}] \
+             [expr {$::tclcurl::test::readproc(calls) > 0}]
+    }
+} -cleanup {
+    unset -nocomplain ::tclcurl::test::readproc
+} -result {0 200 POST application/x-www-form-urlencoded 1 1}
+
+test http-2.3 {-upload with -infile sends a binary HTTP PUT body} -constraints http_server -body {
+    set body {}
+    set fixture [file join [file dirname [file normalize [info script]]] tcl9.png]
+    set fh [open $fixture rb]
+    try {
+        set payload [read $fh]
+    } finally {
+        close $fh
+    }
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure \
+            -url [::tclcurl::test::server::base_url request-inspect] \
+            -upload 1 \
+            -infile $fixture \
+            -infilesize [file size $fixture] \
+            -bodyvar body \
+            -httpheader [list "Expect:"] \
+            -noprogress 1
+        set rc [$handle perform]
+        set response [::tclcurl::test::parse_server_response $body]
+        list \
+            $rc \
+            [$handle getinfo responsecode] \
+            [dict get $response method] \
+            [dict get $response content-length] \
+            [expr {[dict get $response body-hex] eq [binary encode hex $payload]}]
+    }
+} -result {0 200 PUT 19698 1}
+
+test http-2.4 {-upload with -readproc streams the same binary payload} -constraints http_server -body {
+    set body {}
+    set fixture [file join [file dirname [file normalize [info script]]] tcl9.png]
+    set fh [open $fixture rb]
+    try {
+        set payload [read $fh]
+    } finally {
+        close $fh
+    }
+    ::tclcurl::test::readproc_reset $payload
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure \
+            -url [::tclcurl::test::server::base_url request-inspect] \
+            -upload 1 \
+            -readproc ::tclcurl::test::readproc_chunk \
+            -infilesize [string length $payload] \
+            -bodyvar body \
+            -httpheader [list "Expect:"] \
+            -noprogress 1
+        set rc [$handle perform]
+        set response [::tclcurl::test::parse_server_response $body]
+        list \
+            $rc \
+            [$handle getinfo responsecode] \
+            [dict get $response method] \
+            [dict get $response content-length] \
+            [expr {[dict get $response body-hex] eq [binary encode hex $payload]}] \
+            [expr {$::tclcurl::test::readproc(calls) > 0}]
+    }
+} -cleanup {
+    unset -nocomplain ::tclcurl::test::readproc
+} -result {0 200 PUT 19698 1 1}
 
 cleanupTests
