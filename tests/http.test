@@ -1,4 +1,5 @@
 package require tcltest
+package require sha256
 namespace import ::tcltest::*
 
 source [file join [file dirname [file normalize [info script]]] support.tcl]
@@ -39,6 +40,10 @@ proc ::tclcurl::test::readproc_chunk {size} {
     set chunk [string range $::tclcurl::test::readproc(data) $offset [expr {$offset + $size - 1}]]
     incr ::tclcurl::test::readproc(offset) [string length $chunk]
     return $chunk
+}
+
+proc ::tclcurl::test::sha256_hex {data} {
+    return [::sha2::sha256 -hex $data]
 }
 
 test http-1.1 {GET into -bodyvar returns a body and 200 response code} -constraints http_server -body {
@@ -171,13 +176,12 @@ test http-2.1 {-post with -postfields sends application/x-www-form-urlencoded da
     set body {}
     set payload "firstName=Andres&lastName=Garcia&city=Buenos+Aires"
     ::tclcurl::test::with_easy_handle handle {
-        $handle configure \
-            -url [::tclcurl::test::server::base_url request-inspect] \
-            -post 1 \
-            -postfields $payload \
-            -bodyvar body \
-            -httpheader [list "Expect:"] \
-            -noprogress 1
+        $handle configure -url [::tclcurl::test::server::base_url request-inspect] \
+                          -post 1 \
+                          -postfields $payload \
+                          -bodyvar body \
+                          -httpheader [list "Expect:"] \
+                          -noprogress 1
         set rc [$handle perform]
         set response [::tclcurl::test::parse_server_response $body]
         list $rc \
@@ -185,7 +189,7 @@ test http-2.1 {-post with -postfields sends application/x-www-form-urlencoded da
              [dict get $response method]         \
              [dict get $response content-type]   \
              [expr {[dict get $response content-length] == [string length $payload]}] \
-             [expr {[dict get $response body-hex] eq [binary encode hex $payload]}]
+             [expr {[dict get $response body-sha256] eq [::tclcurl::test::sha256_hex $payload]}]
     }
 } -result {0 200 POST application/x-www-form-urlencoded 1 1}
 
@@ -194,23 +198,20 @@ test http-2.2 {-post can stream request data through -readproc} -constraints htt
     set payload "upload=from-readproc&mode=form-urlencoded"
     ::tclcurl::test::readproc_reset $payload
     ::tclcurl::test::with_easy_handle handle {
-        $handle configure \
-            -url [::tclcurl::test::server::base_url request-inspect] \
-            -post 1 \
-            -readproc ::tclcurl::test::readproc_chunk \
-            -infilesize [string length $payload] \
-            -bodyvar body \
-            -httpheader [list "Expect:"] \
-            -noprogress 1
+        $handle configure -url [::tclcurl::test::server::base_url request-inspect] \
+                          -post 1 \
+                          -readproc ::tclcurl::test::readproc_chunk \
+                          -infilesize [string length $payload] \
+                          -bodyvar body \
+                          -httpheader [list "Expect:"] \
+                          -noprogress 1
         set rc [$handle perform]
         set response [::tclcurl::test::parse_server_response $body]
-        #puts "body hex: [dict get $response body-hex]"
-        #puts "payload hex: [binary encode hex $payload]"
         list $rc \
              [$handle getinfo responsecode] \
              [dict get $response method] \
              [dict get $response content-type] \
-             [expr {[dict get $response body-hex] eq [binary encode hex $payload]}] \
+             [expr {[dict get $response body-sha256] eq [::tclcurl::test::sha256_hex $payload]}] \
              [expr {$::tclcurl::test::readproc(calls) > 0}]
     }
 } -cleanup {
@@ -242,7 +243,7 @@ test http-2.3 {-upload with -infile sends a binary HTTP PUT body} -constraints h
             [$handle getinfo responsecode] \
             [dict get $response method] \
             [dict get $response content-length] \
-            [expr {[dict get $response body-hex] eq [binary encode hex $payload]}]
+            [expr {[dict get $response body-sha256] eq [::tclcurl::test::sha256_hex $payload]}]
     }
 } -result {0 200 PUT 19698 1}
 
@@ -272,7 +273,7 @@ test http-2.4 {-upload with -readproc streams the same binary payload} -constrai
             [$handle getinfo responsecode] \
             [dict get $response method] \
             [dict get $response content-length] \
-            [expr {[dict get $response body-hex] eq [binary encode hex $payload]}] \
+            [expr {[dict get $response body-sha256] eq [::tclcurl::test::sha256_hex $payload]}] \
             [expr {$::tclcurl::test::readproc(calls) > 0}]
     }
 } -cleanup {

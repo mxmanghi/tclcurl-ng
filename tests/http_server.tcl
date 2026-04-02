@@ -1,5 +1,7 @@
 namespace eval ::tclcurl::testserver {}
 
+package require sha256
+
 proc ::tclcurl::testserver::http_header_lines {header_block} {
     return [regexp -all -inline {[^\r\n]+} $header_block]
 }
@@ -67,21 +69,32 @@ oo::class create ::tclcurl::testserver::http_service {
             return {}
         }
 
-        set content_length 0
-        set header_block [string range $request_data 0 [expr {$header_end - 1}]]
-        foreach header_line [lrange [::tclcurl::testserver::http_header_lines $header_block] 1 end] {
-            if {[regexp -nocase {^Content-Length:\s*([0-9]+)$} $header_line -> parsed_length]} {
-                set content_length $parsed_length
-                break
-            }
+        set headers [my parse_headers $request_data]
+        if {[string tolower [my header_value $headers transfer-encoding]] eq "chunked"} {
+            return [my complete_chunked_request $request_data $header_end]
         }
 
+        set content_length 0
+        if {[dict exists $headers content-length]} {
+            set content_length [dict get $headers content-length]
+        }
         set request_length [expr {$header_end + 4 + $content_length}]
         if {[string length $request_data] < $request_length} {
             return {}
         }
 
         return [string range $request_data 0 [expr {$request_length - 1}]]
+    }
+
+    method complete_chunked_request {request_data header_end} {
+        set chunk_data [string range $request_data [expr {$header_end + 4}] end]
+        set chunk_info [my parse_chunked_body $chunk_data]
+        if {![dict get $chunk_info complete]} {
+            return {}
+        }
+
+        set request_end [expr {$header_end + 4 + [dict get $chunk_info consumed_length] - 1}]
+        return [string range $request_data 0 $request_end]
     }
 
     method respond {chan request} {
@@ -130,7 +143,65 @@ oo::class create ::tclcurl::testserver::http_service {
             return {}
         }
 
+        set headers [my parse_headers $request]
+        if {[string tolower [my header_value $headers transfer-encoding]] eq "chunked"} {
+            return [my decode_chunked_body [string range $request [expr {$header_end + 4}] end]]
+        }
+
         return [string range $request [expr {$header_end + 4}] end]
+    }
+
+    method decode_chunked_body {body} {
+        return [dict get [my parse_chunked_body $body] decoded_body]
+    }
+
+    method parse_chunked_body {body} {
+        set decoded {}
+        set cursor 0
+
+        while 1 {
+            set line_end [string first "\r\n" $body $cursor]
+            if {$line_end < 0} {
+                return [dict create complete 0 decoded_body {} consumed_length 0]
+            }
+
+            set size_line [string trim [string range $body $cursor [expr {$line_end - 1}]]]
+            set size_token [lindex [split $size_line ";"] 0]
+            if {[scan $size_token %x chunk_size] != 1} {
+                return [dict create complete 0 decoded_body {} consumed_length 0]
+            }
+
+            set data_start [expr {$line_end + 2}]
+            if {$chunk_size == 0} {
+                if {[string range $body $data_start [expr {$data_start + 1}]] eq "\r\n"} {
+                    return [dict create \
+                        complete 1 \
+                        decoded_body $decoded \
+                        consumed_length [expr {$data_start + 2}]]
+                }
+
+                set trailer_end [string first "\r\n\r\n" $body $data_start]
+                if {$trailer_end < 0} {
+                    return [dict create complete 0 decoded_body {} consumed_length 0]
+                }
+
+                return [dict create \
+                    complete 1 \
+                    decoded_body $decoded \
+                    consumed_length [expr {$trailer_end + 4}]]
+            }
+
+            set data_end [expr {$data_start + $chunk_size}]
+            if {[string length $body] < ($data_end + 2)} {
+                return [dict create complete 0 decoded_body {} consumed_length 0]
+            }
+            if {[string range $body $data_end [expr {$data_end + 1}]] ne "\r\n"} {
+                return [dict create complete 0 decoded_body {} consumed_length 0]
+            }
+
+            append decoded [string range $body $data_start [expr {$data_end - 1}]]
+            set cursor [expr {$data_end + 2}]
+        }
     }
 
     method header_value {headers name} {
@@ -220,12 +291,13 @@ oo::class create ::tclcurl::testserver::http_service {
             /request-inspect {
                 set request_body [my request_body $request]
                 set body [join [list \
-                    "method=[::tclcurl::testserver::escape_response_value $method]" \
-                    "path=[::tclcurl::testserver::escape_response_value $path]" \
-                    "content-type=[::tclcurl::testserver::escape_response_value [my header_value $headers content-type]]" \
-                    "content-length=[::tclcurl::testserver::escape_response_value [my header_value $headers content-length]]" \
-                    "body-length=[string length $request_body]" \
-                    "body-hex=[binary encode hex $request_body]"] "\n"]
+                            "method=[::tclcurl::testserver::escape_response_value $method]" \
+                            "path=[::tclcurl::testserver::escape_response_value $path]" \
+                            "content-type=[::tclcurl::testserver::escape_response_value [my header_value $headers content-type]]" \
+                            "content-length=[::tclcurl::testserver::escape_response_value [my header_value $headers content-length]]" \
+                            "body-length=[string length $request_body]" \
+                            "body-hex=[binary encode hex $request_body]" \
+                            "body-sha256=[::sha2::sha256 -hex $request_body]"] "\n"]
                 append body "\n"
                 return [dict create status 200 reason OK body $body headers {}]
             }
