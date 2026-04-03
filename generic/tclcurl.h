@@ -87,6 +87,8 @@ struct curlObjData {
     char                   *inFile;
     FILE                   *inHandle;
     int                     inFlag;
+    char                   *postFields;
+    curl_off_t              postFieldSize;
     char                   *proxy;
     int                     transferText;
     char                   *errorBuffer;

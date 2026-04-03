@@ -47,6 +47,23 @@ int
 TclCurl_SetPostData(Tcl_Interp *interp,struct curlObjData *curlDataPtr) {
     Tcl_Obj *errorMsgObjPtr;
 
+    if (curlDataPtr->postFields != NULL) {
+        if (curlDataPtr->postFieldSize >= 0) {
+            if (curl_easy_setopt(curlDataPtr->curl,CURLOPT_POSTFIELDSIZE_LARGE,
+                                 curlDataPtr->postFieldSize)) {
+                errorMsgObjPtr = Tcl_NewStringObj("Error setting POST field size",-1);
+                Tcl_SetObjResult(interp,errorMsgObjPtr);
+                return TCL_ERROR;
+            }
+        }
+        if (curl_easy_setopt(curlDataPtr->curl,CURLOPT_COPYPOSTFIELDS,
+                             curlDataPtr->postFields)) {
+            errorMsgObjPtr = Tcl_NewStringObj("Error setting the data to post",-1);
+            Tcl_SetObjResult(interp,errorMsgObjPtr);
+            return TCL_ERROR;
+        }
+    }
+
 #ifdef CURL_PRE_7_56_DEPR
     if (curlDataPtr->postListFirst != NULL) {
         if (curl_easy_setopt(curlDataPtr->curl,CURLOPT_MIMEPOST,curlDataPtr->postListFirst)) {
@@ -86,6 +103,12 @@ TclCurl_SetPostData(Tcl_Interp *interp,struct curlObjData *curlDataPtr) {
 void
 TclCurl_ResetPostData(struct curlObjData *curlDataPtr) {
     struct formArrayStruct *tmpPtr;
+
+    Tcl_Free(curlDataPtr->postFields);
+    curlDataPtr->postFields = NULL;
+    curlDataPtr->postFieldSize = -1;
+    curl_easy_setopt(curlDataPtr->curl,CURLOPT_COPYPOSTFIELDS,NULL);
+    curl_easy_setopt(curlDataPtr->curl,CURLOPT_POSTFIELDSIZE_LARGE,(curl_off_t)-1);
 
     if (curlDataPtr->postListFirst) {
         curl_formfree(curlDataPtr->postListFirst);
@@ -142,6 +165,12 @@ TclCurl_ResetFormArray(struct curl_forms *formArray) {
 #else
 void
 TclCurl_ResetPostData(struct curlObjData *curlDataPtr) {
+    Tcl_Free(curlDataPtr->postFields);
+    curlDataPtr->postFields = NULL;
+    curlDataPtr->postFieldSize = -1;
+    curl_easy_setopt(curlDataPtr->curl,CURLOPT_COPYPOSTFIELDS,NULL);
+    curl_easy_setopt(curlDataPtr->curl,CURLOPT_POSTFIELDSIZE_LARGE,(curl_off_t)-1);
+
     if (curlDataPtr->mime != NULL) {
         curl_mime_free(curlDataPtr->mime);
         curlDataPtr->mime = NULL;

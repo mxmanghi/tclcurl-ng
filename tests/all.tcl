@@ -1,6 +1,10 @@
 #!/usr/bin/env tclsh
 
+set ::argv_saved_for_all_tests $argv
+set argv {}
 package require tcltest
+set argv $::argv_saved_for_all_tests
+unset ::argv_saved_for_all_tests
 
 ::tcltest::configure -testdir [file dirname [file normalize [info script]]]
 source [file join [file dirname [file normalize [info script]]] support.tcl]
@@ -50,6 +54,7 @@ proc ::tclcurl::test::shutdown_http_server {} {
 
 set tcltestArgv {}
 set exitServer 0
+set debug 0
 for {set i 0} {$i < [llength $argv]} {incr i} {
     set arg [lindex $argv $i]
     if {$arg eq "-httpserver"} {
@@ -64,8 +69,14 @@ for {set i 0} {$i < [llength $argv]} {incr i} {
         set exitServer 1
         continue
     }
+    if {$arg eq "-debug"} {
+        set debug 1
+        continue
+    }
     lappend tcltestArgv $arg
 }
+
+::tclcurl::test::configure_debug_output $debug
 
 # Allow command line arguments to be passed to the configure command
 # This supports only running a single test or a single test file

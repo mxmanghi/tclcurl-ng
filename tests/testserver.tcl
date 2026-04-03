@@ -1,5 +1,11 @@
 #!/usr/bin/env tclsh
 
+set ::argv_saved_for_testserver $argv
+set argv {}
+source [file join [file dirname [file normalize [info script]]] support.tcl]
+set argv $::argv_saved_for_testserver
+unset ::argv_saved_for_testserver
+
 namespace eval ::tclcurl::testserver {
     variable next_service_id 0
     variable service_classes
@@ -82,7 +88,7 @@ oo::class create ::tclcurl::testserver::service {
 }
 
 proc ::tclcurl::testserver::usage {} {
-    puts stderr "usage: tclsh tests/testserver.tcl ?-host 127.0.0.1? ?-service protocol:port? ... ?-quiet?"
+    puts stderr "usage: tclsh tests/testserver.tcl ?-host 127.0.0.1? ?-service protocol:port? ... ?-quiet? ?-debug?"
 }
 
 proc ::tclcurl::testserver::register_service_class {protocol class_name} {
@@ -116,6 +122,7 @@ proc ::tclcurl::testserver::parse_service_spec {spec} {
 proc ::tclcurl::testserver::parse_args {argv} {
     set host 127.0.0.1
     set quiet 0
+    set debug 0
     set services [list [dict create protocol http port 8990]]
     set custom_services 0
 
@@ -143,6 +150,9 @@ proc ::tclcurl::testserver::parse_args {argv} {
             -quiet {
                 set quiet 1
             }
+            -debug {
+                set debug 1
+            }
             -h -
             -help -
             --help {
@@ -155,7 +165,7 @@ proc ::tclcurl::testserver::parse_args {argv} {
         }
     }
 
-    return [dict create host $host quiet $quiet services $services]
+    return [dict create host $host quiet $quiet debug $debug services $services]
 }
 
 proc ::tclcurl::testserver::create_service {protocol host port quiet} {
@@ -195,6 +205,7 @@ proc ::tclcurl::testserver::stop_services {services} {
 
 proc ::tclcurl::testserver::run {argv} {
     set config [parse_args $argv]
+    ::tclcurl::test::configure_debug_output [dict get $config debug]
     set services [start_services $config]
     try {
         vwait ::tclcurl::testserver::forever

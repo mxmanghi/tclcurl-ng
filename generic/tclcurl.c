@@ -261,6 +261,7 @@ curlInitObjCmd (ClientData clientData,Tcl_Interp *interp,
 
     memset(curlData, 0, sizeof(struct curlObjData));
     curlData->interp = interp;
+    curlData->postFieldSize = -1;
 
     /* This is required to be done when the package is loaded
      * and before any thread is created. It's not recommended to
@@ -1236,6 +1237,7 @@ curlFreeSpace(struct curlObjData *curlData) {
 
     Tcl_Free(curlData->outFile);
     Tcl_Free(curlData->inFile);
+    Tcl_Free(curlData->postFields);
     Tcl_Free(curlData->proxy);
     Tcl_Free(curlData->errorBuffer);
     Tcl_Free(curlData->errorBufferName);
@@ -1371,6 +1373,7 @@ curlResetHandle(Tcl_Interp *interp, struct curlObjData *curlData)  {
     curlData->curl       = tmpPtr->curl;
     curlData->token      = tmpPtr->token;
     curlData->interp     = tmpPtr->interp;
+    curlData->postFieldSize = -1;
 
     curl_easy_reset(curlData->curl);
 
@@ -1683,6 +1686,7 @@ curlCopyCurlData (struct curlObjData *curlDataOld,
 
     curlDataNew->outFile=curlstrdup(curlDataOld->outFile);
     curlDataNew->inFile=curlstrdup(curlDataOld->inFile);
+    curlDataNew->postFields=curlstrdup(curlDataOld->postFields);
     curlDataNew->proxy=curlstrdup(curlDataOld->proxy);
     curlDataNew->errorBuffer=curlstrdup(curlDataOld->errorBuffer);
     curlDataNew->errorBufferName=curlstrdup(curlDataOld->errorBufferName);

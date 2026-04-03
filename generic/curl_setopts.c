@@ -409,6 +409,8 @@ static int TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptChar)
 static int TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptInt)
 static int TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptLong)
 static int TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptCurlOffT)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandlePostFields)
+static int TCLCURL_OPT_HANDLER(TclCurl_HandlePostFieldSize)
 static int TCLCURL_OPT_HANDLER(TclCurl_HandleSetoptSHandle)
 static int TCLCURL_OPT_HANDLER(TclCurl_HandleOutFile)
 static int TCLCURL_OPT_HANDLER(TclCurl_HandleReadData)
@@ -532,7 +534,7 @@ TclCurl_HandleSetoptLong(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
 
-    if (SetoptLong(args->interp, curlHandle, args->def->curlOpt, args->curlOptsIndex, args->objv)) {
+    if (SetoptLong(args->interp,curlHandle,args->def->curlOpt,args->curlOptsIndex,args->objv)) {
         return TCL_ERROR;
     }
     return TCL_OK;
@@ -543,9 +545,31 @@ TclCurl_HandleSetoptCurlOffT(TclCurlOptsArgs *args)
 {
     CURL *curlHandle = args->curlData->curl;
 
-    if (SetoptCurlOffT(args->interp, curlHandle, args->def->curlOpt, args->curlOptsIndex, args->objv)) {
+    if (SetoptCurlOffT(args->interp,curlHandle,args->def->curlOpt,args->curlOptsIndex,args->objv)) {
         return TCL_ERROR;
     }
+    return TCL_OK;
+}
+
+static int
+TclCurl_HandlePostFields(TclCurlOptsArgs *args)
+{
+    Tcl_Free(args->curlData->postFields);
+    args->curlData->postFields = curlstrdup(Tcl_GetString(args->objv));
+    return TCL_OK;
+}
+
+static int
+TclCurl_HandlePostFieldSize(TclCurlOptsArgs *args)
+{
+    Tcl_WideInt wideNumber;
+
+    if (Tcl_GetWideIntFromObj(args->interp,args->objv,&wideNumber)) {
+        curlErrorSetOpt(args->interp,configTable,args->curlOptsIndex,Tcl_GetString(args->objv));
+        return TCL_ERROR;
+    }
+
+    args->curlData->postFieldSize = (curl_off_t) wideNumber;
     return TCL_OK;
 }
 

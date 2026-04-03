@@ -5,6 +5,7 @@
 package require tcltest
 
 namespace eval ::tclcurl::test {
+    variable debug 0
 }
 
 namespace eval ::tclcurl::test::server {
@@ -60,6 +61,29 @@ proc ::tclcurl::test::env_or_default {name defaultValue} {
         return $::env($name)
     }
     return $defaultValue
+}
+
+proc ::tclcurl::test::msgoutput_enabled {args} {
+    puts stderr [join $args {}]
+}
+
+proc ::tclcurl::test::msgoutput_disabled {args} {
+}
+
+proc ::tclcurl::test::configure_debug_output {{enabled 0}} {
+    variable debug
+
+    set debug [expr {$enabled ? 1 : 0}]
+    if {$debug} {
+        proc ::tclcurl::test::msgoutput args {
+            ::tclcurl::test::msgoutput_enabled {*}$args
+        }
+    } else {
+        proc ::tclcurl::test::msgoutput args {
+            ::tclcurl::test::msgoutput_disabled {*}$args
+        }
+    }
+    return $debug
 }
 
 proc ::tclcurl::test::server::set_http_server_script {path} {
@@ -141,6 +165,8 @@ proc ::tclcurl::test::with_easy_handle {varName body} {
     unset handle
     return -options $options $result
 }
+
+::tclcurl::test::configure_debug_output [::tclcurl::test::env_or_default TCLCURL_TEST_DEBUG 0]
 
 ::tcltest::testConstraint curl_http_dir [expr {[::tclcurl::test::curl_http_dir] ne {} && \
                                                [file isdirectory [::tclcurl::test::curl_http_dir]]}]

@@ -37,6 +37,7 @@ oo::class create ::tclcurl::testserver::http_service {
 
     method accept {chan host port} {
         chan configure $chan -blocking 0 -buffering none -translation binary
+        ::tclcurl::test::msgoutput "accept connection chan=$chan host=$host port=$port"
         chan event $chan readable [list [self] read_request $chan]
     }
 
@@ -107,6 +108,7 @@ oo::class create ::tclcurl::testserver::http_service {
         }
 
         set path [lindex [split $target ?] 0]
+        ::tclcurl::test::msgoutput "route request method=$method path=$path"
         set headers [my parse_headers $request]
         set response [my route_request $method $path $target $version $headers $request]
         dict set response head_only [expr {$method eq "HEAD"}]
@@ -337,6 +339,8 @@ oo::class create ::tclcurl::testserver::http_service {
         if {$status_line eq {}} {
             set status_line "HTTP/1.1 $status $reason"
         }
+
+        ::tclcurl::test::msgoutput "send response chan=$chan status=$status reason=$reason body-length=[string length $body]"
 
         set response_headers [list \
             $status_line \

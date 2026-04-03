@@ -172,7 +172,7 @@ test http-1.10 {share handle cleanup is rejected while an easy handle still uses
     list $code $result
 } -result {1 {Share handle is still attached to one or more easy handles.}}
 
-test http-2.1 {-post with -postfields sends application/x-www-form-urlencoded data} -constraints http_server -body {
+test http-2.1.0 {-post with -postfields sends application/x-www-form-urlencoded data} -constraints http_server -body {
     set body {}
     set payload "firstName=Massimo&lastName=Manghi&city=Parma+Italy"
     ::tclcurl::test::with_easy_handle handle {
@@ -192,6 +192,44 @@ test http-2.1 {-post with -postfields sends application/x-www-form-urlencoded da
              [expr {[dict get $response body-sha256] eq [::tclcurl::test::sha256_hex $payload]}]
     }
 } -result {0 200 POST application/x-www-form-urlencoded 1 1}
+
+test http-2.1.1 {-postfields with -postfieldsize sends application/x-www-form-urlencoded data} -constraints http_server -body {
+    set body {}
+    set payload "firstName=Massimo&lastName=Manghi&city=Parma+Italy"
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url request-inspect] \
+                          -post 1 \
+                          -postfields $payload \
+                          -postfieldsize [string length $payload] \
+                          -bodyvar body \
+                          -httpheader [list "Expect:"] \
+                          -noprogress 1
+        set rc [$handle perform]
+        set response [::tclcurl::test::parse_server_response $body]
+        list $rc \
+             [$handle getinfo responsecode]      \
+             [dict get $response method]         \
+             [dict get $response content-type]   \
+             [expr {[dict get $response content-length] == [string length $payload]}] \
+             [expr {[dict get $response body-sha256] eq [::tclcurl::test::sha256_hex $payload]}]
+    }
+} -result {0 200 POST application/x-www-form-urlencoded 1 1}
+
+test http-2.1.2 {-postfieldsize rejects malformed size values} -constraints http_server -body {
+    set body {}
+    set payload "firstName=Massimo&lastName=Manghi&city=Parma+Italy"
+    ::tclcurl::test::with_easy_handle handle {
+        list [catch {
+                  $handle configure -url [::tclcurl::test::server::base_url request-inspect] \
+                                    -post 1 \
+                                    -postfields $payload \
+                                    -postfieldsize bogus \
+                                    -bodyvar body \
+                                    -httpheader [list "Expect:"] \
+                                    -noprogress 1
+              } result] $result
+    }
+} -result {1 {setting option -postfieldsize: bogus}}
 
 test http-2.2 {-post can stream request data through -readproc} -constraints http_server -body {
     set body {}
