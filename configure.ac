@@ -309,8 +309,8 @@ AC_DEFUN([CURL_ENABLE_DEPRECATED_CODE], [
             [7.11.1], [curl_pre_7_11_1_depr=yes],
             [8.17.0], [curl_pre_8_17_0_depr=yes],
             [*],      [AC_MSG_ERROR(
-                         [Unsupported value '$curl_ver' for --enable-deprecated-code. Allowed: v7.56,v7.84,v7.11.1,v8.17.0]
-                       )]
+                    [Unsupported value '$curl_ver' for --enable-deprecated-code. Allowed: v7.56,v7.84,v7.11.1,v8.17.0]
+                )]
           )
         done
       fi
@@ -338,7 +338,11 @@ AC_DEFUN([CURL_ENABLE_DEPRECATED_CODE], [
   test "x$curl_pre_8_17_0_depr" = xyes && curl_depr_enabled="$curl_depr_enabled v8.17.0"
   test "x$curl_depr_enabled" = x && curl_depr_enabled="none"
 
-  AC_MSG_NOTICE([deprecated curl code enabled for: $curl_depr_enabled])
+  if test "$curl_depr_enabled" = none; then
+    AC_MSG_NOTICE([no deprecated curl code enabled])
+  else
+    AC_MSG_NOTICE([deprecated curl code enabled for: $curl_depr_enabled])
+  fi
 ])
 
 # Tcl9 defines MODULE_SCOPE, but autotools override it, so we try

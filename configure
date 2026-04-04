@@ -9456,7 +9456,7 @@ fi
     curl_pre_8_17_0_depr=yes ;; #(
   *) :
     as_fn_error $? "Unsupported value '$curl_ver' for --enable-deprecated-code. Allowed: v7.56,v7.84,v7.11.1,v8.17.0
-                       " "$LINENO" 5
+                " "$LINENO" 5
            ;; #(
   *) :
      ;;
@@ -9493,8 +9493,13 @@ esac
   test "x$curl_pre_8_17_0_depr" = xyes && curl_depr_enabled="$curl_depr_enabled v8.17.0"
   test "x$curl_depr_enabled" = x && curl_depr_enabled="none"
 
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: deprecated curl code enabled for: $curl_depr_enabled" >&5
+  if test "$curl_depr_enabled" = none; then
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: no deprecated curl code enabled" >&5
+printf "%s\n" "$as_me: no deprecated curl code enabled" >&6;}
+  else
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: deprecated curl code enabled for: $curl_depr_enabled" >&5
 printf "%s\n" "$as_me: deprecated curl code enabled for: $curl_depr_enabled" >&6;}
+  fi
 
 
 #--------------------------------------------------------------------

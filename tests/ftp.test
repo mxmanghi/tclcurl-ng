@@ -1,0 +1,109 @@
+package require tcltest
+package require sha256
+namespace import ::tcltest::*
+
+source [file join [file dirname [file normalize [info script]]] support.tcl]
+
+::tclcurl::test::load_package
+
+proc ::tclcurl::test::file_sha256_hex {path} {
+    set fh [open $path rb]
+    try {
+        return [::sha2::sha256 -hex [read $fh]]
+    } finally {
+        close $fh
+    }
+}
+
+proc ::tclcurl::test::seed_ftp_file {source_path target_name} {
+    file mkdir [::tclcurl::test::ftp_root]
+    file copy -force $source_path [file join [::tclcurl::test::ftp_root] $target_name]
+}
+
+test ftp-1.1 {-upload stores README.md on the FTP server} -constraints ftp_server -body {
+    set readme [file join [::tclcurl::test::repo_root] README.md]
+    ::tclcurl::test::ftp_reset_root
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::ftp_base_url README.md] \
+                          -upload 1 \
+                          -infile $readme \
+                          -infilesize [file size $readme] \
+                          -noprogress 1
+        set rc [$handle perform]
+        set uploaded [file join [::tclcurl::test::ftp_root] README.md]
+        list $rc \
+             [file exists $uploaded] \
+             [expr {[::tclcurl::test::file_sha256_hex $uploaded] eq [::tclcurl::test::file_sha256_hex $readme]}]
+    }
+} -result {0 1 1}
+
+test ftp-1.2 {-upload stores a binary file on the FTP server} -constraints ftp_server -body {
+    set fixture [file join [file dirname [file normalize [info script]]] tcl9.png]
+    ::tclcurl::test::ftp_reset_root
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::ftp_base_url tcl9.png] \
+                          -upload 1 \
+                          -infile $fixture \
+                          -infilesize [file size $fixture] \
+                          -noprogress 1
+        set rc [$handle perform]
+        set uploaded [file join [::tclcurl::test::ftp_root] tcl9.png]
+        list $rc \
+             [file exists $uploaded] \
+             [expr {[::tclcurl::test::file_sha256_hex $uploaded] eq [::tclcurl::test::file_sha256_hex $fixture]}]
+    }
+} -result {0 1 1}
+
+test ftp-1.3 {-ftplistonly returns uploaded files from the remote directory} -constraints ftp_server -body {
+    set body {}
+    set readme [file join [::tclcurl::test::repo_root] README.md]
+    set fixture [file join [file dirname [file normalize [info script]]] tcl9.png]
+    ::tclcurl::test::ftp_reset_root
+    ::tclcurl::test::seed_ftp_file $readme README.md
+    ::tclcurl::test::seed_ftp_file $fixture tcl9.png
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::ftp_base_url] \
+                          -ftplistonly 1 \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        set listing [split [::tclcurl::test::normalizedBody $body] "\n"]
+        list $rc \
+             [expr {[lsearch -exact $listing README.md] >= 0}] \
+             [expr {[lsearch -exact $listing tcl9.png] >= 0}]
+    }
+} -result {0 1 1}
+
+test ftp-1.4 {download retrieves README.md from the FTP server} -constraints ftp_server -body {
+    set body {}
+    set readme [file join [::tclcurl::test::repo_root] README.md]
+    ::tclcurl::test::ftp_reset_root
+    ::tclcurl::test::seed_ftp_file $readme README.md
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::ftp_base_url README.md] \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {[::sha2::sha256 -hex $body] eq [::tclcurl::test::file_sha256_hex $readme]}]
+    }
+} -result {0 226 1}
+
+test ftp-1.5 {download retrieves a binary file from the FTP server} -constraints ftp_server -body {
+    set body {}
+    set fixture [file join [file dirname [file normalize [info script]]] tcl9.png]
+    ::tclcurl::test::ftp_reset_root
+    ::tclcurl::test::seed_ftp_file $fixture tcl9.png
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::ftp_base_url tcl9.png] \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {[::sha2::sha256 -hex $body] eq [::tclcurl::test::file_sha256_hex $fixture]}]
+    }
+} -result {0 226 1}
+
+cleanupTests
