@@ -63,6 +63,10 @@ proc ::tclcurl::test::env_or_default {name defaultValue} {
     return $defaultValue
 }
 
+proc ::tclcurl::test::range_fixture {} {
+    return [string repeat "0123456789abcdef" 8192]
+}
+
 proc ::tclcurl::test::msgoutput_enabled {args} {
     puts stderr [join $args {}]
 }

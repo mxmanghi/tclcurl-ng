@@ -224,6 +224,71 @@ oo::class create ::tclcurl::testserver::http_service {
                             headers [list "Location: $location"]]
     }
 
+    method byte_range_response {headers full_body} {
+        set total_length [string length $full_body]
+        set range_header [my header_value $headers range]
+        if {$range_header eq {}} {
+            return [dict create \
+                status 200 \
+                reason OK \
+                body $full_body \
+                headers [list "Accept-Ranges: bytes"]]
+        }
+
+        if {![regexp {^bytes=\s*([0-9]+-[0-9]+)(\s*,\s*([0-9]+-[0-9]+))*$} $range_header]} {
+            return [dict create \
+                status 416 \
+                reason "Range Not Satisfiable" \
+                body {} \
+                headers [list "Content-Range: bytes */$total_length"]]
+        }
+
+        set ranges {}
+        foreach range_spec [split [string range $range_header 6 end] ,] {
+            set range_spec [string trim $range_spec]
+            lassign [split $range_spec -] start end
+            if {$start > $end || $end >= $total_length} {
+                return [dict create \
+                    status 416 \
+                    reason "Range Not Satisfiable" \
+                    body {} \
+                    headers [list "Content-Range: bytes */$total_length"]]
+            }
+            lappend ranges [list $start $end]
+        }
+
+        if {[llength $ranges] == 1} {
+            lassign [lindex $ranges 0] start end
+            set range_body [string range $full_body $start $end]
+            return [dict create \
+                status 206 \
+                reason "Partial Content" \
+                body $range_body \
+                headers [list \
+                    "Accept-Ranges: bytes" \
+                    "Content-Range: bytes $start-$end/$total_length"]]
+        }
+
+        set boundary "tclcurl-boundary"
+        set range_body {}
+        foreach range $ranges {
+            lassign $range start end
+            append range_body "--$boundary\r\n"
+            append range_body "Content-Type: text/plain\r\n"
+            append range_body "Content-Range: bytes $start-$end/$total_length\r\n\r\n"
+            append range_body [string range $full_body $start $end]
+            append range_body "\r\n"
+        }
+        append range_body "--$boundary--\r\n"
+        return [dict create \
+            status 206 \
+            reason "Partial Content" \
+            body $range_body \
+            headers [list \
+                "Accept-Ranges: bytes" \
+                "Content-Type: multipart/byteranges; boundary=$boundary"]]
+    }
+
     method route_request {method path target version headers request} {
         if {[regexp {^/redir_([0-9]+)$} $path -> redirect_step]} {
             if {$redirect_step < 5} {
@@ -305,6 +370,9 @@ oo::class create ::tclcurl::testserver::http_service {
                             "body-sha256=[::sha2::sha256 -hex $request_body]"] "\n"]
                 append body "\n"
                 return [dict create status 200 reason OK body $body headers {}]
+            }
+            /range-data {
+                return [my byte_range_response $headers [::tclcurl::test::range_fixture]]
             }
             /shutdown {
                 # Let's have also a method to have the server orderly stop operations

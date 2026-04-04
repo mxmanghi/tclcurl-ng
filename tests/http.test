@@ -8,6 +8,7 @@ source [file join [file dirname [file normalize [info script]]] support.tcl]
 
 proc ::tclcurl::test::captureWriteProc {chunk} {
     append ::tclcurl::test::writeBuffer $chunk
+    incr ::tclcurl::test::writeProcCalls
     return
 }
 
@@ -80,10 +81,9 @@ test http-1.4 {getinfo exposes transfer metadata after a successful request} -co
     ::tclcurl::test::with_easy_handle handle {
         $handle configure -url [::tclcurl::test::server::base_url] -bodyvar body -noprogress 1
         $handle perform
-        list \
-            [string match [::tclcurl::test::server::base_url]* [$handle getinfo effectiveurl]] \
-            [expr {[$handle getinfo headersize] > 0}] \
-            [expr {[$handle getinfo sizedownload] > 0}]
+        list [string match [::tclcurl::test::server::base_url]* [$handle getinfo effectiveurl]] \
+             [expr {[$handle getinfo headersize] > 0}]  \
+             [expr {[$handle getinfo sizedownload] > 0}]
     }
 } -result {1 1 1}
 
@@ -276,12 +276,11 @@ test http-2.3 {-upload with -infile sends a binary HTTP PUT body} -constraints h
             -noprogress 1
         set rc [$handle perform]
         set response [::tclcurl::test::parse_server_response $body]
-        list \
-            $rc \
-            [$handle getinfo responsecode] \
-            [dict get $response method] \
-            [dict get $response content-length] \
-            [expr {[dict get $response body-sha256] eq [::tclcurl::test::sha256_hex $payload]}]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [dict get $response method] \
+             [dict get $response content-length] \
+             [expr {[dict get $response body-sha256] eq [::tclcurl::test::sha256_hex $payload]}]
     }
 } -result {0 200 PUT 19698 1}
 
@@ -315,5 +314,59 @@ test http-2.4 {-upload with -readproc streams the same binary payload} -constrai
 } -cleanup {
     unset -nocomplain ::tclcurl::test::readproc
 } -result {0 200 PUT 19698 1 1}
+
+test http-3.1 {-range returns the requested byte subset from a large response} -constraints http_server -body {
+    set ::tclcurl::test::writeBuffer {}
+    set ::tclcurl::test::writeProcCalls 0
+    catch {unset headers}
+    set fullPayload [::tclcurl::test::range_fixture]
+    set start 16384
+    set end   98303
+    set expected [string range $fullPayload $start $end]
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url range-data] \
+                          -range "$start-$end" \
+                          -writeproc ::tclcurl::test::captureWriteProc \
+                          -headervar headers \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {$::tclcurl::test::writeBuffer eq $expected}] \
+             [expr {$::tclcurl::test::writeProcCalls > 1}] \
+             [expr {[info exists headers(Content-Range)] && $headers(Content-Range) eq "bytes $start-$end/[string length $fullPayload]"}]
+    }
+} -cleanup {
+    unset -nocomplain ::tclcurl::test::writeBuffer
+    unset -nocomplain ::tclcurl::test::writeProcCalls
+    catch {unset headers}
+} -result {0 206 1 1 1}
+
+test http-3.2 {-range can request multiple byte subsets in a single transfer} -constraints http_server -body {
+    set body {}
+    catch {unset headers}
+    set fullPayload [::tclcurl::test::range_fixture]
+    set ranges {{16 47} {102 134} {1233 2643}}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url range-data] \
+                          -range [join [lmap r $ranges { join $r "-" }] ","]  \
+                          -bodyvar body \
+                          -headervar headers \
+                          -noprogress 1
+        set rc [$handle perform]
+        set checks [list]
+        foreach range $ranges {
+            lassign $range start end
+            lappend checks [expr {[string first "Content-Range: bytes $start-$end/[string length $fullPayload]" $body] >= 0}]
+            lappend checks [expr {[string first [string range $fullPayload $start $end] $body] >= 0}]
+        }
+        list $rc \
+             [$handle getinfo responsecode] \
+             [string match "multipart/byteranges; boundary=*" $headers(Content-Type)] \
+             [expr {[lsearch -exact $checks 0] < 0}]
+    }
+} -cleanup {
+    catch {unset headers}
+} -result {0 206 1 1}
 
 cleanupTests

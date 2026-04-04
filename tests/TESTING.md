@@ -51,14 +51,16 @@ If the configured HTTP server is not reachable, the server-backed cases are skip
 - share handle wiring for DNS sharing
 - redirect handling through `-followlocation`, `-maxredirs`, `-autoreferer`, and `-postredir`
 - cookie state through `-cookiefile` and cookie sharing via `share cookies`
+- request body handling through `-post`, `-postfields`, `-postfieldsize`, `-upload`, `-readproc`, and `-range`
+
+`tests/mime.test` currently covers multipart form submission through `-httppost`.
 
 ## Migration candidates from `curl/tests/http`
 
 Based on the current TclCurl option surface in `generic/curl_setopts.h`, the strongest next targets for migration are:
 
-- request bodies: `-post`, `-postfields`, `-httppost`, `-upload`, `-readproc`
-- header handling: `-httpheader`, `-writeheader`, `-header`, `-http200aliases`
-- transfer controls: `-range`, `-resumefrom`, `-timeout`, `-timeoutms`, `-connecttimeout`, `-buffersize`
+- header handling: `-writeheader`
+- transfer controls: `-resumefrom`, `-timeout`, `-timeoutms`, `-connecttimeout`, `-buffersize`
 - protocol negotiation: `-httpversion`, `-encoding`, `-transferencoding`, `-contentdecoding`, `-transferdecoding`
 - name resolution and routing: `-resolve`, `-ipresolve`, `-interface`, `-port`, `-tcpnodelay`
 - auth paths supported by the linked libcurl build: `-userpwd`, `-username`, `-password`, `-httpauth`, `-proxyauth`
