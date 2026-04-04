@@ -369,4 +369,68 @@ test http-3.2 {-range can request multiple byte subsets in a single transfer} -c
     catch {unset headers}
 } -result {0 206 1 1}
 
+test http-4.1 {-timeout succeeds when the server responds before the deadline} -constraints http_server -body {
+    set body {}
+    set errbuf {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url wait-1s] \
+                          -timeout 2 \
+                          -bodyvar body \
+                          -errorbuffer errbuf \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {[::tclcurl::test::normalizedBody $body] eq "waited=1s"}] \
+             [expr {$errbuf eq {}}]
+    }
+} -result {0 200 1 1}
+
+test http-4.2 {-timeout fails when the response takes too long} -constraints http_server -body {
+    set body {}
+    set errbuf {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url wait-2s?reply=none] \
+                          -timeout 1 \
+                          -bodyvar body \
+                          -errorbuffer errbuf \
+                          -noprogress 1
+        list [catch {$handle perform}] \
+             [expr {[string length $errbuf] > 0}] \
+             [expr {$body eq {}}]
+    }
+} -result {1 1 1}
+
+test http-4.3 {-timeoutms succeeds when the server responds before the deadline} -constraints http_server -body {
+    set body {}
+    set errbuf {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url wait-200ms] \
+                          -timeoutms 900 \
+                          -bodyvar body \
+                          -errorbuffer errbuf \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {[::tclcurl::test::normalizedBody $body] eq "waited=200ms"}] \
+             [expr {$errbuf eq {}}]
+    }
+} -result {0 200 1 1}
+
+test http-4.4 {-timeoutms fails when the response takes too long} -constraints http_server -body {
+    set body {}
+    set errbuf {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url wait-600ms?reply=none] \
+                          -timeoutms 100 \
+                          -bodyvar body \
+                          -errorbuffer errbuf \
+                          -noprogress 1
+        list [catch {$handle perform}] \
+             [expr {[string length $errbuf] > 0}] \
+             [expr {$body eq {}}]
+    }
+} -result {1 1 1}
+
 cleanupTests

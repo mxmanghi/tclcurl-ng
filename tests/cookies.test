@@ -5,18 +5,6 @@ source [file join [file dirname [file normalize [info script]]] support.tcl]
 
 ::tclcurl::test::load_package
 
-proc ::tclcurl::test::normalizedBody {body} {
-    set normalized [string map [list "\r\n" "\n" "\r" "\n"] $body]
-    set lines {}
-    foreach line [split $normalized "\n"] {
-        if {$line eq {}} {
-            continue
-        }
-        lappend lines $line
-    }
-    return [join $lines "\n"]
-}
-
 proc ::tclcurl::test::cookieEnginePath {name} {
     # let's have the token represented in hex form for brevity
     set token [format "%X" [clock clicks]]

@@ -10,6 +10,30 @@ proc ::tclcurl::testserver::escape_response_value {value} {
     return [string map [list "\\" "\\\\" "\n" "\\n" "\r" "\\r"] $value]
 }
 
+proc ::tclcurl::testserver::parse_query {target} {
+    set query_start [string first ? $target]
+    if {$query_start < 0} {
+        return [dict create]
+    }
+
+    set params [dict create]
+    foreach pair [split [string range $target [expr {$query_start + 1}] end] &] {
+        if {$pair eq {}} {
+            continue
+        }
+        set separator [string first = $pair]
+        if {$separator < 0} {
+            dict set params $pair {}
+            continue
+        }
+        dict set params \
+            [string range $pair 0 [expr {$separator - 1}]] \
+            [string range $pair [expr {$separator + 1}] end]
+    }
+
+    return $params
+}
+
 oo::class create ::tclcurl::testserver::http_service {
     superclass ::tclcurl::testserver::service
 
@@ -113,6 +137,14 @@ oo::class create ::tclcurl::testserver::http_service {
         set response [my route_request $method $path $target $version $headers $request]
         dict set response head_only [expr {$method eq "HEAD"}]
         set response [my build_response_dict $response]
+        if {[dict exists $response delay_ms]} {
+            set callback [list [self] send_response $chan $response]
+            if {[dict exists $response close_only] && [dict get $response close_only]} {
+                set callback [list [self] close_client $chan]
+            }
+            after [dict get $response delay_ms] $callback
+            return
+        }
         my send_response $chan $response
     }
 
@@ -299,6 +331,26 @@ oo::class create ::tclcurl::testserver::http_service {
             return [dict create status 200 reason OK body $body headers {}]
         }
 
+        if {[regexp {^/wait-([0-9]+)(ms|s)$} $path -> wait_amount wait_unit]} {
+            set wait_time $wait_amount
+            set close_only 0
+            if {$wait_unit eq "s"} {
+                set wait_time [expr {$wait_time * 1000}]
+            }
+            set query_params [::tclcurl::testserver::parse_query $target]
+            if {[dict exists $query_params reply] && [dict get $query_params reply] eq "none"} {
+                set close_only 1
+            }
+
+            return [dict create \
+                status 200 \
+                reason OK \
+                delay_ms $wait_time \
+                close_only $close_only \
+                body "waited=${wait_amount}${wait_unit}\n" \
+                headers {}]
+        }
+
         if {[regexp {^/cookie-set/([^/]+)/([^/]+)$} $path -> cookie_name cookie_value]} {
             set body "set-cookie=$cookie_name=$cookie_value\n"
             return [dict create status     200     \
@@ -417,12 +469,18 @@ oo::class create ::tclcurl::testserver::http_service {
             "Connection: close"]
         set response_headers [concat $response_headers $headers]
 
-        puts -nonewline $chan [join $response_headers "\r\n"]
-        puts -nonewline $chan "\r\n\r\n"
-        if {!$head_only} {
-            puts -nonewline $chan $body
+        if {[catch {
+            puts -nonewline $chan [join $response_headers "\r\n"]
+            puts -nonewline $chan "\r\n\r\n"
+            if {!$head_only} {
+                puts -nonewline $chan $body
+            }
+            flush $chan
+        } write_error]} {
+            ::tclcurl::test::msgoutput "response write failed chan=$chan error=$write_error"
+            my close_client $chan
+            return
         }
-        flush $chan
         my close_client $chan
     }
 

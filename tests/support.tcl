@@ -9,8 +9,10 @@ namespace eval ::tclcurl::test {
 }
 
 namespace eval ::tclcurl::test::server {
-    variable cached_availability
-    variable cached_url
+    variable cached_http_availability
+    variable cached_http_url
+    variable cached_ftp_availability
+    variable cached_ftp_url
     variable configured_http_server_script
 }
 
@@ -67,6 +69,18 @@ proc ::tclcurl::test::range_fixture {} {
     return [string repeat "0123456789abcdef" 8192]
 }
 
+proc ::tclcurl::test::normalizedBody {body} {
+    set normalized [string map [list "\r\n" "\n" "\r" "\n"] $body]
+    set lines {}
+    foreach line [split $normalized "\n"] {
+        if {$line eq {}} {
+            continue
+        }
+        lappend lines $line
+    }
+    return [join $lines "\n"]
+}
+
 proc ::tclcurl::test::msgoutput_enabled {args} {
     puts stderr [join $args {}]
 }
@@ -116,6 +130,24 @@ proc ::tclcurl::test::server::base_url {{path {}}} {
     return "${base}/[string trimleft $path /]"
 }
 
+proc ::tclcurl::test::server::ftp_base_url {{path {}}} {
+    set base [::tclcurl::test::env_or_default TCLCURL_TEST_FTP_BASE_URL "ftp://127.0.0.1:8991"]
+    set base [string trimright $base /]
+    if {$path eq {}} { return "${base}/" }
+    return "${base}/[string trimleft $path /]"
+}
+
+proc ::tclcurl::test::ftp_root {} {
+    return [env_or_default TCLCURL_TEST_FTP_ROOT "/tmp/ftp"]
+}
+
+proc ::tclcurl::test::ftp_reset_root {} {
+    set root [ftp_root]
+    catch {file delete -force $root}
+    file mkdir $root
+    return $root
+}
+
 proc ::tclcurl::test::curl_root {} {
     return [env_or_default CURL_ROOT {}]
 }
@@ -145,19 +177,35 @@ proc ::tclcurl::test::server::url_endpoint_available {url} {
 }
 
 proc ::tclcurl::test::server::http_server_available {} {
-    variable cached_availability
-    variable cached_url
+    variable cached_http_availability
+    variable cached_http_url
 
     set url [base_url]
-    if {[info exists cached_availability] && \
-        [info exists cached_url] && \
-         $cached_url eq $url} {
-        return $cached_availability
+    if {[info exists cached_http_availability] && \
+        [info exists cached_http_url] && \
+         $cached_http_url eq $url} {
+        return $cached_http_availability
     }
 
-    set cached_url $url
-    set cached_availability [url_endpoint_available $url]
-    return $cached_availability
+    set cached_http_url $url
+    set cached_http_availability [url_endpoint_available $url]
+    return $cached_http_availability
+}
+
+proc ::tclcurl::test::server::ftp_server_available {} {
+    variable cached_ftp_availability
+    variable cached_ftp_url
+
+    set url [ftp_base_url]
+    if {[info exists cached_ftp_availability] && \
+        [info exists cached_ftp_url] && \
+        $cached_ftp_url eq $url} {
+        return $cached_ftp_availability
+    }
+
+    set cached_ftp_url $url
+    set cached_ftp_availability [url_endpoint_available $url]
+    return $cached_ftp_availability
 }
 
 proc ::tclcurl::test::with_easy_handle {varName body} {
@@ -176,3 +224,4 @@ proc ::tclcurl::test::with_easy_handle {varName body} {
                                                [file isdirectory [::tclcurl::test::curl_http_dir]]}]
 ::tcltest::testConstraint curl_server_built [::tclcurl::test::curl_server_built]
 ::tcltest::testConstraint http_server [::tclcurl::test::server::http_server_available]
+::tcltest::testConstraint ftp_server [::tclcurl::test::server::ftp_server_available]

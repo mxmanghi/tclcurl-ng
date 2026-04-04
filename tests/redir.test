@@ -5,18 +5,6 @@ source [file join [file dirname [file normalize [info script]]] support.tcl]
 
 ::tclcurl::test::load_package
 
-proc ::tclcurl::test::normalizedBody {body} {
-    set normalized [string map [list "\r\n" "\n" "\r" "\n"] $body]
-    set lines {}
-    foreach line [split $normalized "\n"] {
-        if {$line eq {}} {
-            continue
-        }
-        lappend lines $line
-    }
-    return [join $lines "\n"]
-}
-
 test redir-1.1 {-followlocation follows a five-step redirect chain} -constraints http_server -body {
     set body {}
     ::tclcurl::test::with_easy_handle handle {

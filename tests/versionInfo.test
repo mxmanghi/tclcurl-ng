@@ -38,5 +38,4 @@ test 1.07 {: Test that -protocols returns something} -body {
 	return [curl::versioninfo -protocols]
 } -match regexp -result {^([a-z0-9]+ ?)+$}
 
-
 cleanupTests
