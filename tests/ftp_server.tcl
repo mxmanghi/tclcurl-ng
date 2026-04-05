@@ -28,17 +28,16 @@ oo::class create ::tclcurl::testserver::ftp_service {
     }
 
     method accept {chan host port} {
-        chan configure $chan \
-            -blocking 0 \
-            -buffering line \
-            -translation crlf \
-            -encoding utf-8
-        set sessions($chan) [dict create \
-            cwd / \
-            type A \
-            passive_listener {} \
-            data_chan {} \
-            pending_action {}]
+        chan configure $chan -blocking 0 \
+                             -buffering line \
+                             -translation crlf \
+                             -encoding utf-8
+        set sessions($chan) [dict create cwd / \
+                                         type A \
+                                         passive_listener {} \
+                                         data_chan {} \
+                                         pending_action {} \
+                                         rename_from {}]
         my send_reply $chan 220 "TclCurl FTP test server ready"
         chan event $chan readable [list [self] read_command $chan]
     }
@@ -70,6 +69,7 @@ oo::class create ::tclcurl::testserver::ftp_service {
             return
         }
 
+        ::tclcurl::test::msgoutput "TclCurl FTP Server: command '$command' received"
         switch -- $command {
             USER {
                 my send_reply $chan 331 "Anonymous login ok, send password"
@@ -96,6 +96,14 @@ oo::class create ::tclcurl::testserver::ftp_service {
                 dict set sessions($chan) type [string toupper $argument]
                 my send_reply $chan 200 "Type set to [dict get $sessions($chan) type]"
             }
+            SITE {
+                my handle_site_command $chan $argument
+            }
+            MKD {
+                set virtual_path [my normalize_virtual_path [dict get $sessions($chan) cwd] $argument]
+                file mkdir [my virtual_to_fs $virtual_path]
+                my send_reply $chan 257 "\"$virtual_path\" created"
+            }
             CWD {
                 set virtual_path [my normalize_virtual_path [dict get $sessions($chan) cwd] $argument]
                 set fs_path [my virtual_to_fs $virtual_path]
@@ -118,7 +126,8 @@ oo::class create ::tclcurl::testserver::ftp_service {
                     return
                 }
                 set port [my open_passive_listener $chan]
-                my send_reply $chan 229 "Entering Extended Passive Mode (|||$port|)"
+                my send_reply $chan 229 \
+                    "Entering Extended Passive Mode ([my passive_triplet $port])"
             }
             PASV {
                 set port [my open_passive_listener $chan]
@@ -134,6 +143,36 @@ oo::class create ::tclcurl::testserver::ftp_service {
                     return
                 }
                 my send_reply $chan 213 [file size $fs_path]
+            }
+            DELE {
+                set fs_path [my resolve_path $chan $argument]
+                if {![file exists $fs_path] || [file isdirectory $fs_path]} {
+                    my send_reply $chan 550 "File unavailable"
+                    return
+                }
+                file delete -force $fs_path
+                my send_reply $chan 250 "File deleted"
+            }
+            RNFR {
+                set fs_path [my resolve_path $chan $argument]
+                if {![file exists $fs_path]} {
+                    my send_reply $chan 550 "File unavailable"
+                    return
+                }
+                dict set sessions($chan) rename_from $fs_path
+                my send_reply $chan 350 "Ready for RNTO"
+            }
+            RNTO {
+                set from_path [dict get $sessions($chan) rename_from]
+                if {$from_path eq {}} {
+                    my send_reply $chan 503 "Bad sequence of commands"
+                    return
+                }
+                set to_path [my resolve_path $chan $argument]
+                file mkdir [file dirname $to_path]
+                file rename -force $from_path $to_path
+                dict set sessions($chan) rename_from {}
+                my send_reply $chan 250 "Rename successful"
             }
             LIST {
                 my begin_transfer $chan LIST $argument
@@ -164,6 +203,40 @@ oo::class create ::tclcurl::testserver::ftp_service {
         }]} {
             my close_session $chan
         }
+    }
+
+    method handle_site_command {chan argument} {
+        set subcommand [string toupper [lindex [split $argument] 0]]
+
+        switch -- $subcommand {
+            CHMOD {
+                set mode [lindex [split $argument] 1]
+                set target [lindex [split $argument] 2]
+                if {$mode eq {} || $target eq {}} {
+                    my send_reply $chan 501 "Missing SITE CHMOD arguments"
+                    return
+                }
+
+                set fs_path [my resolve_path $chan $target]
+                if {![file exists $fs_path]} {
+                    my send_reply $chan 550 "SITE CHMOD target does not exist"
+                    return
+                }
+
+                if {[catch {file attributes $fs_path -permissions $mode}]} {
+                    # Keep the test server lenient on platforms that do not
+                    # honor POSIX mode changes the same way.
+                }
+                my send_reply $chan 200 "SITE CHMOD command successful"
+            }
+            default {
+                my send_reply $chan 502 "SITE command not implemented"
+            }
+        }
+    }
+
+    method passive_triplet {port {delimiter |}} {
+        return "${delimiter}${delimiter}${delimiter}${port}${delimiter}"
     }
 
     method normalize_virtual_path {cwd path} {
@@ -213,10 +286,24 @@ oo::class create ::tclcurl::testserver::ftp_service {
         return [my virtual_to_fs [my normalize_virtual_path [dict get $sessions($chan) cwd] $path]]
     }
 
+    method transfer_path {argument} {
+        set path {}
+        foreach token [split $argument] {
+            if {$token eq {}} {
+                continue
+            }
+            if {[string match "-*" $token]} {
+                continue
+            }
+            set path $token
+            break
+        }
+        return $path
+    }
+
     method open_passive_listener {chan} {
         my reset_passive_state $chan
-        set listener [socket -server [list [self] accept_data $chan] \
-            -myaddr [my host] 0]
+        set listener [socket -server [list [self] accept_data $chan] -myaddr [my host] 0]
         dict set sessions($chan) passive_listener $listener
         return [lindex [fconfigure $listener -sockname] end]
     }
@@ -241,6 +328,9 @@ oo::class create ::tclcurl::testserver::ftp_service {
     }
 
     method begin_transfer {chan action argument} {
+        if {$action in {LIST NLST}} {
+            set argument [my transfer_path $argument]
+        }
         dict set sessions($chan) pending_action [dict create action $action argument $argument]
         my send_reply $chan 150 "Opening data connection"
 
@@ -290,7 +380,9 @@ oo::class create ::tclcurl::testserver::ftp_service {
                 }
                 STOR {
                     set fs_path [my resolve_path $chan $argument]
-                    file mkdir [file dirname $fs_path]
+                    if {![file isdirectory [file dirname $fs_path]]} {
+                        error "missing directory"
+                    }
                     set fh [open $fs_path wb]
                     fconfigure $fh -translation binary
                     try {

@@ -106,4 +106,130 @@ test ftp-1.5 {download retrieves a binary file from the FTP server} -constraints
     }
 } -result {0 226 1}
 
+test ftp-2.1 {-dirlistonly returns names only for an FTP directory URL} -constraints ftp_server -body {
+    set body {}
+    set readme [file join [::tclcurl::test::repo_root] README.md]
+    set fixture [file join [file dirname [file normalize [info script]]] tcl9.png]
+    ::tclcurl::test::ftp_reset_root
+    ::tclcurl::test::seed_ftp_file $readme README.md
+    ::tclcurl::test::seed_ftp_file $fixture tcl9.png
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::ftp_base_url] \
+                          -dirlistonly 1 \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        set listing [split [::tclcurl::test::normalizedBody $body] "\n"]
+        list $rc \
+             [expr {[lsearch -exact $listing README.md] >= 0}] \
+             [expr {[lsearch -exact $listing tcl9.png] >= 0}] \
+             [expr {[string first "owner group" $body] < 0}]
+    }
+} -result {0 1 1 1}
+
+test ftp-2.2 {-dirlistonly implies a directory listing without a trailing slash} -constraints ftp_server -body {
+    set body {}
+    set readme [file join [::tclcurl::test::repo_root] README.md]
+    set fixture [file join [file dirname [file normalize [info script]]] tcl9.png]
+    ::tclcurl::test::ftp_reset_root
+    ::tclcurl::test::seed_ftp_file $readme README.md
+    ::tclcurl::test::seed_ftp_file $fixture tcl9.png
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [string trimright [::tclcurl::test::server::ftp_base_url] /] \
+                          -dirlistonly 1 \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        set listing [split [::tclcurl::test::normalizedBody $body] "\n"]
+        list $rc \
+             [expr {[lsearch -exact $listing README.md] >= 0}] \
+             [expr {[lsearch -exact $listing tcl9.png] >= 0}]
+    }
+} -result {0 1 1}
+
+test ftp-3.1 {-quote can create and enter a subdirectory before uploading a file} -constraints ftp_server -body {
+    set library [lindex [::tclcurl::test::build_library_candidates] 0]
+    if {$library eq {}} {
+        return -code error "no built TclCurl library available for ftp quote test"
+    }
+    ::tclcurl::test::ftp_reset_root
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::ftp_base_url [file tail $library]] \
+                          -upload 1 \
+                          -infile $library \
+                          -infilesize [file size $library] \
+                          -quote [list "MKD uploads" "CWD uploads"] \
+                          -noprogress 1
+        set rc [$handle perform]
+        set uploaded [file join [::tclcurl::test::ftp_root] uploads [file tail $library]]
+        list $rc \
+             [file isdirectory [file join [::tclcurl::test::ftp_root] uploads]] \
+             [file exists $uploaded] \
+             [expr {[::tclcurl::test::file_sha256_hex $uploaded] eq [::tclcurl::test::file_sha256_hex $library]}]
+    }
+} -result {0 1 1 1}
+
+test ftp-3.2 {-quote can change directory before download and -postquote can delete the remote file} -constraints ftp_server -body {
+    set body {}
+    set library [lindex [::tclcurl::test::build_library_candidates] 0]
+    if {$library eq {}} {
+        return -code error "no built TclCurl library available for ftp quote test"
+    }
+    ::tclcurl::test::ftp_reset_root
+    file mkdir [file join [::tclcurl::test::ftp_root] uploads]
+    file copy -force $library [file join [::tclcurl::test::ftp_root] uploads [file tail $library]]
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::ftp_base_url [file tail $library]] \
+                          -quote [list "CWD uploads"] \
+                          -postquote [list "DELE [file tail $library]"] \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        set remote_copy [file join [::tclcurl::test::ftp_root] uploads [file tail $library]]
+        list $rc \
+             [expr {[::sha2::sha256 -hex $body] eq [::tclcurl::test::file_sha256_hex $library]}] \
+             [expr {![file exists $remote_copy]}] \
+             [file isdirectory [file join [::tclcurl::test::ftp_root] uploads]]
+    }
+} -result {0 1 1 1}
+
+test ftp-4.1 {upload to a missing FTP subdirectory fails without -ftpcreatemissingdirs} -constraints ftp_server -body {
+    set errbuf {}
+    set readme [file join [::tclcurl::test::repo_root] README.md]
+    set remote_path "missing/subdir/README.md"
+    ::tclcurl::test::ftp_reset_root
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::ftp_base_url $remote_path] \
+                          -upload 1 \
+                          -infile $readme \
+                          -infilesize [file size $readme] \
+                          -errorbuffer errbuf \
+                          -noprogress 1
+        list [catch {$handle perform}] \
+             [expr {[string length $errbuf] > 0}] \
+             [expr {![file exists [file join [::tclcurl::test::ftp_root] missing subdir README.md]]}]
+    }
+} -result {1 1 1}
+
+test ftp-4.2 {-ftpcreatemissingdirs creates remote directories before upload} -constraints ftp_server -body {
+    set readme [file join [::tclcurl::test::repo_root] README.md]
+    set remote_path "missing/subdir/README.md"
+    ::tclcurl::test::ftp_reset_root
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::ftp_base_url $remote_path] \
+                          -upload 1 \
+                          -infile $readme \
+                          -infilesize [file size $readme] \
+                          -ftpcreatemissingdirs 1 \
+                          -noprogress 1
+        set rc [$handle perform]
+        set uploaded [file join [::tclcurl::test::ftp_root] missing subdir README.md]
+        list $rc \
+             [file isdirectory [file join [::tclcurl::test::ftp_root] missing]] \
+             [file isdirectory [file join [::tclcurl::test::ftp_root] missing subdir]] \
+             [file exists $uploaded] \
+             [expr {[::tclcurl::test::file_sha256_hex $uploaded] eq [::tclcurl::test::file_sha256_hex $readme]}]
+    }
+} -result {0 1 1 1 1}
+
 cleanupTests

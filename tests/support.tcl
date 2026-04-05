@@ -20,6 +20,28 @@ proc ::tclcurl::test::repo_root {} {
     return [file dirname [file dirname [file normalize [info script]]]]
 }
 
+proc ::tclcurl::test::msgoutput_enabled {args} {
+    puts stderr [join $args {}]
+}
+
+proc ::tclcurl::test::msgoutput_disabled {args} { }
+
+proc ::tclcurl::test::configure_debug_output {{enabled 0}} {
+    variable debug
+
+    set debug [expr {$enabled ? 1 : 0}]
+    if {$debug} {
+        proc ::tclcurl::test::msgoutput args {
+            ::tclcurl::test::msgoutput_enabled {*}$args
+        }
+    } else {
+        proc ::tclcurl::test::msgoutput args {
+            ::tclcurl::test::msgoutput_disabled {*}$args
+        }
+    }
+    return $debug
+}
+
 proc ::tclcurl::test::build_library_candidates {} {
     set root [repo_root]
     lassign [split $::tcl_version "."] tcl_major tcl_minor
@@ -29,7 +51,7 @@ proc ::tclcurl::test::build_library_candidates {} {
     } elseif {$tcl_major == 9} {
         return [glob -nocomplain [file join $root libtcl9*TclCurl*.so]]
     } else {
-        puts "for the moment no other OS supported"
+        puts "no supported shared library library model found"
     }
 
 #    return [concat \
@@ -48,6 +70,7 @@ proc ::tclcurl::test::load_package {} {
             if {[file exists $scriptPath]} {
                 source $scriptPath
             }
+            ::tclcurl::test::msgoutput "TclCurl loaded from $libraryPath"
             package require TclCurl
             return
         }
@@ -79,29 +102,6 @@ proc ::tclcurl::test::normalizedBody {body} {
         lappend lines $line
     }
     return [join $lines "\n"]
-}
-
-proc ::tclcurl::test::msgoutput_enabled {args} {
-    puts stderr [join $args {}]
-}
-
-proc ::tclcurl::test::msgoutput_disabled {args} {
-}
-
-proc ::tclcurl::test::configure_debug_output {{enabled 0}} {
-    variable debug
-
-    set debug [expr {$enabled ? 1 : 0}]
-    if {$debug} {
-        proc ::tclcurl::test::msgoutput args {
-            ::tclcurl::test::msgoutput_enabled {*}$args
-        }
-    } else {
-        proc ::tclcurl::test::msgoutput args {
-            ::tclcurl::test::msgoutput_disabled {*}$args
-        }
-    }
-    return $debug
 }
 
 proc ::tclcurl::test::server::set_http_server_script {path} {
@@ -166,10 +166,16 @@ proc ::tclcurl::test::curl_server_built {} {
 }
 
 proc ::tclcurl::test::server::url_endpoint_available {url} {
-    if {![regexp {^https?://([^/:]+)(?::([0-9]+))?(/.*)?$} $url -> host port]} {
+    if {![regexp {^(?:https?|ftp)://([^/:]+)(?::([0-9]+))?(/.*)?$} $url -> host port]} {
         return 0
     }
-    if {$port eq {}} { set port 80 }
+    if {$port eq {}} {
+        if {[string match "ftp://*" $url]} {
+            set port 21
+        } else {
+            set port 80
+        }
+    }
     if {[catch {set sock [socket $host $port]}]} { return 0 }
     close $sock
 
