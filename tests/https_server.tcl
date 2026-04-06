@@ -1,3 +1,15 @@
+# https_server.tcl -- Wrapping TLS around HTTP to have a simple HTTPS server 
+#
+# Implementation of the HTTP server support used by the TclCurl extension.
+#
+# Copyright (c) 2024-2026 Massimo Manghi
+#
+# SPDX-License-Identifier: TCL
+#
+# See the file "license.terms" at the top level of this distribution
+# for information on usage and redistribution of this file, and for the
+# complete disclaimer of warranties and limitation of liability.
+
 namespace eval ::tclcurl::testserver {}
 
 package require tls

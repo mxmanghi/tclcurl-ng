@@ -1,4 +1,16 @@
 #!/usr/bin/env tclsh
+#
+# testserver.tcl -- Start the server implementations needed by the test suite 
+#
+# Implementation of the HTTP server support used by the TclCurl extension.
+#
+# Copyright (c) 2024-2026 Massimo Manghi
+#
+# SPDX-License-Identifier: TCL
+#
+# See the file "license.terms" at the top level of this distribution
+# for information on usage and redistribution of this file, and for the
+# complete disclaimer of warranties and limitation of liability.
 
 set ::argv_saved_for_testserver $argv
 set argv {}

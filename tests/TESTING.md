@@ -49,6 +49,20 @@ When the Tcl HTTP test server is wired in, the server script path precedence is:
 
 If the configured server for a protocol is not reachable, the corresponding server-backed cases are skipped.
 
+## Running secure protocol tests
+
+In order to test the https series of tests you have to create a self-signed pair of key/certificate to be stored in tests/certs
+
+```
+ mkdir -p tests/certs
+
+  openssl req   -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes \
+                -keyout tests/certs/server.key \
+                -out tests/certs/server.crt \
+                -subj "/CN=localhost" \
+                -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+```
+
 ## Shared transport scenarios
 
 `tests/http_common.tcl` contains transport-oriented scenario helpers that are shared by `http.test`, `https.test`, `redir.test`, and `cookies.test`.

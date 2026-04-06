@@ -439,7 +439,7 @@ oo::class create ::tclcurl::testserver::http_service {
                 return [my byte_range_response $headers [::tclcurl::test::range_fixture]]
             }
             /shutdown {
-                # Let's have also a method to have the server orderly stop operations
+                # Let's also have a method to orderly stop operations
                 set ::tclcurl::testserver::forever "no more"
                 return [dict create status 200 reason OK body "server orderly shutdown\n" headers {}]
             }
