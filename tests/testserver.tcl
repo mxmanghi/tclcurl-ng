@@ -124,6 +124,7 @@ proc ::tclcurl::testserver::parse_args {argv} {
     set quiet 0
     set debug 0
     set services [list [dict create protocol http port 8990] \
+                       [dict create protocol https port 9443] \
                        [dict create protocol ftp port 8991]]
     set custom_services 0
 
@@ -231,6 +232,7 @@ proc ::tclcurl::testserver::command_map {} {
 namespace ensemble create -command ::tclcurl::testserver -map [::tclcurl::testserver::command_map]
 
 source [file join [file dirname [file normalize [info script]]] http_server.tcl]
+source [file join [file dirname [file normalize [info script]]] https_server.tcl]
 source [file join [file dirname [file normalize [info script]]] ftp_server.tcl]
 
 if {[file normalize $argv0] eq [file normalize [info script]]} {

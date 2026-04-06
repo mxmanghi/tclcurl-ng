@@ -11,6 +11,8 @@ namespace eval ::tclcurl::test {
 namespace eval ::tclcurl::test::server {
     variable cached_http_availability
     variable cached_http_url
+    variable cached_https_availability
+    variable cached_https_url
     variable cached_ftp_availability
     variable cached_ftp_url
     variable configured_http_server_script
@@ -137,6 +139,29 @@ proc ::tclcurl::test::server::ftp_base_url {{path {}}} {
     return "${base}/[string trimleft $path /]"
 }
 
+proc ::tclcurl::test::server::https_base_url {{path {}}} {
+    set base [::tclcurl::test::env_or_default TCLCURL_TEST_HTTPS_BASE_URL "https://127.0.0.1:9443"]
+    set base [string trimright $base /]
+    if {$path eq {}} { return "${base}/" }
+    return "${base}/[string trimleft $path /]"
+}
+
+proc ::tclcurl::test::https_cert_file {} {
+    return [file join [::tclcurl::test::repo_root] tests certs server.crt]
+}
+
+proc ::tclcurl::test::https_key_file {} {
+    return [file join [::tclcurl::test::repo_root] tests certs server.key]
+}
+
+proc ::tclcurl::test::https_credentials_available {} {
+    return [expr {[file exists [https_cert_file]] && [file exists [https_key_file]]}]
+}
+
+proc ::tclcurl::test::tls_package_available {} {
+    return [expr {![catch {package require tls}]}]
+}
+
 proc ::tclcurl::test::ftp_root {} {
     return [env_or_default TCLCURL_TEST_FTP_ROOT "/tmp/ftp"]
 }
@@ -214,6 +239,22 @@ proc ::tclcurl::test::server::ftp_server_available {} {
     return $cached_ftp_availability
 }
 
+proc ::tclcurl::test::server::https_server_available {} {
+    variable cached_https_availability
+    variable cached_https_url
+
+    set url [https_base_url]
+    if {[info exists cached_https_availability] && \
+        [info exists cached_https_url] && \
+        $cached_https_url eq $url} {
+        return $cached_https_availability
+    }
+
+    set cached_https_url $url
+    set cached_https_availability [url_endpoint_available $url]
+    return $cached_https_availability
+}
+
 proc ::tclcurl::test::with_easy_handle {varName body} {
     upvar 1 $varName handle
 
@@ -230,4 +271,9 @@ proc ::tclcurl::test::with_easy_handle {varName body} {
                                                [file isdirectory [::tclcurl::test::curl_http_dir]]}]
 ::tcltest::testConstraint curl_server_built [::tclcurl::test::curl_server_built]
 ::tcltest::testConstraint http_server [::tclcurl::test::server::http_server_available]
+::tcltest::testConstraint tls_package [::tclcurl::test::tls_package_available]
+::tcltest::testConstraint https_credentials [::tclcurl::test::https_credentials_available]
+::tcltest::testConstraint https_server [expr {[::tclcurl::test::tls_package_available] && \
+                                              [::tclcurl::test::https_credentials_available] && \
+                                              [::tclcurl::test::server::https_server_available]}]
 ::tcltest::testConstraint ftp_server [::tclcurl::test::server::ftp_server_available]
