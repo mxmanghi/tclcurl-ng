@@ -1,5 +1,20 @@
 #!/usr/bin/env tclsh
 
+# all.tcl --
+#
+# Central hub for all tests 
+#
+# This file is partially derived from tclcurl-fa.
+#
+# Copyright (c) 2001-2011 Andres Garcia Garcia
+# Copyright (c) 2024-2026 Massimo Manghi
+#
+# SPDX-License-Identifier: TCL
+#
+# See the file "license.terms" at the top level of this distribution
+# for information on usage and redistribution of this file, and for the
+# complete disclaimer of warranties and limitation of liability.
+
 set ::argv_saved_for_all_tests $argv
 set argv {}
 package require tcltest

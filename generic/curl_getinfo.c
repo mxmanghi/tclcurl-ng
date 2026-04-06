@@ -1,18 +1,20 @@
 /*
- *----------------------------------------------------------------------
+ * curl_getinfo.c -- Functions related to the 'curl_easy_getinfo' function in libcurl.
  *
- * curlGetInfo --
+ * Implementation of the TclCurl extension that creates the curl namespace
+ * so that Tcl interpreters can access libcurl.
  *
- *  Invokes the 'curl_easy_getinfo' function in libcurl.
+ * This file is partially derived from tclcurl-fa.
  *
- * Parameters:
+ * Copyright (c) 2001-2011 Andres Garcia Garcia
+ * Copyright (c) 2024-2026 Massimo Manghi
  *
- * Results:
- *   0 if all went well.
- *   The CURLcode for the error.
+ * SPDX-License-Identifier: TCL
  *
- *----------------------------------------------------------------------
- */
+ * See the file "license.terms" at the top level of this distribution
+ * for information on usage and redistribution of this file, and for the
+ * complete disclaimer of warranties and limitation of liability.
+ */    
 
 #include <tcl.h>
 #include <curl/curl.h>
@@ -71,6 +73,19 @@ static const char *const getInfoTable[TCLCURL_INFO_COUNT + 1] = {
     NULL
 };
 
+/*----------------------------------------------------------------------
+ *
+ * curlGetInfo --
+ *
+ *  Invokes the 'curl_easy_getinfo' function in libcurl.
+ *
+ * Parameters:
+ *
+ * Results:
+ *   0 if all went well.
+ *   The CURLcode for the error.
+ *
+ *---------------------------------------------------------------------*/
 static Tcl_Obj*
 curlGetInfo(Tcl_Interp *interp,CURL *curlHandle,int tableIndex) {
     char*                    charPtr;

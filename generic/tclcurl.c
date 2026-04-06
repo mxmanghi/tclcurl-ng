@@ -4,12 +4,16 @@
  * Implementation of the TclCurl extension that creates the curl namespace
  * so that Tcl interpreters can access libcurl.
  *
- * Copyright (c) 2001-2011 Andres Garcia Garcia.
+ * This file is partially derived from tclcurl-fa.
+ *
+ * Copyright (c) 2001-2011 Andres Garcia Garcia
  * Copyright (c) 2024-2026 Massimo Manghi
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * SPDX-License-Identifier: TCL
  *
+ * See the file "license.terms" at the top level of this distribution
+ * for information on usage and redistribution of this file, and for the
+ * complete disclaimer of warranties and limitation of liability.
  */
 
 #ifdef HAVE_CONFIG_H
