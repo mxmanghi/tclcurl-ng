@@ -2,8 +2,30 @@ package require tcltest
 namespace import ::tcltest::*
 
 source [file join [file dirname [file normalize [info script]]] support.tcl]
+source [file join [file dirname [file normalize [info script]]] http_common.tcl]
 
 ::tclcurl::test::load_package
+
+set ::tclcurl::test::https_common_opts [list -cainfo [::tclcurl::test::https_cert_file]]
+
+test https-2.1 {HTTPS GET shares the common GET transport scenario} -constraints https_server -body {
+    ::tclcurl::test::transport_basic_get ::tclcurl::test::server::https_base_url $::tclcurl::test::https_common_opts
+} -result {0 200 1}
+
+test https-2.2 {HTTPS HEAD shares the common HEAD transport scenario} -constraints https_server -body {
+    ::tclcurl::test::transport_head ::tclcurl::test::server::https_base_url $::tclcurl::test::https_common_opts
+} -result {0 200 1}
+
+test https-2.3 {HTTPS -writeproc shares the common callback delivery scenario} -constraints https_server -body {
+    ::tclcurl::test::transport_writeproc ::tclcurl::test::server::https_base_url $::tclcurl::test::https_common_opts
+} -cleanup {
+    unset -nocomplain ::tclcurl::test::writeBuffer
+} -result {0 200 1}
+
+test https-2.4 {HTTPS POST shares the common request body scenario} -constraints https_server -body {
+    set payload "firstName=Massimo&lastName=Manghi&city=Parma+Italy"
+    ::tclcurl::test::transport_postfields ::tclcurl::test::server::https_base_url $::tclcurl::test::https_common_opts $payload
+} -result {0 200 POST application/x-www-form-urlencoded 1 1}
 
 test https-1.1 {HTTPS GET succeeds when certificate verification is disabled} -constraints https_server -body {
     set body {}
