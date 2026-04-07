@@ -90,8 +90,8 @@ proc ::tclcurl::test::env_or_default {name defaultValue} {
     return $defaultValue
 }
 
-proc ::tclcurl::test::range_fixture {} {
-    return [string repeat "0123456789abcdef" 8192]
+proc ::tclcurl::test::range_fixture {{ntimes 8192}} {
+    return [string repeat "0123456789abcdef" $ntimes]
 }
 
 proc ::tclcurl::test::normalizedBody {body} {

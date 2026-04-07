@@ -34,6 +34,28 @@ proc ::tclcurl::test::progress_probe {dltotal dlnow ultotal ulnow} {
     if {$dlnow > $::tclcurl::test::progress_max_dlnow} {
         set ::tclcurl::test::progress_max_dlnow $dlnow
     }
+    return 0
+}
+
+proc ::tclcurl::test::progress_pause_probe {dltotal dlnow ultotal ulnow} {
+    incr ::tclcurl::test::progress_calls
+    set ::tclcurl::test::progress_last [list $dltotal $dlnow $ultotal $ulnow]
+
+    if {!$::tclcurl::test::pause_done && ($dlnow > 0)} {
+        set ::tclcurl::test::pause_done 1
+        incr ::tclcurl::test::pause_count
+        set ::tclcurl::test::pause_start_dlnow $dlnow
+        set pause_started_ms [clock milliseconds]
+        $::tclcurl::test::progress_handle pause
+        after $::tclcurl::test::pause_duration_ms
+        $::tclcurl::test::progress_handle resume
+        incr ::tclcurl::test::pause_total_ms [expr {[clock milliseconds] - $pause_started_ms}]
+    } elseif {$::tclcurl::test::pause_done && !$::tclcurl::test::resume_seen} {
+        set ::tclcurl::test::resume_seen 1
+        set ::tclcurl::test::resume_seen_dlnow $dlnow
+    }
+
+    return 0
 }
 
 test progress-1.1 {-command runs after a successful transfer} -constraints http_server -body {
@@ -97,5 +119,39 @@ test progress-1.4 {-buffersize rejects malformed values} -constraints http_serve
               } result] $result
     }
 } -result {1 {setting option -buffersize: bogus}}
+
+test progress-1.5 {-progressproc can pause and resume a transfer} -constraints http_server -body {
+    set expectedSize [string length [::tclcurl::test::range_fixture]]
+    set ::tclcurl::test::progress_calls 0
+    set ::tclcurl::test::progress_last {}
+    set ::tclcurl::test::progress_handle {}
+    set ::tclcurl::test::pause_done 0
+    set ::tclcurl::test::pause_count 0
+    set ::tclcurl::test::pause_duration_ms 300
+    set ::tclcurl::test::pause_total_ms 0
+    set ::tclcurl::test::pause_start_dlnow 0
+    set ::tclcurl::test::resume_seen 0
+    set ::tclcurl::test::resume_seen_dlnow 0
+    set body {}
+    set started_ms [clock milliseconds]
+    ::tclcurl::test::with_easy_handle handle {
+        set ::tclcurl::test::progress_handle $handle
+        $handle configure -url [::tclcurl::test::server::base_url range-data] \
+                          -progressproc ::tclcurl::test::progress_pause_probe \
+                          -buffersize 1024 \
+                          -bodyvar body \
+                          -noprogress 0
+        set rc [$handle perform]
+        set elapsed_ms [expr {[clock milliseconds] - $started_ms}]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {$::tclcurl::test::pause_count == 1}] \
+             [expr {$::tclcurl::test::pause_total_ms >= $::tclcurl::test::pause_duration_ms}] \
+             [expr {$elapsed_ms >= $::tclcurl::test::pause_duration_ms}] \
+             [expr {$::tclcurl::test::pause_start_dlnow > 0}] \
+             [expr {$::tclcurl::test::resume_seen_dlnow >= $::tclcurl::test::pause_start_dlnow}] \
+             [string length $body]
+    }
+} -result [list 0 200 1 1 1 1 1 131072]
 
 cleanupTests
