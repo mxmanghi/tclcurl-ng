@@ -1,6 +1,6 @@
 # TclCurl - get a URL with FTP, TELNET, LDAP, DICT, FILE, HTTP or HTTPS syntax.
 
-This project was forked from the (flightaware/tclcurl-fa)[https://github.com/flightaware/tclcurl-fa]
+This project was forked from the [flightaware/tclcurl-fa](https://github.com/flightaware/tclcurl-fa)
 repository and the contitued as independed development effort since the upstream maintainers
 apparently stopped accepting or reacting to PR
 
