@@ -1,8 +1,8 @@
-[![Linux CI](https://github.com/flightaware/tclcurl-fa/actions/workflows/linux-ci.yml/badge.svg)](https://github.com/flightaware/tclcurl-fa/actions/workflows/linux-ci.yml)
-[![Mac CI](https://github.com/flightaware/tclcurl-fa/actions/workflows/mac-ci.yml/badge.svg)](https://github.com/flightaware/tclcurl-fa/actions/workflows/mac-ci.yml)
-[![Windows CI](https://github.com/flightaware/tclcurl-fa/actions/workflows/windows-ci.yml/badge.svg)](https://github.com/flightaware/tclcurl-fa/actions/workflows/windows-ci.yml)
-
 # TclCurl - get a URL with FTP, TELNET, LDAP, DICT, FILE, HTTP or HTTPS syntax.
+
+This project was forked from the (flightaware/tclcurl-fa)[https://github.com/flightaware/tclcurl-fa]
+repository and the contitued as independed development effort since the upstream maintainers
+apparently stopped accepting or reacting to PR
 
 ## Introduction
 
@@ -11,7 +11,7 @@ about what libcurl is capable of check https://curl.se/
 
 To make type:
 
-      ./configure ?--enable-threads?
+      ./configure --with-tcl=<tclConfig.sh directory> ?--enable-threads?
       make
       make install
 
@@ -19,7 +19,7 @@ The configure script will deduce `$PREFIX` from the tcl installation.
 The generated `Makefile` uses the file `$PREFIX/lib/tclConfig.sh` that was left by
 the make of tcl for most of its configuration parameters.
 
-There is another file, ReadMeW32.txt, to explain how to compile in Windows.
+*We retained the ReadMeW32.txt that explains how to compile in Windows, but this fork is currently tested only for Unix*
 
 ## Troubleshooting
 
