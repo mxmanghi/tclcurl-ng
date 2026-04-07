@@ -60,12 +60,11 @@ Check the man page for details.
 
 ## Authors
 
-Originally written by:  Andres Garcia (fandom@telefonica.net)
-Cloned from a repo by Steve Havelka once at:  https://bitbucket.org/smh377/tclcurl/ (now broken 2026-04-07)
-
-Code refactored and test suite developed by Massimo Manghi (massimo.manghi@rivetweb.org). Some parts were 
+- Originally written by:  Andres Garcia (fandom@telefonica.net)
+- Cloned from a repo by Steve Havelka once at:  https://bitbucket.org/smh377/tclcurl/ (now broken 2026-04-07)
+- Code refactored and test suite developed by Massimo Manghi (massimo.manghi@rivetweb.org). Some parts were 
 written with the help of the OpenAI/Codex assistant but every modification and AI generated code has been
-evaluated by the author.
+evaluated by the author (2024-2026)
 
 ## License
 
