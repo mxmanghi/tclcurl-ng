@@ -1,3 +1,18 @@
+# http.test --
+#
+# Tests HTTP transport features including bodies, headers, callbacks, and ranges.
+#
+# Copyright (c) 2024-2026 Massimo Manghi
+#
+# SPDX-License-Identifier: TCL
+#
+# See the file "license.terms" at the top level of this distribution
+# for information on usage and redistribution of this file, and for the
+# complete disclaimer of warranties and limitation of liability.
+#
+# Portions of this file were drafted or revised with AI assistance
+# under the direction and review of Massimo Manghi
+
 package require tcltest
 package require sha256
 namespace import ::tcltest::*

@@ -1,15 +1,19 @@
 /*
  * tclcurl.h --
  *
- * Header file for the TclCurl extension to enable Tcl interpreters
- * to access libcurl.
+ * Implementation of the TclCurl extension that creates the curl namespace
+ * so that Tcl interpreters can access libcurl.
  *
- * Copyright (c) 2001-2011 Andres Garcia Garcia.
- * Copyright (c) 2026 Massimo Manghi
+ * This file is partially derived from tclcurl-fa.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * Copyright (c) 2001-2011 Andres Garcia Garcia
+ * Copyright (c) 2024-2026 Massimo Manghi
  *
+ * SPDX-License-Identifier: TCL
+ *
+ * See the file "license.terms" at the top level of this distribution
+ * for information on usage and redistribution of this file, and for the
+ * complete disclaimer of warranties and limitation of liability.
  */
 
 #ifndef __tclcurl_h__
@@ -171,7 +175,7 @@ void curlErrorSetOpt(Tcl_Interp *interp,const char **configTable, int option,con
 size_t curlHeaderReader(void *ptr,size_t size,size_t nmemb,FILE *stream);
 size_t curlBodyReader(void *ptr,size_t size,size_t nmemb,FILE *curlDataPtr);
 
-int curlProgressCallback(void *clientp,double dltotal,double dlnow,double ultotal,double ulnow);
+int curlProgressCallback(void *clientp,curl_off_t dltotal,curl_off_t dlnow,curl_off_t ultotal,curl_off_t ulnow);
 
 size_t curlWriteProcInvoke(void *ptr,size_t size,size_t nmemb,FILE *curlDataPtr);
 size_t curlReadProcInvoke(void *ptr,size_t size,size_t nmemb,FILE *curlDataPtr);

@@ -1,6 +1,22 @@
 /*
- * curl_setopts.h
+ * curl_setopts.h --
  *
+ * Definition and central X-macro based table of symbols and functions for
+ * the CLI option management. 
+ *
+ * This file is partially derived from tclcurl-fa.
+ *
+ * Copyright (c) 2001-2011 Andres Garcia Garcia
+ * Copyright (c) 2024-2026 Massimo Manghi
+ *
+ * SPDX-License-Identifier: TCL
+ *
+ * See the file "license.terms" at the top level of this distribution
+ * for information on usage and redistribution of this file, and for the
+ * complete disclaimer of warranties and limitation of liability.
+ *
+ * Portions of this file were drafted or revised with AI assistance
+ * under the direction and review of Massimo Manghi.
  */
 
 #ifndef __curl_setopts_h__

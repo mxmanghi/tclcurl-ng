@@ -21,6 +21,10 @@ the make of tcl for most of its configuration parameters.
 
 *We retained the ReadMeW32.txt that explains how to compile in Windows, but this fork is currently tested only for Unix*
 
+Some portions of this project were developed with AI-assisted drafting/editing
+tools under human direction, supervision, review, and approval. All accepted changes
+were selected, verified, and integrated by the human maintainers.
+
 ## Troubleshooting
 
 If you are running Red Hat or Fedora and you are compiling from source,

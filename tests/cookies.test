@@ -1,3 +1,18 @@
+# cookies.test --
+#
+# Tests cookie engine behavior, cookie injection, and cookie sharing.
+#
+# Copyright (c) 2024-2026 Massimo Manghi
+#
+# SPDX-License-Identifier: TCL
+#
+# See the file "license.terms" at the top level of this distribution
+# for information on usage and redistribution of this file, and for the
+# complete disclaimer of warranties and limitation of liability.
+#
+# Portions of this file were drafted or revised with AI assistance
+# under the direction and review of Massimo Manghi
+
 package require tcltest
 namespace import ::tcltest::*
 

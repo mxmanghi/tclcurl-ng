@@ -429,6 +429,9 @@ oo::class create ::tclcurl::testserver::http_service {
                             "path=[::tclcurl::testserver::escape_response_value $path]" \
                             "content-type=[::tclcurl::testserver::escape_response_value [my header_value $headers content-type]]" \
                             "content-length=[::tclcurl::testserver::escape_response_value [my header_value $headers content-length]]" \
+                            "user-agent=[::tclcurl::testserver::escape_response_value [my header_value $headers user-agent]]" \
+                            "referer=[::tclcurl::testserver::escape_response_value [my header_value $headers referer]]" \
+                            "x-tclcurl-test=[::tclcurl::testserver::escape_response_value [my header_value $headers x-tclcurl-test]]" \
                             "body-length=[string length $request_body]" \
                             "body-hex=[binary encode hex $request_body]" \
                             "body-sha256=[::sha2::sha256 -hex $request_body]"] "\n"]

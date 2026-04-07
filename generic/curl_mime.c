@@ -1,14 +1,18 @@
 /*
- * curl_mime.h --
+ * curl_mime.c --
  *
- * Header file for the TclCurl extension to enable Tcl interpreters
- * to access libcurl.
+ * mime formatted multipart form data management. 
  *
- * Copyright (c) 2001-2011 Andres Garcia Garcia.
- * Copyright (c) 2026 Massimo Manghi
+ * This file is partially derived from tclcurl-fa.
  *
- * See the file "license.terms" for information on usage and redistribution
- * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ * Copyright (c) 2001-2011 Andres Garcia Garcia
+ * Copyright (c) 2024-2026 Massimo Manghi
+ *
+ * SPDX-License-Identifier: TCL
+ *
+ * See the file "license.terms" at the top level of this distribution
+ * for information on usage and redistribution of this file, and for the
+ * complete disclaimer of warranties and limitation of liability.
  *
  */
 

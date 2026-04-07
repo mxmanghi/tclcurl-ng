@@ -1,0 +1,171 @@
+# output.test --
+#
+# Tests output routing to files for bodies, headers, and diagnostics.
+#
+# Copyright (c) 2024-2026 Massimo Manghi
+#
+# SPDX-License-Identifier: TCL
+#
+# See the file "license.terms" at the top level of this distribution
+# for information on usage and redistribution of this file, and for the
+# complete disclaimer of warranties and limitation of liability.
+#
+# Portions of this file were drafted or revised with AI assistance
+# under the direction and review of Massimo Manghi
+
+package require tcltest
+namespace import ::tcltest::*
+
+source [file join [file dirname [file normalize [info script]]] support.tcl]
+
+::tclcurl::test::load_package
+
+proc ::tclcurl::test::slurp_file {path {translation auto}} {
+    set fh [open $path]
+    try {
+        if {$translation ne "auto"} {
+            chan configure $fh -translation $translation
+        }
+        return [read $fh]
+    } finally {
+        close $fh
+    }
+}
+
+test output-1.1 {-file writes the HTTP response body to disk} -constraints http_server -body {
+    set bodyPath [file join [::tcltest::temporaryDirectory] output-body.txt]
+    catch {file delete -force $bodyPath}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] \
+                          -file $bodyPath \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {[file exists $bodyPath]}] \
+             [expr {[::tclcurl::test::slurp_file $bodyPath] eq "tclcurl test server\n"}]
+    }
+} -cleanup {
+    catch {file delete -force [file join [::tcltest::temporaryDirectory] output-body.txt]}
+} -result {0 200 1 1}
+
+test output-1.2 {-writeheader writes HTTP response headers to disk} -constraints http_server -body {
+    set headerPath [file join [::tcltest::temporaryDirectory] output-headers.txt]
+    catch {file delete -force $headerPath}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] \
+                          -nobody 1 \
+                          -writeheader $headerPath \
+                          -noprogress 1
+        set rc [$handle perform]
+        set headerText [::tclcurl::test::slurp_file $headerPath]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {[file exists $headerPath]}] \
+             [expr {[string first "HTTP/1.1 200 OK" $headerText] >= 0}] \
+             [expr {[string first "Content-Length:" $headerText] >= 0}]
+    }
+} -cleanup {
+    catch {file delete -force [file join [::tcltest::temporaryDirectory] output-headers.txt]}
+} -result {0 200 1 1 1}
+
+test output-1.3 {-stderr redirects verbose diagnostics to a file} -constraints http_server -body {
+    set stderrPath [file join [::tcltest::temporaryDirectory] output-stderr.txt]
+    catch {file delete -force $stderrPath}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] \
+                          -stderr $stderrPath \
+                          -verbose 1 \
+                          -nobody 1 \
+                          -noprogress 1
+        set rc [$handle perform]
+        set stderrText [::tclcurl::test::slurp_file $stderrPath]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {[file exists $stderrPath]}] \
+             [expr {[string length $stderrText] > 0}] \
+             [expr {[string first "HEAD / HTTP/1.1" $stderrText] >= 0}]
+    }
+} -cleanup {
+    catch {file delete -force [file join [::tcltest::temporaryDirectory] output-stderr.txt]}
+} -result {0 200 1 1 1}
+
+test output-1.4 {-file can be reset to the default destination} -constraints http_server -body {
+    set bodyPath [file join [::tcltest::temporaryDirectory] output-body-reset.txt]
+    catch {file delete -force $bodyPath}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] \
+                          -file $bodyPath \
+                          -noprogress 1
+        set firstRc [$handle perform]
+        file delete -force $bodyPath
+
+        $handle configure -url [::tclcurl::test::server::base_url] \
+                          -file "" \
+                          -noprogress 1
+        set secondRc [$handle perform]
+
+        list $firstRc \
+             $secondRc \
+             [$handle getinfo responsecode] \
+             [expr {![file exists $bodyPath]}]
+    }
+} -cleanup {
+    catch {file delete -force [file join [::tcltest::temporaryDirectory] output-body-reset.txt]}
+} -result {0 0 200 1}
+
+test output-1.5 {-writeheader can be reset to the default destination} -constraints http_server -body {
+    set headerPath [file join [::tcltest::temporaryDirectory] output-headers-reset.txt]
+    catch {file delete -force $headerPath}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] \
+                          -nobody 1 \
+                          -writeheader $headerPath \
+                          -noprogress 1
+        set firstRc [$handle perform]
+        file delete -force $headerPath
+
+        $handle configure -url [::tclcurl::test::server::base_url] \
+                          -nobody 1 \
+                          -writeheader "" \
+                          -noprogress 1
+        set secondRc [$handle perform]
+
+        list $firstRc \
+             $secondRc \
+             [$handle getinfo responsecode] \
+             [expr {![file exists $headerPath]}]
+    }
+} -cleanup {
+    catch {file delete -force [file join [::tcltest::temporaryDirectory] output-headers-reset.txt]}
+} -result {0 0 200 1}
+
+test output-1.6 {-stderr can be reset to the default destination} -constraints http_server -body {
+    set stderrPath [file join [::tcltest::temporaryDirectory] output-stderr-reset.txt]
+    catch {file delete -force $stderrPath}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] \
+                          -stderr $stderrPath \
+                          -verbose 1 \
+                          -nobody 1 \
+                          -noprogress 1
+        set firstRc [$handle perform]
+        file delete -force $stderrPath
+
+        $handle configure -url [::tclcurl::test::server::base_url] \
+                          -stderr "" \
+                          -verbose 1 \
+                          -nobody 1 \
+                          -noprogress 1
+        set secondRc [$handle perform]
+
+        list $firstRc \
+             $secondRc \
+             [$handle getinfo responsecode] \
+             [expr {![file exists $stderrPath]}]
+    }
+} -cleanup {
+    catch {file delete -force [file join [::tcltest::temporaryDirectory] output-stderr-reset.txt]}
+} -result {0 0 200 1}
+
+cleanupTests

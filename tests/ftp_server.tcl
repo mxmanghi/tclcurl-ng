@@ -1,3 +1,15 @@
+# ftp_server.tcl --
+#
+# Implementation of a simple FTP server for testing of the tclcurl extension
+#
+# Copyright (c) 2024-2026 Massimo Manghi
+#
+# SPDX-License-Identifier: TCL
+#
+# See the file "license.terms" at the top level of this distribution
+# for information on usage and redistribution of this file, and for the
+# complete disclaimer of warranties and limitation of liability.
+
 namespace eval ::tclcurl::testserver {}
 
 oo::class create ::tclcurl::testserver::ftp_service {

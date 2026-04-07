@@ -1,0 +1,101 @@
+# progress.test --
+#
+# Tests transfer completion and progress callbacks.
+#
+# Copyright (c) 2024-2026 Massimo Manghi
+#
+# SPDX-License-Identifier: TCL
+#
+# See the file "license.terms" at the top level of this distribution
+# for information on usage and redistribution of this file, and for the
+# complete disclaimer of warranties and limitation of liability.
+#
+# Portions of this file were drafted or revised with AI assistance
+# under the direction and review of Massimo Manghi
+
+package require tcltest
+namespace import ::tcltest::*
+
+source [file join [file dirname [file normalize [info script]]] support.tcl]
+
+::tclcurl::test::load_package
+
+proc ::tclcurl::test::command_probe {} {
+    incr ::tclcurl::test::command_calls
+    return 0
+}
+
+proc ::tclcurl::test::progress_probe {dltotal dlnow ultotal ulnow} {
+    incr ::tclcurl::test::progress_calls
+    set ::tclcurl::test::progress_last [list $dltotal $dlnow $ultotal $ulnow]
+    if {$dltotal > $::tclcurl::test::progress_max_dltotal} {
+        set ::tclcurl::test::progress_max_dltotal $dltotal
+    }
+    if {$dlnow > $::tclcurl::test::progress_max_dlnow} {
+        set ::tclcurl::test::progress_max_dlnow $dlnow
+    }
+}
+
+test progress-1.1 {-command runs after a successful transfer} -constraints http_server -body {
+    set ::tclcurl::test::command_calls 0
+    set body {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] \
+                          -command ::tclcurl::test::command_probe \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode]     \
+             $::tclcurl::test::command_calls    \
+             [expr {[string length $body] > 0}]
+    }
+} -result {0 200 1 1}
+
+test progress-1.2 {-progressproc reports download progress during transfer} -constraints http_server -body {
+    set expectedSize [string length [::tclcurl::test::range_fixture]]
+    set ::tclcurl::test::progress_calls 0
+    set ::tclcurl::test::progress_last {}
+    set ::tclcurl::test::progress_max_dltotal 0
+    set ::tclcurl::test::progress_max_dlnow 0
+    set body {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url range-data] \
+                          -progressproc ::tclcurl::test::progress_probe \
+                          -bodyvar body \
+                          -noprogress 0
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode]         \
+             [expr {$::tclcurl::test::progress_calls > 0}] \
+             $::tclcurl::test::progress_max_dltotal \
+             $::tclcurl::test::progress_max_dlnow   \
+             [string length $body]
+    }
+} -result [list 0 200 1 131072 131072 131072]
+
+test progress-1.3 {-buffersize accepts a valid integer value} -constraints http_server -body {
+    set body {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url range-data] \
+                          -buffersize 4096 \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [string length $body]
+    }
+} -result [list 0 200 131072]
+
+test progress-1.4 {-buffersize rejects malformed values} -constraints http_server -body {
+    ::tclcurl::test::with_easy_handle handle {
+        list [catch {
+                  $handle configure -url [::tclcurl::test::server::base_url range-data] \
+                                    -buffersize bogus \
+                                    -noprogress 1
+              } result] $result
+    }
+} -result {1 {setting option -buffersize: bogus}}
+
+cleanupTests

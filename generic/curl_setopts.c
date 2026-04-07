@@ -1,7 +1,21 @@
 /*
- * curl_setopts.c
+ * curl_setopts.c --
  *
+ * Central CLI option management. 
  *
+ * This file is partially derived from tclcurl-fa.
+ *
+ * Copyright (c) 2001-2011 Andres Garcia Garcia
+ * Copyright (c) 2024-2026 Massimo Manghi
+ *
+ * SPDX-License-Identifier: TCL
+ *
+ * See the file "license.terms" at the top level of this distribution
+ * for information on usage and redistribution of this file, and for the
+ * complete disclaimer of warranties and limitation of liability.
+ *
+ * Portions of this file were drafted or revised with AI assistance
+ * under the direction and review of Massimo Manghi.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -927,7 +941,7 @@ TclCurl_HandleProgressProc(TclCurlOptsArgs *args)
                 curlProgressCallback)) {
             return TCL_ERROR;
         }
-        if (curl_easy_setopt(curlHandle,CURLOPT_PROGRESSDATA,
+        if (curl_easy_setopt(curlHandle,CURLOPT_XFERINFODATA,
                 args->curlData)) {
             return TCL_ERROR;
         }

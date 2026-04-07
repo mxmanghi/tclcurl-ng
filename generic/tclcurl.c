@@ -724,8 +724,8 @@ curlBodyReader(void *ptr,size_t size,size_t nmemb,FILE *curlDataPtr) {
  *-----------------------------------------------------------------------
  */
 int
-curlProgressCallback(void *clientData,double dltotal,double dlnow,
-        double ultotal,double ulnow) {
+curlProgressCallback(void *clientData,curl_off_t dltotal,curl_off_t dlnow,
+        curl_off_t ultotal,curl_off_t ulnow) {
 
     struct curlObjData    *curlData=(struct curlObjData *)clientData;
     Tcl_Obj               *tclProcPtr;
@@ -739,10 +739,10 @@ curlProgressCallback(void *clientData,double dltotal,double dlnow,
 
     tclProcPtr = Tcl_NewListObj(0, 0);
     Tcl_ListObjAppendElement(curlData->interp, tclProcPtr, Tcl_NewStringObj(curlData->progressProc, -1));
-    Tcl_ListObjAppendElement(curlData->interp, tclProcPtr, Tcl_NewDoubleObj(dltotal));
-    Tcl_ListObjAppendElement(curlData->interp, tclProcPtr, Tcl_NewDoubleObj(dlnow));
-    Tcl_ListObjAppendElement(curlData->interp, tclProcPtr, Tcl_NewDoubleObj(ultotal));
-    Tcl_ListObjAppendElement(curlData->interp, tclProcPtr, Tcl_NewDoubleObj(ulnow));
+    Tcl_ListObjAppendElement(curlData->interp, tclProcPtr, Tcl_NewWideIntObj((Tcl_WideInt)dltotal));
+    Tcl_ListObjAppendElement(curlData->interp, tclProcPtr, Tcl_NewWideIntObj((Tcl_WideInt)dlnow));
+    Tcl_ListObjAppendElement(curlData->interp, tclProcPtr, Tcl_NewWideIntObj((Tcl_WideInt)ultotal));
+    Tcl_ListObjAppendElement(curlData->interp, tclProcPtr, Tcl_NewWideIntObj((Tcl_WideInt)ulnow));
     Tcl_IncrRefCount(tclProcPtr);
 
     if (Tcl_EvalObjEx(curlData->interp,tclProcPtr,TCL_EVAL_GLOBAL)!=TCL_OK) {

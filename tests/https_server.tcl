@@ -19,7 +19,8 @@ oo::class create ::tclcurl::testserver::https_service {
 
     method start {} {
         if {![::tclcurl::test::https_credentials_available]} {
-            error "https credentials not available"
+            puts "https credentials not available, HTTPS tests will not run"
+            return
         }
 
         set listener [::tls::socket -server [list [self] accept] \
