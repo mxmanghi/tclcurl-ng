@@ -49,6 +49,7 @@ oo::class create ::tclcurl::testserver::ftp_service {
                                          passive_listener {} \
                                          data_chan {} \
                                          pending_action {} \
+                                         restart_offset 0 \
                                          rename_from {}]
         my send_reply $chan 220 "TclCurl FTP test server ready"
         chan event $chan readable [list [self] read_command $chan]
@@ -155,6 +156,14 @@ oo::class create ::tclcurl::testserver::ftp_service {
                     return
                 }
                 my send_reply $chan 213 [file size $fs_path]
+            }
+            REST {
+                if {![string is entier -strict $argument] || $argument < 0} {
+                    my send_reply $chan 501 "Invalid restart position"
+                    return
+                }
+                dict set sessions($chan) restart_offset $argument
+                my send_reply $chan 350 "Restarting at $argument"
             }
             DELE {
                 set fs_path [my resolve_path $chan $argument]
@@ -368,7 +377,9 @@ oo::class create ::tclcurl::testserver::ftp_service {
 
         set action [dict get $pending action]
         set argument [dict get $pending argument]
+        set restart_offset [dict get $sessions($chan) restart_offset]
         dict set sessions($chan) pending_action {}
+        dict set sessions($chan) restart_offset 0
 
         set status [catch {
             switch -- $action {
@@ -385,6 +396,9 @@ oo::class create ::tclcurl::testserver::ftp_service {
                     }
                     set fh [open $fs_path rb]
                     try {
+                        if {$restart_offset > 0} {
+                            chan seek $fh $restart_offset start
+                        }
                         puts -nonewline $data_chan [read $fh]
                     } finally {
                         close $fh

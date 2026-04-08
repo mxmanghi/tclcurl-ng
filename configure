@@ -9487,11 +9487,11 @@ esac
   fi
 
     curl_depr_enabled=
-  test "x$curl_pre_7_56_depr" = xyes   && curl_depr_enabled="$curl_depr_enabled v7.56"
-  test "x$curl_pre_7_84_depr" = xyes   && curl_depr_enabled="$curl_depr_enabled v7.84"
+  test "x$curl_pre_7_56_depr"   = xyes && curl_depr_enabled="$curl_depr_enabled v7.56"
+  test "x$curl_pre_7_84_depr"   = xyes && curl_depr_enabled="$curl_depr_enabled v7.84"
   test "x$curl_pre_7_11_1_depr" = xyes && curl_depr_enabled="$curl_depr_enabled v7.11.1"
   test "x$curl_pre_8_17_0_depr" = xyes && curl_depr_enabled="$curl_depr_enabled v8.17.0"
-  test "x$curl_depr_enabled" = x && curl_depr_enabled="none"
+  test "x$curl_depr_enabled"    = x    && curl_depr_enabled="none"
 
   if test "$curl_depr_enabled" = none; then
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: no deprecated curl code enabled" >&5
@@ -9508,7 +9508,7 @@ printf "%s\n" "$as_me: deprecated curl code enabled for: $curl_depr_enabled" >&6
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-ac_config_files="$ac_config_files Makefile pkgIndex.tcl doc/tclcurl.n doc/tclcurl_share.n"
+ac_config_files="$ac_config_files Makefile pkgIndex.tcl doc/tclcurl.n.md doc/tclcurl_share.n"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -10201,7 +10201,7 @@ do
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "pkgIndex.tcl") CONFIG_FILES="$CONFIG_FILES pkgIndex.tcl" ;;
-    "doc/tclcurl.n") CONFIG_FILES="$CONFIG_FILES doc/tclcurl.n" ;;
+    "doc/tclcurl.n.md") CONFIG_FILES="$CONFIG_FILES doc/tclcurl.n.md" ;;
     "doc/tclcurl_share.n") CONFIG_FILES="$CONFIG_FILES doc/tclcurl_share.n" ;;
 
   *) as_fn_error $? "invalid argument: '$ac_config_target'" "$LINENO" 5;;

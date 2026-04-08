@@ -726,7 +726,7 @@ lib/README.encoding in libcurl docs for details.
 .B -transferencoding
 Adds a request for compressed Transfer Encoding in the outgoing HTTP
 request. If the server supports this and so desires, it can respond with the
-HTTP resonse sent using a compressed Transfer-Encoding that will be
+HTTP response sent using a compressed Transfer-Encoding that will be
 automatically uncompressed by TclCurl on receival.
 
 Transfer-Encoding differs slightly from the Content-Encoding you ask for with

@@ -297,8 +297,8 @@ int TclCurl_HandleHttpPost(TclCurlOptsArgs *coa)
             }
             case FILECONTENT_HTTP_OPT:
             {
-                //Tcl_Size data_l;
-                //curl_mime_data_cb(part,curlstrdup(Tcl_GetStringFromObj(httpPostData[++arg_p],&data_l),data_l),
+                Tcl_Size data_l;
+                curl_mime_filedata(part,Tcl_GetStringFromObj(httpPostData[++arg_p],&data_l));
                 break;
             }
         }

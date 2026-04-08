@@ -5,7 +5,7 @@ The repository now has two distinct kinds of files under `tests/`:
 - `*.test`: real `tcltest` test cases that are executed by `tests/all.tcl`
 - `legacy/*.tcl`: legacy example scripts that are useful as references, but are not part of the automated suite
 
-*Last update: 2026-04-06*
+*Last update: 2026-04-08*
 
 ## Running the suite
 
@@ -93,6 +93,27 @@ Tests that are primarily about easy-handle lifecycle or share-handle lifecycle s
 - request body handling through `-post`, `-postfields`, `-postfieldsize`, `-upload`, `-readproc`, and `-range`
 - timeout handling through `-timeout` and `-timeoutms`
 
+`tests/output.test` covers output routing:
+
+- `-file` and resetting it to the default destination
+- `-writeheader` and resetting it to the default destination
+- `-stderr` and resetting it to the default destination
+
+`tests/progress.test` covers transfer callbacks and related controls:
+
+- `-command`
+- `-progressproc`
+- pause / resume callback behavior
+- `-buffersize`
+
+`tests/negotiation.test` covers HTTP negotiation-oriented options:
+
+- `-httpversion`
+- `-encoding`
+- `-transferencoding`
+- `-contentdecoding`
+- `-transferdecoding`
+
 `tests/https.test` covers the TLS-specific aspects of the same HTTP behaviors:
 
 - HTTPS GET with certificate verification disabled
@@ -107,10 +128,15 @@ Tests that are primarily about easy-handle lifecycle or share-handle lifecycle s
 - `-dirlistonly`
 - `-quote` / `-postquote`
 - `-ftpcreatemissingdirs`
+- `-resumefrom`
 
 `tests/redir.test` and `tests/cookies.test` are thin wrappers around the shared transport scenarios, kept as separate files for readability and focused `tcltest` runs.
 
-`tests/mime.test` currently covers multipart form submission through `-httppost`.
+`tests/mime.test` currently covers multipart form submission through `-httppost`:
+
+- mixed textual parts
+- buffer-backed parts
+- file-backed parts
 
 ## HTTPS setup
 
@@ -139,11 +165,15 @@ openssl req -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes \
 
 Based on the current TclCurl option surface in `generic/curl_setopts.h`, the strongest next targets for migration are:
 
-- header handling: `-writeheader`
-- transfer controls: `-resumefrom`, `-connecttimeout`, `-buffersize`
-- protocol negotiation: `-httpversion`, `-encoding`, `-transferencoding`, `-contentdecoding`, `-transferdecoding`
+- transfer controls: `-connecttimeout`
 - name resolution and routing: `-resolve`, `-ipresolve`, `-interface`, `-port`, `-tcpnodelay`
 - auth paths supported by the linked libcurl build: `-userpwd`, `-username`, `-password`, `-httpauth`, `-proxyauth`
+
+Useful follow-on areas not listed above but still worth covering are:
+
+- callback diagnostics such as `-debugproc`
+- advanced multipart forms through `-httppost` (`contentheader`, overridden `filename`, `filecontent`)
+- broader metadata and utility APIs such as `getinfo`, `curl::curlConfig`, `easystrerror`, `multistrerror`, and `sharestrerror`
 
 ## Gaps still worth planning
 

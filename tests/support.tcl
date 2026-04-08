@@ -94,6 +94,10 @@ proc ::tclcurl::test::range_fixture {{ntimes 8192}} {
     return [string repeat "0123456789abcdef" $ntimes]
 }
 
+proc ::tclcurl::test::negotiation_payload {} {
+    return [string range [::tclcurl::test::range_fixture] 0 255]
+}
+
 proc ::tclcurl::test::normalizedBody {body} {
     set normalized [string map [list "\r\n" "\n" "\r" "\n"] $body]
     set lines {}

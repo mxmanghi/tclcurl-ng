@@ -13,6 +13,7 @@
 namespace eval ::tclcurl::testserver {}
 
 package require sha256
+package require zlib
 
 proc ::tclcurl::testserver::http_header_lines {header_block} {
     return [regexp -all -inline {[^\r\n]+} $header_block]
@@ -260,6 +261,17 @@ oo::class create ::tclcurl::testserver::http_service {
         return {}
     }
 
+    method chunk_encode {body {chunk_size 16}} {
+        set encoded {}
+        set body_length [string length $body]
+        for {set offset 0} {$offset < $body_length} {incr offset $chunk_size} {
+            set chunk [string range $body $offset [expr {$offset + $chunk_size - 1}]]
+            append encoded [format %X [string length $chunk]] "\r\n" $chunk "\r\n"
+        }
+        append encoded "0\r\n\r\n"
+        return $encoded
+    }
+
     method redirect_response {location {reason "Found"}} {
         set body "redirect=$location\n"
         return [dict create status 302      \
@@ -427,8 +439,12 @@ oo::class create ::tclcurl::testserver::http_service {
                 set body [join [list \
                             "method=[::tclcurl::testserver::escape_response_value $method]" \
                             "path=[::tclcurl::testserver::escape_response_value $path]" \
+                            "request-version=[::tclcurl::testserver::escape_response_value $version]" \
                             "content-type=[::tclcurl::testserver::escape_response_value [my header_value $headers content-type]]" \
                             "content-length=[::tclcurl::testserver::escape_response_value [my header_value $headers content-length]]" \
+                            "accept-encoding=[::tclcurl::testserver::escape_response_value [my header_value $headers accept-encoding]]" \
+                            "te=[::tclcurl::testserver::escape_response_value [my header_value $headers te]]" \
+                            "connection=[::tclcurl::testserver::escape_response_value [my header_value $headers connection]]" \
                             "user-agent=[::tclcurl::testserver::escape_response_value [my header_value $headers user-agent]]" \
                             "referer=[::tclcurl::testserver::escape_response_value [my header_value $headers referer]]" \
                             "x-tclcurl-test=[::tclcurl::testserver::escape_response_value [my header_value $headers x-tclcurl-test]]" \
@@ -437,6 +453,23 @@ oo::class create ::tclcurl::testserver::http_service {
                             "body-sha256=[::sha2::sha256 -hex $request_body]"] "\n"]
                 append body "\n"
                 return [dict create status 200 reason OK body $body headers {}]
+            }
+            /deflated-data {
+                set body [::tclcurl::test::negotiation_payload]
+                return [dict create \
+                    status 200 \
+                    reason OK \
+                    body [zlib compress $body] \
+                    headers [list "Content-Encoding: deflate"]]
+            }
+            /chunked-data {
+                set body [::tclcurl::test::negotiation_payload]
+                return [dict create \
+                    status 200 \
+                    reason OK \
+                    body $body \
+                    headers {} \
+                    transfer_encoding chunked]
             }
             /range-data {
                 return [my byte_range_response $headers [::tclcurl::test::range_fixture]]
@@ -460,7 +493,8 @@ oo::class create ::tclcurl::testserver::http_service {
             body {} \
             head_only 0 \
             headers {} \
-            status_line {}]
+            status_line {} \
+            transfer_encoding {}]
 
         dict for {key value} $response {
             dict set completed_response $key $value
@@ -480,15 +514,23 @@ oo::class create ::tclcurl::testserver::http_service {
         set response_headers [list \
             $status_line \
             "Content-Type: text/plain" \
-            "Content-Length: [string length $body]" \
             "Connection: close"]
+        if {$transfer_encoding eq "chunked"} {
+            lappend response_headers "Transfer-Encoding: chunked"
+        } else {
+            lappend response_headers "Content-Length: [string length $body]"
+        }
         set response_headers [concat $response_headers $headers]
 
         if {[catch {
             puts -nonewline $chan [join $response_headers "\r\n"]
             puts -nonewline $chan "\r\n\r\n"
             if {!$head_only} {
-                puts -nonewline $chan $body
+                if {$transfer_encoding eq "chunked"} {
+                    puts -nonewline $chan [my chunk_encode $body]
+                } else {
+                    puts -nonewline $chan $body
+                }
             }
             flush $chan
         } write_error]} {

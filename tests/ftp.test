@@ -35,6 +35,15 @@ proc ::tclcurl::test::seed_ftp_file {source_path target_name} {
     file copy -force $source_path [file join [::tclcurl::test::ftp_root] $target_name]
 }
 
+proc ::tclcurl::test::write_binary_file {path data} {
+    set fh [open $path wb]
+    try {
+        puts -nonewline $fh $data
+    } finally {
+        close $fh
+    }
+}
+
 test ftp-1.1 {-upload stores README.md on the FTP server} -constraints ftp_server -body {
     set readme [file join [::tclcurl::test::repo_root] README.md]
     ::tclcurl::test::ftp_reset_root
@@ -246,5 +255,40 @@ test ftp-4.2 {-ftpcreatemissingdirs creates remote directories before upload} -c
              [expr {[::tclcurl::test::file_sha256_hex $uploaded] eq [::tclcurl::test::file_sha256_hex $readme]}]
     }
 } -result {0 1 1 1 1}
+
+test ftp-5.1 {-resumefrom downloads the remaining tail of an FTP file} -constraints ftp_server -body {
+    set body {}
+    set payload [string range [::tclcurl::test::range_fixture] 0 4095]
+    set resume_from 257
+    set remote_name resumefrom-fixture.txt
+    set temp_path [file join [::tcltest::temporaryDirectory] $remote_name]
+    ::tclcurl::test::write_binary_file $temp_path $payload
+    ::tclcurl::test::ftp_reset_root
+    ::tclcurl::test::seed_ftp_file $temp_path $remote_name
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::ftp_base_url $remote_name] \
+                          -resumefrom $resume_from \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [string index $body 0] \
+             [expr {$body eq [string range $payload $resume_from end]}]
+    }
+} -cleanup {
+    catch {file delete -force [file join [::tcltest::temporaryDirectory] resumefrom-fixture.txt]}
+} -result [list 0 226 [string index [::tclcurl::test::range_fixture] 257] 1]
+
+test ftp-5.2 {-resumefrom rejects malformed values} -constraints ftp_server -body {
+    ::tclcurl::test::with_easy_handle handle {
+        set status [catch {
+                  $handle configure -url [::tclcurl::test::server::ftp_base_url resumefrom-fixture.txt] \
+                                    -resumefrom bogus \
+                                    -noprogress 1
+              } result]
+        list $status [string match {setting option -resumefrom:*} $result]
+    }
+} -result {1 1}
 
 cleanupTests

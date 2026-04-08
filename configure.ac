@@ -332,11 +332,11 @@ AC_DEFUN([CURL_ENABLE_DEPRECATED_CODE], [
 
   dnl Optional: show what was enabled
   curl_depr_enabled=
-  test "x$curl_pre_7_56_depr" = xyes   && curl_depr_enabled="$curl_depr_enabled v7.56"
-  test "x$curl_pre_7_84_depr" = xyes   && curl_depr_enabled="$curl_depr_enabled v7.84"
+  test "x$curl_pre_7_56_depr"   = xyes && curl_depr_enabled="$curl_depr_enabled v7.56"
+  test "x$curl_pre_7_84_depr"   = xyes && curl_depr_enabled="$curl_depr_enabled v7.84"
   test "x$curl_pre_7_11_1_depr" = xyes && curl_depr_enabled="$curl_depr_enabled v7.11.1"
   test "x$curl_pre_8_17_0_depr" = xyes && curl_depr_enabled="$curl_depr_enabled v8.17.0"
-  test "x$curl_depr_enabled" = x && curl_depr_enabled="none"
+  test "x$curl_depr_enabled"    = x    && curl_depr_enabled="none"
 
   if test "$curl_depr_enabled" = none; then
     AC_MSG_NOTICE([no deprecated curl code enabled])
@@ -361,5 +361,5 @@ CURL_ENABLE_DEPRECATED_CODE
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-AC_CONFIG_FILES([Makefile pkgIndex.tcl doc/tclcurl.n doc/tclcurl_share.n])
+AC_CONFIG_FILES([Makefile pkgIndex.tcl doc/tclcurl.n.md doc/tclcurl_share.n])
 AC_OUTPUT
