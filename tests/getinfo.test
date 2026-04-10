@@ -17,6 +17,7 @@ package require tcltest
 namespace import ::tcltest::*
 
 source [file join [file dirname [file normalize [info script]]] support.tcl]
+source [file join [file dirname [file normalize [info script]]] http_common.tcl]
 
 ::tclcurl::test::load_package
 
