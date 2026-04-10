@@ -1,0 +1,52 @@
+# config.test --
+#
+# Tests build-time libcurl metadata exposed through curl::curlConfig.
+#
+# Copyright (c) 2024-2026 Massimo Manghi
+#
+# SPDX-License-Identifier: TCL
+#
+# See the file "license.terms" at the top level of this distribution
+# for information on usage and redistribution of this file, and for the
+# complete disclaimer of warranties and limitation of liability.
+#
+# Portions of this file were drafted or revised with AI assistance
+# under the direction and review of Massimo Manghi
+
+package require tcltest
+namespace import ::tcltest::*
+
+source [file join [file dirname [file normalize [info script]]] support.tcl]
+
+::tclcurl::test::load_package
+
+test config-1.1 {curl::curlConfig -prefix returns a non-empty installation prefix} -body {
+    set prefix [curl::curlConfig -prefix]
+    expr {[string length [string trim $prefix]] > 0}
+} -result 1
+
+test config-1.2 {curl::curlConfig -feature returns a Tcl list of compiled features} -body {
+    set features [curl::curlConfig -feature]
+    list \
+        [expr {[catch {llength $features}] == 0}] \
+        [expr {[llength $features] > 0}]
+} -result {1 1}
+
+test config-1.3 {curl::curlConfig -vernum returns a positive hexadecimal version number} -body {
+    set vernum [string trim [curl::curlConfig -vernum]]
+    list \
+        [string is xdigit -strict $vernum] \
+        [expr {[scan $vernum %x numeric] == 1 && $numeric > 0}]
+} -result {1 1}
+
+test config-1.4 {curl::curlConfig -ca returns a string result} -body {
+    set caPath [curl::curlConfig -ca]
+    string length $caPath
+} -match glob -result *
+
+test config-1.5 {curl::curlConfig rejects unsupported options} -body {
+    set status [catch {curl::curlConfig -bogus} result]
+    list $status [string match {bad option*} $result]
+} -result {1 1}
+
+cleanupTests

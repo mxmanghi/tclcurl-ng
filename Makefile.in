@@ -18,6 +18,7 @@
 #========================================================================
 
 #SAMPLE_NEW_VAR	= @SAMPLE_NEW_VAR@
+TCLCURL_DOC_GEN = @TCLCURL_DOC_GEN@
 
 #========================================================================
 # Nothing of the variables below this line should need to be changed.
@@ -209,11 +210,10 @@ libraries:
 # end user machine when building from source.
 #========================================================================
 
-doc:
-#	@echo "If you have documentation to create, place the commands to"
-#	@echo "build the docs in the 'doc:' target.  For example:"
-#	@echo "        xml2nroff sample.xml > sample.n"
-#	@echo "        xml2html sample.xml > sample.html"
+doc: doc/tclcurl.n
+
+doc/tclcurl.n: doc/tclcurl.n.md
+	$(TCLCURL_DOC_GEN) doc/tclcurl.n doc/tclcurl.n.md
 
 install: all install-binaries install-libraries install-doc
 

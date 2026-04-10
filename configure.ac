@@ -73,6 +73,8 @@ TEA_SETUP_COMPILER
 TEA_ADD_SOURCES([tclcurl.c tcl_size.c curl_mime.c curl_setopts.c curl_getinfo.c ftp.c curl_utils.c multi.c])
 TCLCURL_SCRIPTS=tclcurl.tcl
 AC_SUBST(TCLCURL_SCRIPTS)
+TCLCURL_DOC_GEN='/usr/bin/lowdown -s -Tman -o'
+AC_SUBST(TCLCURL_DOC_GEN)
 
 #--------------------------------------------------------------------
 # Find libcurl, if it's not present, it makes no sense to compile

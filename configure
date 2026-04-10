@@ -671,6 +671,7 @@ SHARED_BUILD
 TCL_THREADS
 TCL_INCLUDES
 curl
+TCLCURL_DOC_GEN
 TCLCURL_SCRIPTS
 PKG_OBJECTS
 PKG_SOURCES
@@ -5498,6 +5499,8 @@ printf "%s\n" "$ac_cv_c_bigendian" >&6; }
 
 
 TCLCURL_SCRIPTS=tclcurl.tcl
+
+TCLCURL_DOC_GEN='/usr/bin/lowdown -s -Tman -o'
 
 
 #--------------------------------------------------------------------
