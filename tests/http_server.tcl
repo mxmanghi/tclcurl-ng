@@ -14,6 +14,7 @@ namespace eval ::tclcurl::testserver {}
 
 package require sha256
 package require zlib
+package require base64
 
 proc ::tclcurl::testserver::http_header_lines {header_block} {
     return [regexp -all -inline {[^\r\n]+} $header_block]
@@ -68,8 +69,12 @@ oo::class create ::tclcurl::testserver::http_service {
         set listener [socket -server [list [self] accept] \
             -myaddr [my host] [my port]]
         my set_listener $listener
-        my log "listening on [my endpoint]"
+        my log [my listening_message]
         return $listener
+    }
+
+    method description {} {
+        return "HTTP origin test server"
     }
 
     method accept {chan host port} {
@@ -134,6 +139,7 @@ oo::class create ::tclcurl::testserver::http_service {
 
     method respond {chan request} {
         set request_line [lindex [split $request "\r\n"] 0]
+        # Example match: "GET /request-inspect HTTP/1.1"
         if {![regexp {^([A-Z]+) ([^ ]+) HTTP/([0-9.]+)$} $request_line -> method target version]} {
             set response [my build_response_dict [dict create \
                 status 400 \
@@ -172,6 +178,7 @@ oo::class create ::tclcurl::testserver::http_service {
         set headers [dict create]
 
         foreach header_line [lrange $header_lines 1 end] {
+            # Example match: "Content-Type: text/plain"
             if {![regexp {^([^:]+):\s*(.*)$} $header_line -> name value]} {
                 continue
             }
@@ -272,6 +279,61 @@ oo::class create ::tclcurl::testserver::http_service {
         return $encoded
     }
 
+    method streaming_payload_length {stream_chunks} {
+        set total 0
+        foreach stream_chunk $stream_chunks {
+            lassign $stream_chunk delay_ms chunk_data
+            incr total [string length $chunk_data]
+        }
+        return $total
+    }
+
+    method stream_response_body {chan response_headers head_only transfer_encoding stream_chunks} {
+        if {[catch {
+            puts -nonewline $chan [join $response_headers "\r\n"]
+            puts -nonewline $chan "\r\n\r\n"
+            flush $chan
+        } write_error]} {
+            ::tclcurl::test::msgoutput "response write failed chan=$chan error=$write_error"
+            my close_client $chan
+            return
+        }
+
+        if {$head_only} {
+            my close_client $chan
+            return
+        }
+
+        my send_stream_chunk $chan $transfer_encoding $stream_chunks 0
+    }
+
+    method send_stream_chunk {chan transfer_encoding stream_chunks index} {
+        if {$index >= [llength $stream_chunks]} {
+            my close_client $chan
+            return
+        }
+
+        lassign [lindex $stream_chunks $index] delay_ms chunk_data
+        after $delay_ms [list [self] write_stream_chunk $chan $transfer_encoding $stream_chunks $index $chunk_data]
+    }
+
+    method write_stream_chunk {chan transfer_encoding stream_chunks index chunk_data} {
+        if {[catch {
+            if {$transfer_encoding eq "chunked"} {
+                puts -nonewline $chan [my chunk_encode $chunk_data]
+            } else {
+                puts -nonewline $chan $chunk_data
+            }
+            flush $chan
+        } write_error]} {
+            ::tclcurl::test::msgoutput "stream write failed chan=$chan error=$write_error"
+            my close_client $chan
+            return
+        }
+
+        my send_stream_chunk $chan $transfer_encoding $stream_chunks [expr {$index + 1}]
+    }
+
     method redirect_response {location {reason "Found"}} {
         set body "redirect=$location\n"
         return [dict create status 302      \
@@ -291,6 +353,7 @@ oo::class create ::tclcurl::testserver::http_service {
                 headers [list "Accept-Ranges: bytes"]]
         }
 
+        # Example matches: "bytes=16-47" and "bytes=16-47,102-134"
         if {![regexp {^bytes=\s*([0-9]+-[0-9]+)(\s*,\s*([0-9]+-[0-9]+))*$} $range_header]} {
             return [dict create \
                 status 416 \
@@ -346,6 +409,7 @@ oo::class create ::tclcurl::testserver::http_service {
     }
 
     method route_request {method path target version headers request} {
+        # Example matches: "/redir_1" and "/redir_5"
         if {[regexp {^/redir_([0-9]+)$} $path -> redirect_step]} {
             if {$redirect_step < 5} {
                 return [my redirect_response "/redir_[incr redirect_step]"]
@@ -355,6 +419,7 @@ oo::class create ::tclcurl::testserver::http_service {
             return [dict create status 200 reason OK body $body headers {}]
         }
 
+        # Example matches: "/wait-200ms" and "/wait-2s"
         if {[regexp {^/wait-([0-9]+)(ms|s)$} $path -> wait_amount wait_unit]} {
             set wait_time $wait_amount
             set close_only 0
@@ -375,6 +440,7 @@ oo::class create ::tclcurl::testserver::http_service {
                 headers {}]
         }
 
+        # Example match: "/cookie-set/session_id/abc123"
         if {[regexp {^/cookie-set/([^/]+)/([^/]+)$} $path -> cookie_name cookie_value]} {
             set body "set-cookie=$cookie_name=$cookie_value\n"
             return [dict create status     200     \
@@ -434,6 +500,53 @@ oo::class create ::tclcurl::testserver::http_service {
                 set body "cookie=$cookie_header\n"
                 return [dict create status 200 reason OK body $body headers {}]
             }
+            /proxy-target {
+                return [dict create status 200 reason OK body "proxy=ok\n" headers {}]
+            }
+            /proxy-auth-target {
+                return [dict create status 200 reason OK body "proxy-auth=ok\n" headers {}]
+            }
+            /auth-basic {
+                set expected_user "testuser"
+                set expected_password "testpass"
+                set authorization [my header_value $headers authorization]
+                # Example match: "Basic dGVzdHVzZXI6dGVzdHBhc3M="
+                if {![regexp {^Basic\s+(.+)$} $authorization -> auth_blob]} {
+                    return [dict create \
+                        status 401 \
+                        reason "Unauthorized" \
+                        body "auth=missing\n" \
+                        headers [list "WWW-Authenticate: Basic realm=\"TclCurl Test\""]]
+                }
+
+                if {[catch {set decoded [::base64::decode $auth_blob]}]} {
+                    return [dict create \
+                        status 401 \
+                        reason "Unauthorized" \
+                        body "auth=invalid\n" \
+                        headers [list "WWW-Authenticate: Basic realm=\"TclCurl Test\""]]
+                }
+
+                # Example decoded value: "testuser:testpass"
+                if {![regexp {^([^:]+):(.*)$} $decoded -> username password]} {
+                    return [dict create \
+                        status 401 \
+                        reason "Unauthorized" \
+                        body "auth=invalid\n" \
+                        headers [list "WWW-Authenticate: Basic realm=\"TclCurl Test\""]]
+                }
+
+                if {$username ne $expected_user || $password ne $expected_password} {
+                    return [dict create \
+                        status 401 \
+                        reason "Unauthorized" \
+                        body "auth=denied\n" \
+                        headers [list "WWW-Authenticate: Basic realm=\"TclCurl Test\""]]
+                }
+
+                set body "auth=ok\nuser=$username\n"
+                return [dict create status 200 reason OK body $body headers {}]
+            }
             /request-inspect {
                 set request_body [my request_body $request]
                 set body [join [list \
@@ -471,6 +584,30 @@ oo::class create ::tclcurl::testserver::http_service {
                     headers {} \
                     transfer_encoding chunked]
             }
+            /slow-body-1 {
+                set body [::tclcurl::test::negotiation_payload]
+                return [dict create \
+                    status 200 \
+                    reason OK \
+                    body {} \
+                    headers {} \
+                    stream_chunks [list \
+                        [list 0 [string range $body 0 9]] \
+                        [list 6000 [string range $body 10 end]]]]
+            }
+            /slow-body-2 {
+                set body [string range [::tclcurl::test::range_fixture] 0 191]
+                set stream_chunks {}
+                for {set offset 0} {$offset < [string length $body]} {incr offset 32} {
+                    lappend stream_chunks [list 1000 [string range $body $offset [expr {$offset + 31}]]]
+                }
+                return [dict create \
+                    status 200 \
+                    reason OK \
+                    body {} \
+                    headers {} \
+                    stream_chunks $stream_chunks]
+            }
             /range-data {
                 return [my byte_range_response $headers [::tclcurl::test::range_fixture]]
             }
@@ -494,7 +631,8 @@ oo::class create ::tclcurl::testserver::http_service {
             head_only 0 \
             headers {} \
             status_line {} \
-            transfer_encoding {}]
+            transfer_encoding {} \
+            stream_chunks {}]
 
         dict for {key value} $response {
             dict set completed_response $key $value
@@ -515,12 +653,19 @@ oo::class create ::tclcurl::testserver::http_service {
             $status_line \
             "Content-Type: text/plain" \
             "Connection: close"]
-        if {$transfer_encoding eq "chunked"} {
+        if {[llength $stream_chunks] > 0} {
+            lappend response_headers "Content-Length: [my streaming_payload_length $stream_chunks]"
+        } elseif {$transfer_encoding eq "chunked"} {
             lappend response_headers "Transfer-Encoding: chunked"
         } else {
             lappend response_headers "Content-Length: [string length $body]"
         }
         set response_headers [concat $response_headers $headers]
+
+        if {[llength $stream_chunks] > 0} {
+            my stream_response_body $chan $response_headers $head_only $transfer_encoding $stream_chunks
+            return
+        }
 
         if {[catch {
             puts -nonewline $chan [join $response_headers "\r\n"]

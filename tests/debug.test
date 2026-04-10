@@ -1,0 +1,80 @@
+# debug.test --
+#
+# Tests verbose transfer diagnostics delivered through -debugproc.
+#
+# Copyright (c) 2024-2026 Massimo Manghi
+#
+# SPDX-License-Identifier: TCL
+#
+# See the file "license.terms" at the top level of this distribution
+# for information on usage and redistribution of this file, and for the
+# complete disclaimer of warranties and limitation of liability.
+#
+# Portions of this file were drafted or revised with AI assistance
+# under the direction and review of Massimo Manghi
+
+package require tcltest
+namespace import ::tcltest::*
+
+source [file join [file dirname [file normalize [info script]]] support.tcl]
+
+::tclcurl::test::load_package
+
+proc ::tclcurl::test::debugproc_reset {} {
+    set ::tclcurl::test::debugproc(calls) 0
+    set ::tclcurl::test::debugproc(records) {}
+}
+
+proc ::tclcurl::test::debugproc_capture {infoType data} {
+    incr ::tclcurl::test::debugproc(calls)
+    lappend ::tclcurl::test::debugproc(records) [list $infoType [string range $data 0 end]]
+    return 0
+}
+
+proc ::tclcurl::test::debugproc_contains {expectedType needle} {
+    foreach record $::tclcurl::test::debugproc(records) {
+        lassign $record infoType payload
+        if {$infoType == $expectedType && [string first $needle $payload] >= 0} {
+            return 1
+        }
+    }
+    return 0
+}
+
+test debug-1.1 {-debugproc receives outgoing and incoming headers when verbose mode is enabled} -constraints http_server -body {
+    ::tclcurl::test::debugproc_reset
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] \
+                          -nobody 1 \
+                          -verbose 1 \
+                          -debugproc ::tclcurl::test::debugproc_capture \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {$::tclcurl::test::debugproc(calls) > 0}] \
+             [::tclcurl::test::debugproc_contains 2 "HEAD / HTTP/1.1"] \
+             [::tclcurl::test::debugproc_contains 1 "HTTP/1.1 200 OK"]
+    }
+} -cleanup {
+    unset -nocomplain ::tclcurl::test::debugproc
+} -result {0 200 1 1 1}
+
+test debug-1.2 {-debugproc is not invoked when verbose mode is disabled} -constraints http_server -body {
+    ::tclcurl::test::debugproc_reset
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] \
+                          -nobody 1 \
+                          -verbose 0 \
+                          -debugproc ::tclcurl::test::debugproc_capture \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             $::tclcurl::test::debugproc(calls)
+    }
+} -cleanup {
+    unset -nocomplain ::tclcurl::test::debugproc
+} -result {0 200 0}
+
+cleanupTests

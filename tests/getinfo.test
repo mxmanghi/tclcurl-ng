@@ -1,0 +1,125 @@
+# getinfo.test --
+#
+# Tests a focused set of high-value getinfo fields on easy handles.
+#
+# Copyright (c) 2024-2026 Massimo Manghi
+#
+# SPDX-License-Identifier: TCL
+#
+# See the file "license.terms" at the top level of this distribution
+# for information on usage and redistribution of this file, and for the
+# complete disclaimer of warranties and limitation of liability.
+#
+# Portions of this file were drafted or revised with AI assistance
+# under the direction and review of Massimo Manghi
+
+package require tcltest
+namespace import ::tcltest::*
+
+source [file join [file dirname [file normalize [info script]]] support.tcl]
+
+::tclcurl::test::load_package
+
+test getinfo-1.1 {basic HTTP transfer exposes core connection and sizing metadata} -constraints http_server -body {
+    set body {}
+    ::tclcurl::test::with_easy_handle handle {
+        set url [::tclcurl::test::server::base_url]
+        $handle configure -url $url \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list \
+            $rc \
+            [expr {[$handle getinfo effectiveurl] eq $url}] \
+            [$handle getinfo responsecode] \
+            [expr {[string length [$handle getinfo primaryip]] > 0}] \
+            [expr {[$handle getinfo primaryport] == 8990}] \
+            [expr {[string length [$handle getinfo localip]] > 0}] \
+            [expr {[$handle getinfo localport] > 0}] \
+            [expr {[$handle getinfo headersize] > 0}] \
+            [expr {[$handle getinfo requestsize] > 0}] \
+            [expr {[$handle getinfo sizedownload] == [string length $body]}] \
+            [expr {[$handle getinfo contentlengthdownload] == [string length $body]}] \
+            [expr {[string match "text/plain*" [$handle getinfo contenttype]]}] \
+            [expr {[$handle getinfo numconnects] >= 1}] \
+            [expr {[$handle getinfo totaltime] >= 0.0}] \
+            [expr {[$handle getinfo namelookuptime] >= 0.0}] \
+            [expr {[$handle getinfo connecttime] >= 0.0}] \
+            [expr {[$handle getinfo pretransfertime] >= 0.0}] \
+            [expr {[$handle getinfo starttransfertime] >= 0.0}]
+    }
+} -result {0 1 200 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1}
+
+test getinfo-1.2 {redirect-related metadata is populated after following a redirect} -constraints http_server -body {
+    set body {}
+    ::tclcurl::test::with_easy_handle handle {
+        set targetUrl [::tclcurl::test::server::base_url redir_5]
+        $handle configure -url [::tclcurl::test::server::base_url redir_1] \
+                          -followlocation 1 \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list \
+            $rc \
+            [$handle getinfo responsecode] \
+            [expr {[$handle getinfo effectiveurl] eq $targetUrl}] \
+            [expr {[$handle getinfo redirectcount] == 4}] \
+            [expr {[$handle getinfo redirecttime] >= 0.0}] \
+            [expr {[::tclcurl::test::normalizedBody $body] eq "path=/redir_5\nmethod=GET"}]
+    }
+} -result {0 200 1 4 1 1}
+
+test getinfo-1.3 {httpauthavail reports basic after a Basic-auth challenge} -constraints http_server -body {
+    set body {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url auth-basic] \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        set authAvail [$handle getinfo httpauthavail]
+        list \
+            $rc \
+            [$handle getinfo responsecode] \
+            [expr {[lsearch -exact $authAvail basic] >= 0}] \
+            [expr {[::tclcurl::test::normalizedBody $body] eq "auth=missing"}]
+    }
+} -result {0 401 1 1}
+
+test getinfo-1.4 {successful Basic authentication still exposes consistent transfer metadata} -constraints http_server -body {
+    set body {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url auth-basic] \
+                          -userpwd "testuser:testpass" \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list \
+            $rc \
+            [$handle getinfo responsecode] \
+            [expr {[$handle getinfo redirectcount] == 0}] \
+            [expr {[$handle getinfo sizedownload] == [string length $body]}] \
+            [expr {[$handle getinfo contentlengthdownload] == [string length $body]}] \
+            [expr {[string match "text/plain*" [$handle getinfo contenttype]]}] \
+            [expr {[::tclcurl::test::normalizedBody $body] eq "auth=ok\nuser=testuser"}]
+    }
+} -result {0 200 1 1 1 1 1}
+
+test getinfo-1.5 {cookielist reports cookies loaded into the cookie engine} -constraints http_server -body {
+    set body {}
+    set cookieRecord [::tclcurl::test::netscapeCookieRecordFor ::tclcurl::test::server::base_url session_id abc123]
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url cookie-echo] \
+                          -cookielist $cookieRecord \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        set cookieList [$handle getinfo cookielist]
+        list \
+            $rc \
+            [$handle getinfo responsecode] \
+            [expr {[lsearch -glob $cookieList "*\tsession_id\tabc123"] >= 0}] \
+            [expr {[::tclcurl::test::normalizedBody $body] eq "cookie=session_id=abc123"}]
+    }
+} -result {0 200 1 1}
+
+cleanupTests

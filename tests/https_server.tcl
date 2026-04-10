@@ -17,6 +17,10 @@ package require tls
 oo::class create ::tclcurl::testserver::https_service {
     superclass ::tclcurl::testserver::http_service
 
+    method description {} {
+        return "HTTPS origin test server"
+    }
+
     method start {} {
         if {![::tclcurl::test::https_credentials_available]} {
             puts "https credentials not available, HTTPS tests will not run"
@@ -31,7 +35,7 @@ oo::class create ::tclcurl::testserver::https_service {
             -ssl3 0 \
             [my port]]
         my set_listener $listener
-        my log "listening on [my endpoint]"
+        my log [my listening_message]
         return $listener
     }
 }

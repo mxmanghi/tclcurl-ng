@@ -15,6 +15,8 @@ namespace eval ::tclcurl::test::server {
     variable cached_https_url
     variable cached_ftp_availability
     variable cached_ftp_url
+    variable cached_proxy_availability
+    variable cached_proxy_url
     variable configured_http_server_script
 }
 
@@ -150,6 +152,13 @@ proc ::tclcurl::test::server::https_base_url {{path {}}} {
     return "${base}/[string trimleft $path /]"
 }
 
+proc ::tclcurl::test::server::proxy_base_url {{path {}}} {
+    set base [::tclcurl::test::env_or_default TCLCURL_TEST_PROXY_BASE_URL "http://127.0.0.1:8992"]
+    set base [string trimright $base /]
+    if {$path eq {}} { return "${base}/" }
+    return "${base}/[string trimleft $path /]"
+}
+
 proc ::tclcurl::test::https_cert_file {} {
     return [file join [::tclcurl::test::repo_root] tests certs server.crt]
 }
@@ -259,6 +268,22 @@ proc ::tclcurl::test::server::https_server_available {} {
     return $cached_https_availability
 }
 
+proc ::tclcurl::test::server::proxy_server_available {} {
+    variable cached_proxy_availability
+    variable cached_proxy_url
+
+    set url [proxy_base_url]
+    if {[info exists cached_proxy_availability] && \
+        [info exists cached_proxy_url] && \
+        $cached_proxy_url eq $url} {
+        return $cached_proxy_availability
+    }
+
+    set cached_proxy_url $url
+    set cached_proxy_availability [url_endpoint_available $url]
+    return $cached_proxy_availability
+}
+
 proc ::tclcurl::test::with_easy_handle {varName body} {
     upvar 1 $varName handle
 
@@ -281,3 +306,4 @@ proc ::tclcurl::test::with_easy_handle {varName body} {
                                               [::tclcurl::test::https_credentials_available] && \
                                               [::tclcurl::test::server::https_server_available]}]
 ::tcltest::testConstraint ftp_server [::tclcurl::test::server::ftp_server_available]
+::tcltest::testConstraint proxy_server [::tclcurl::test::server::proxy_server_available]

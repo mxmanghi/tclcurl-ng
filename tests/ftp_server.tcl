@@ -35,8 +35,12 @@ oo::class create ::tclcurl::testserver::ftp_service {
         set listener [socket -server [list [self] accept] \
             -myaddr [my host] [my port]]
         my set_listener $listener
-        my log "listening on [my endpoint]"
+        my log [my listening_message]
         return $listener
+    }
+
+    method description {} {
+        return "FTP test server"
     }
 
     method accept {chan host port} {

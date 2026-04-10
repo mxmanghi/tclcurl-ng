@@ -76,6 +76,14 @@ oo::class create ::tclcurl::testserver::service {
         return "[my protocol]://[my host]:[my port]/"
     }
 
+    method description {} {
+        return "[string toupper [my protocol]] test server"
+    }
+
+    method listening_message {} {
+        return "listening on [my endpoint] ([my description])"
+    }
+
     method log {message} {
         if {!$quiet} {
             puts stderr $message
@@ -137,7 +145,8 @@ proc ::tclcurl::testserver::parse_args {argv} {
     set debug 0
     set services [list [dict create protocol http port 8990] \
                        [dict create protocol https port 9443] \
-                       [dict create protocol ftp port 8991]]
+                       [dict create protocol ftp port 8991] \
+                       [dict create protocol proxy port 8992]]
     set custom_services 0
 
     for {set i 0} {$i < [llength $argv]} {incr i} {
@@ -246,6 +255,7 @@ namespace ensemble create -command ::tclcurl::testserver -map [::tclcurl::testse
 source [file join [file dirname [file normalize [info script]]] http_server.tcl]
 source [file join [file dirname [file normalize [info script]]] https_server.tcl]
 source [file join [file dirname [file normalize [info script]]] ftp_server.tcl]
+source [file join [file dirname [file normalize [info script]]] proxy_server.tcl]
 
 if {[file normalize $argv0] eq [file normalize [info script]]} {
     if {[catch {::tclcurl::testserver::run $argv} message]} {

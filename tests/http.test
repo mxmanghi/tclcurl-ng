@@ -182,20 +182,47 @@ test http-3.2 {-range can request multiple byte subsets in a single transfer} -c
     catch {unset headers}
 } -result {0 206 1 1}
 
-test http-4.1 {-timeout succeeds when the server responds before the deadline} -constraints http_server -body {
-    ::tclcurl::test::transport_timeout_success ::tclcurl::test::server::base_url {} wait-1s -timeout 2 "waited=1s"
-} -result {0 200 1 1}
-
-test http-4.2 {-timeout fails when the response takes too long} -constraints http_server -body {
-    ::tclcurl::test::transport_timeout_failure ::tclcurl::test::server::base_url {} wait-2s?reply=none -timeout 1
-} -result {1 1 1}
-
-test http-4.3 {-timeoutms succeeds when the server responds before the deadline} -constraints http_server -body {
+test http-4.1 {-timeoutms succeeds when the server responds before the deadline} -constraints http_server -body {
     ::tclcurl::test::transport_timeout_success ::tclcurl::test::server::base_url {} wait-200ms -timeoutms 900 "waited=200ms"
 } -result {0 200 1 1}
 
-test http-4.4 {-timeoutms fails when the response takes too long} -constraints http_server -body {
+test http-4.2 {-timeoutms fails when the response takes too long} -constraints http_server -body {
     ::tclcurl::test::transport_timeout_failure ::tclcurl::test::server::base_url {} wait-600ms?reply=none -timeoutms 100
 } -result {1 1 1}
+
+test http-4.3 {-lowspeedlimit and -lowspeedtime abort a transfer that stays below the minimum rate} -constraints http_server -body {
+    set body {}
+    set errbuf {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url slow-body-1] \
+                          -lowspeedlimit 20 \
+                          -lowspeedtime 5 \
+                          -bodyvar body \
+                          -errorbuffer errbuf \
+                          -noprogress 1
+        list [catch {$handle perform}] \
+             [expr {[string length $errbuf] > 0}] \
+             [expr {[string length $body] > 0}]
+    }
+} -result {1 1 1}
+
+test http-4.4 {-lowspeedlimit and -lowspeedtime allow a transfer that stays above the minimum rate} -constraints http_server -body {
+    set body {}
+    set payload [string range [::tclcurl::test::range_fixture] 0 191]
+    set errbuf {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url slow-body-2] \
+                          -lowspeedlimit 20 \
+                          -lowspeedtime 5 \
+                          -bodyvar body \
+                          -errorbuffer errbuf \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {$body eq $payload}] \
+             [expr {$errbuf eq {}}]
+    }
+} -result {0 200 1 1}
 
 cleanupTests

@@ -1,0 +1,89 @@
+# proxy.test --
+#
+# Tests plain HTTP proxy forwarding and Basic proxy authentication.
+#
+# Copyright (c) 2024-2026 Massimo Manghi
+#
+# SPDX-License-Identifier: TCL
+#
+# See the file "license.terms" at the top level of this distribution
+# for information on usage and redistribution of this file, and for the
+# complete disclaimer of warranties and limitation of liability.
+#
+# Portions of this file were drafted or revised with AI assistance
+# under the direction and review of Massimo Manghi
+
+package require tcltest
+namespace import ::tcltest::*
+
+source [file join [file dirname [file normalize [info script]]] support.tcl]
+
+::tclcurl::test::load_package
+
+test proxy-1.1 {-proxy forwards a plain HTTP request through the local proxy} -constraints {http_server proxy_server} -body {
+    set body {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url proxy-target] \
+                          -proxy "127.0.0.1:8992" \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc [$handle getinfo responsecode] [expr {[::tclcurl::test::normalizedBody $body] eq "proxy=ok"}]
+    }
+} -result {0 200 1}
+
+test proxy-1.2 {-proxy and -proxyport work together for plain HTTP proxying} -constraints {http_server proxy_server} -body {
+    set body {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url proxy-target] \
+                          -proxy "127.0.0.1" \
+                          -proxyport 8992 \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc [$handle getinfo responsecode] [expr {[::tclcurl::test::normalizedBody $body] eq "proxy=ok"}]
+    }
+} -result {0 200 1}
+
+test proxy-1.3 {a proxy-auth protected route returns 407 without proxy credentials} -constraints {http_server proxy_server} -body {
+    set body {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url proxy-auth-target] \
+                          -proxy "127.0.0.1:8992" \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc [$handle getinfo responsecode] [expr {[::tclcurl::test::normalizedBody $body] eq "proxy-auth=missing"}]
+    }
+} -result {0 407 1}
+
+test proxy-1.4 {wrong proxy credentials are rejected} -constraints {http_server proxy_server} -body {
+    set body {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url proxy-auth-target] \
+                          -proxy "127.0.0.1:8992" \
+                          -proxyuserpwd "proxyuser:wrongpass" \
+                          -proxyauth basic \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc [$handle getinfo responsecode] [expr {[::tclcurl::test::normalizedBody $body] eq "proxy-auth=denied"}]
+    }
+} -result {0 407 1}
+
+test proxy-1.5 {-proxyuserpwd and -proxyauth basic authenticate through the proxy} -constraints {http_server proxy_server} -body {
+    set body {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url proxy-auth-target] \
+                          -proxy "127.0.0.1" \
+                          -proxyport 8992 \
+                          -proxyuserpwd "proxyuser:proxypass" \
+                          -proxyauth basic \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc [$handle getinfo responsecode] [expr {[::tclcurl::test::normalizedBody $body] eq "proxy-auth=ok"}]
+    }
+} -result {0 200 1}
+
+cleanupTests
