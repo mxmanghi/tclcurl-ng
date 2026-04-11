@@ -672,6 +672,8 @@ TCL_THREADS
 TCL_INCLUDES
 curl
 TCLCURL_DOC_GEN
+PANDOC
+LOWDOWN
 TCLCURL_SCRIPTS
 PKG_OBJECTS
 PKG_SOURCES
@@ -762,6 +764,7 @@ ac_user_opts='
 enable_option_checking
 with_tcl
 with_tcl8
+with_md_converter
 with_curlprefix
 with_curlinclude
 with_libcurl
@@ -1423,6 +1426,7 @@ Optional Packages:
   --with-tcl              directory containing tcl configuration
                           (tclConfig.sh)
   --with-tcl8             Compile for Tcl8 in Tcl9 environment
+  --with-md-converter    markdown-to-man converter to use: lowdown, pandoc, or auto
   --with-curlprefix       base directory for the cURL install '/usr', '/usr/local',...
   --with-curlinclude      directory containing the public libcurl header files
   --with-libcurl          directory containing libcurl
@@ -5500,7 +5504,156 @@ printf "%s\n" "$ac_cv_c_bigendian" >&6; }
 
 TCLCURL_SCRIPTS=tclcurl.tcl
 
-TCLCURL_DOC_GEN='/usr/bin/lowdown -s -Tman -o'
+
+# Extract the first word of "lowdown", so it can be a program name with args.
+set dummy lowdown; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_LOWDOWN+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) case $LOWDOWN in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_LOWDOWN="$LOWDOWN" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_LOWDOWN="$as_dir$ac_word$ac_exec_ext"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac ;;
+esac
+fi
+LOWDOWN=$ac_cv_path_LOWDOWN
+if test -n "$LOWDOWN"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $LOWDOWN" >&5
+printf "%s\n" "$LOWDOWN" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
+# Extract the first word of "pandoc", so it can be a program name with args.
+set dummy pandoc; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_PANDOC+y}
+then :
+  printf %s "(cached) " >&6
+else case e in #(
+  e) case $PANDOC in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_PANDOC="$PANDOC" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_PANDOC="$as_dir$ac_word$ac_exec_ext"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac ;;
+esac
+fi
+PANDOC=$ac_cv_path_PANDOC
+if test -n "$PANDOC"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PANDOC" >&5
+printf "%s\n" "$PANDOC" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+
+
+
+# Check whether --with-md-converter was given.
+if test ${with_md_converter+y}
+then :
+  withval=$with_md_converter;
+    case "$withval" in
+        auto)
+            md_converter_choice=auto
+            ;;
+        lowdown)
+            if test "x$LOWDOWN" = x; then
+                as_fn_error $? "--with-md-converter=lowdown requested, but lowdown was not found" "$LINENO" 5
+            fi
+            md_converter_choice=lowdown
+            ;;
+        pandoc)
+            if test "x$PANDOC" = x; then
+                as_fn_error $? "--with-md-converter=pandoc requested, but pandoc was not found" "$LINENO" 5
+            fi
+            md_converter_choice=pandoc
+            ;;
+        *)
+            as_fn_error $? "bad value '$withval' for --with-md-converter: must be lowdown, pandoc, or auto" "$LINENO" 5
+            ;;
+    esac
+
+else case e in #(
+  e)
+    md_converter_choice=auto
+  ;;
+esac
+fi
+
+
+if test "x$md_converter_choice" = xauto; then
+    if test "x$LOWDOWN" != x; then
+        md_converter_choice=lowdown
+    elif test "x$PANDOC" != x; then
+        md_converter_choice=pandoc
+    else
+        md_converter_choice=none
+    fi
+fi
+
+case "$md_converter_choice" in
+    lowdown)
+        TCLCURL_DOC_GEN="$LOWDOWN -s -Tman -o"
+        ;;
+    pandoc)
+        TCLCURL_DOC_GEN="$PANDOC -f markdown -t man -o"
+        ;;
+    none)
+        TCLCURL_DOC_GEN=
+        ;;
+esac
+
 
 
 #--------------------------------------------------------------------

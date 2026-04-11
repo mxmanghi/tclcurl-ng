@@ -73,7 +73,59 @@ TEA_SETUP_COMPILER
 TEA_ADD_SOURCES([tclcurl.c tcl_size.c curl_mime.c curl_setopts.c curl_getinfo.c ftp.c curl_utils.c multi.c])
 TCLCURL_SCRIPTS=tclcurl.tcl
 AC_SUBST(TCLCURL_SCRIPTS)
-TCLCURL_DOC_GEN='/usr/bin/lowdown -s -Tman -o'
+
+AC_PATH_PROG([LOWDOWN],[lowdown],[])
+AC_PATH_PROG([PANDOC],[pandoc],[])
+
+AC_ARG_WITH([md-converter],
+ [  --with-md-converter    markdown-to-man converter to use: lowdown, pandoc, or auto],
+ [
+    case "$withval" in
+        auto)
+            md_converter_choice=auto
+            ;;
+        lowdown)
+            if test "x$LOWDOWN" = x; then
+                AC_MSG_ERROR([--with-md-converter=lowdown requested, but lowdown was not found])
+            fi
+            md_converter_choice=lowdown
+            ;;
+        pandoc)
+            if test "x$PANDOC" = x; then
+                AC_MSG_ERROR([--with-md-converter=pandoc requested, but pandoc was not found])
+            fi
+            md_converter_choice=pandoc
+            ;;
+        *)
+            AC_MSG_ERROR([bad value '$withval' for --with-md-converter: must be lowdown, pandoc, or auto])
+            ;;
+    esac
+ ],[
+    md_converter_choice=auto
+ ])
+
+if test "x$md_converter_choice" = xauto; then
+    if test "x$LOWDOWN" != x; then
+        md_converter_choice=lowdown
+    elif test "x$PANDOC" != x; then
+        md_converter_choice=pandoc
+    else
+        md_converter_choice=none
+    fi
+fi
+
+case "$md_converter_choice" in
+    lowdown)
+        TCLCURL_DOC_GEN="$LOWDOWN -s -Tman -o"
+        ;;
+    pandoc)
+        TCLCURL_DOC_GEN="$PANDOC -f markdown -t man -o"
+        ;;
+    none)
+        TCLCURL_DOC_GEN=
+        ;;
+esac
+
 AC_SUBST(TCLCURL_DOC_GEN)
 
 #--------------------------------------------------------------------

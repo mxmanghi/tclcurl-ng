@@ -213,7 +213,11 @@ libraries:
 doc: doc/tclcurl.n
 
 doc/tclcurl.n: doc/tclcurl.n.md
-	$(TCLCURL_DOC_GEN) doc/tclcurl.n doc/tclcurl.n.md
+	@if test -z "$(TCLCURL_DOC_GEN)"; then \
+	    echo "Warning: no markdown-to-man converter available; skipping doc/tclcurl.n"; \
+	else \
+	    $(TCLCURL_DOC_GEN) doc/tclcurl.n doc/tclcurl.n.md; \
+	fi
 
 install: all install-binaries install-libraries install-doc
 
