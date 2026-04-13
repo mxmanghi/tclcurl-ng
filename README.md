@@ -2,7 +2,11 @@
 
 This project was forked from the [flightaware/tclcurl-fa](https://github.com/flightaware/tclcurl-fa)
 repository and the contitued as independed development effort since the upstream maintainers
-apparently stopped accepting or reacting to PR
+apparently stopped accepting or reacting to PR. 
+
+The current project status supports most options of the legacy tclcurl. Some options (see below)
+can be included in the build even though they might have no effect, since recent version
+of libcurl discontinued support for them
 
 Some portions of this project were developed with AI-assisted drafting/editing
 tools under human direction, supervision, review, and approval. All accepted changes
@@ -20,7 +24,8 @@ To make type:
       make install
 
 In order to highlight the continuity with tclcurl-fa version numbering will start with
-version 8.0.0
+version 8.0.0 to mark the possible incompatibilies due to removed options because
+obsoleted or deprecated in libcurl
 
  ### Configure options
 
@@ -46,7 +51,7 @@ the make of tcl for most of its configuration parameters.
    deprecated specific features. Accepted arguments
    are:
      + 7.11.1 - re-enable `-dnsuseglobalcache`
-     + 7.56 - re-enable old style method to construct mime multipart/form-data messages)
+     + 7.56 - re-enable old style method to construct mime multipart/form-data messages
      + 7.84 - re-enable deprecated options `-randomfile` and `-egdsocket`
      + 8.17.0 - re-enable `-krb4level`
 

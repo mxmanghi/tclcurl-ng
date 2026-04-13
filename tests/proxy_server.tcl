@@ -240,11 +240,10 @@ oo::class create ::tclcurl::testserver::proxy_service {
     # Build the standard proxy reply for malformed requests before any upstream
     # forwarding is attempted.
     method bad_request_response {} {
-        return [dict create \
-            status 400 \
-            reason "Bad Request" \
-            body "bad proxy request\n" \
-            headers {}]
+        return [dict create status      400 \
+                            reason      "Bad Request" \
+                            body        "bad proxy request\n" \
+                            headers     {}]
     }
 
     # Parse the proxy request, enforce proxy-specific policy and forward the
