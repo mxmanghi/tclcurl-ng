@@ -20,6 +20,22 @@ package require base64
 oo::class create ::tclcurl::testserver::proxy_service {
     superclass ::tclcurl::testserver::http_endpoint_service
 
+    variable tunnel_peer tunnel_root tunnel_pending
+
+    constructor args {
+        array set tunnel_peer {}
+        array set tunnel_root {}
+        array set tunnel_pending {}
+        next {*}$args
+    }
+
+    destructor {
+        foreach chan [array names tunnel_peer] {
+            catch {close $chan}
+        }
+        next
+    }
+
     method description {} {
         return "HTTP proxy test server"
     }
@@ -51,6 +67,14 @@ oo::class create ::tclcurl::testserver::proxy_service {
 
     method auth_required {path} {
         return [expr {$path eq "/proxy-auth-target"}]
+    }
+
+    # Parse the host:port target used by HTTP CONNECT requests.
+    method parse_connect_target {target} {
+        if {![regexp {^([^:]+):([0-9]+)$} $target -> host port]} {
+            error "invalid CONNECT target"
+        }
+        return [dict create host $host port $port]
     }
 
     # Validate the Proxy-Authorization header against the fixed credentials used
@@ -142,6 +166,77 @@ oo::class create ::tclcurl::testserver::proxy_service {
         return $response
     }
 
+    # Tear down both sides of an active CONNECT tunnel and discard the book-
+    # keeping used by the asynchronous copy callbacks.
+    method close_tunnel {root} {
+        if {![info exists tunnel_peer($root)]} {
+            return
+        }
+
+        set peer $tunnel_peer($root)
+        catch {unset tunnel_pending($root)}
+        catch {unset tunnel_root($root)}
+        catch {unset tunnel_root($peer)}
+        catch {unset tunnel_peer($root)}
+        catch {unset tunnel_peer($peer)}
+        catch {close $root}
+        catch {close $peer}
+    }
+
+    # Complete one direction of an asynchronous CONNECT tunnel copy. The tunnel
+    # is closed after both directions finish, or immediately if one direction
+    # ends with an error.
+    method tunnel_copy_done {src dst direction bytes {error {}}} {
+        set root $tunnel_root($src)
+        ::tclcurl::test::msgoutput \
+            "proxy tunnel copy done direction=$direction src=$src dst=$dst bytes=$bytes error=$error"
+
+        if {$error ne {}} {
+            my close_tunnel $root
+            return
+        }
+
+        incr tunnel_pending($root) -1
+        if {$tunnel_pending($root) <= 0} {
+            my close_tunnel $root
+        }
+    }
+
+    # Establish a CONNECT tunnel to the requested upstream endpoint and bridge
+    # bytes asynchronously in both directions.
+    method start_tunnel {chan host port} {
+        ::tclcurl::test::msgoutput \
+            "proxy tunnel connect chan=$chan host=$host port=$port"
+        if {[catch {set upstream [socket $host $port]} socket_error]} {
+            ::tclcurl::test::msgoutput \
+                "proxy tunnel connect failed chan=$chan error=$socket_error"
+            my proxy_response $chan 502 "Bad Gateway" "proxy-error=$socket_error\n" {}
+            return
+        }
+
+        chan configure $upstream -blocking 0 -buffering none -translation binary
+        set tunnel_peer($chan) $upstream
+        set tunnel_peer($upstream) $chan
+        set tunnel_root($chan) $chan
+        set tunnel_root($upstream) $chan
+        set tunnel_pending($chan) 2
+
+        if {[catch {
+            puts -nonewline $chan "HTTP/1.1 200 Connection Established\r\n\r\n"
+            flush $chan
+        } write_error]} {
+            ::tclcurl::test::msgoutput \
+                "proxy tunnel establish failed chan=$chan error=$write_error"
+            my close_tunnel $chan
+            return
+        }
+
+        chan copy $chan $upstream -command \
+            [list [self] tunnel_copy_done $chan $upstream client_to_upstream]
+        chan copy $upstream $chan -command \
+            [list [self] tunnel_copy_done $upstream $chan upstream_to_client]
+    }
+
     # Build the standard proxy reply for malformed requests before any upstream
     # forwarding is attempted.
     method bad_request_response {} {
@@ -171,6 +266,19 @@ oo::class create ::tclcurl::testserver::proxy_service {
         ::tclcurl::test::msgoutput \
             "proxy request-line chan=$chan method=$method target=$target version=$version"
         set headers [my parse_headers $request]
+
+        if {$method eq "CONNECT"} {
+            if {[catch {set connect_info [my parse_connect_target $target]} connect_error]} {
+                ::tclcurl::test::msgoutput \
+                    "proxy bad connect target chan=$chan target=$target error=$connect_error"
+                dict with [my bad_request_response] {}
+                my proxy_response $chan $status $reason $body $headers
+                return
+            }
+            my start_tunnel $chan [dict get $connect_info host] [dict get $connect_info port]
+            return
+        }
+
         set target_info [my parse_target $target $headers]
         set path [dict get $target_info path]
         ::tclcurl::test::msgoutput \

@@ -86,4 +86,17 @@ test proxy-1.5 {-proxyuserpwd and -proxyauth basic authenticate through the prox
     }
 } -result {0 200 1}
 
+test proxy-1.6 {-httpproxytunnel tunnels an HTTP request through CONNECT} -constraints {http_server proxy_server} -body {
+    set body {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url proxy-target] \
+                          -proxy "127.0.0.1:8992" \
+                          -httpproxytunnel 1 \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc [$handle getinfo responsecode] [expr {[::tclcurl::test::normalizedBody $body] eq "proxy=ok"}]
+    }
+} -result {0 200 1}
+
 cleanupTests
