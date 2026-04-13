@@ -1,5 +1,5 @@
 .\" -*- mode: troff; coding: utf-8 -*-
-.TH "TclCurl" "3" "2 February 2026" "TclCurl 8.0.0" "TclCurl Easy Interface"
+.TH "TclCurl" "n" "2 February 2026" "TclCurl 8.0.0" "TclCurl Easy Interface"
 .SH NAME
 .LP
 TclCurl: - get  a  URL with FTP, FTPS, HTTP, HTTPS, SCP, SFTP, TFTP, TELNET, DICT, FILE, LDAP, LDAPS, IMAP, IMAPS, POP, POP3, SMTP, SMTPS and gopher syntax.
@@ -388,7 +388,7 @@ Pass a string with the user name to use for the transfer while connecting to Pro
 .IP
 It should be used in same way as the \fB-proxyuserpwd\fR is used, except that it allows the username to contain a colon, like in the following example: \(lqsip:\c
 .MT user@example.com
-.ME \c
+.ME
 \(rq.
 .IP
 Note the \fB-proxyusername\fR option is an alternative way to set the user name while connecting to Proxy. It doesn\(cqt make sense to use them together.

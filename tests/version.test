@@ -19,7 +19,7 @@ source [file join [file dirname [file normalize [info script]]] support.tcl]
 ::tclcurl::test::load_package
 package require TclCurl
 
-test 1.01 {: Test that curl::version returns something} -body {
+test version-1.01 {: Test that curl::version returns something} -body {
 	set result [curl::version]
 
 	return $result

@@ -20,35 +20,34 @@ source [file join [file dirname [file normalize [info script]]] support.tcl]
 ::tclcurl::test::load_package
 package require TclCurl
 
-
-test 1.01 {: Test that -version returns something} -body {
+test versioninfo-1.01 {: Test that -version returns something} -body {
 	return [curl::versioninfo -version]
 } -match regexp -result {^\d+\.\d+\.\d+(-DEV)?$}
 
-test 1.02 {: Test that -versionnum returns something} -body {
+test versioninfo-1.02 {: Test that -versionnum returns something} -body {
 	return [curl::versioninfo -versionnum]
 } -match regexp -result {^[0-9A-F]+$}
 
-test 1.03 {: Test that -features returns something} -body {
+test versioninfo-1.03 {: Test that -features returns something} -body {
 	return [curl::versioninfo -features]
 } -match regexp -result {^([A-Z0-9]+ ?)+$}
 
-test 1.04 {: Test that -sslversion returns something} -body {
+test versioninfo-1.04 {: Test that -sslversion returns something} -body {
 	# unix sslversion string looks like {^(OpenSSL|GnuTLS|LibreSSL)/\d+\.\d+\.\d+\w*$}
 	# macosx sslversion string looks like {^SecureTransport \(OpenSSL/\d+\.\d+\.\d+\w*\)$}
         # On Windows, Schannel does not provide any version numbers
 	return [curl::versioninfo -sslversion]
 } -match regexp -result {((OpenSSL|GnuTLS|LibreSSL)/\d+\.\d+\.\d+\w*)|Schannel}
 
-test 1.05 {: Test that -sslversionnum returns something} -body {
+test versioninfo-1.05 {: Test that -sslversionnum returns something} -body {
 	return [curl::versioninfo -sslversionnum]
 } -match regexp -result {^\d+$}
 
-test 1.06 {: Test that -libzversion returns something} -body {
+test versioninfo-1.06 {: Test that -libzversion returns something} -body {
 	return [curl::versioninfo -libzversion]
 } -match regexp -result {^\d+\.\d+(\.\d+)?$}
 
-test 1.07 {: Test that -protocols returns something} -body {
+test versioninfo-1.07 {: Test that -protocols returns something} -body {
 	return [curl::versioninfo -protocols]
 } -match regexp -result {^([a-z0-9]+ ?)+$}
 
