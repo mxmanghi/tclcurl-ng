@@ -45,9 +45,9 @@ the make of tcl for most of its configuration parameters.
    enable deprecated code passing a comma separated list of the milestone versions which
    deprecated specific features. Accepted arguments
    are:
+     + 7.11.1 - re-enable `-dnsuseglobalcache`
      + 7.56 - re-enable old style method to construct mime multipart/form-data messages)
      + 7.84 - re-enable deprecated options `-randomfile` and `-egdsocket`
-     + 7.11.1 - re-enable `-dnsuseglobalcache`
      + 8.17.0 - re-enable `-krb4level`
 
  ### OS Support
