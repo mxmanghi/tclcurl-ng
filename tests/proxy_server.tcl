@@ -14,101 +14,18 @@ namespace eval ::tclcurl::testserver {}
 
 package require base64
 
+# HTTP proxy test service. The shared HTTP endpoint superclass owns the
+# listener/buffering/header-parsing mechanics; this class only implements proxy
+# target resolution, proxy authentication and upstream forwarding.
 oo::class create ::tclcurl::testserver::proxy_service {
-    superclass ::tclcurl::testserver::service
-
-    variable request_data
-
-    constructor args {
-        array set request_data {}
-        next {*}$args
-    }
-
-    destructor {
-        foreach chan [array names request_data] {
-            catch {close $chan}
-        }
-        next
-    }
-
-    method start {} {
-        set listener [socket -server [list [self] accept] \
-            -myaddr [my host] [my port]]
-        my set_listener $listener
-        my log [my listening_message]
-        return $listener
-    }
+    superclass ::tclcurl::testserver::http_endpoint_service
 
     method description {} {
         return "HTTP proxy test server"
     }
 
-    method accept {chan host port} {
-        chan configure $chan -blocking 0 -buffering none -translation binary
-        ::tclcurl::test::msgoutput "proxy accept chan=$chan host=$host port=$port"
-        chan event $chan readable [list [self] read_request $chan]
-    }
-
-    method read_request {chan} {
-        if {[eof $chan]} {
-            my close_client $chan
-            return
-        }
-
-        set chunk [read $chan]
-        if {$chunk eq {}} {
-            return
-        }
-
-        append request_data($chan) $chunk
-        set request [my complete_request $request_data($chan)]
-        if {$request eq {}} {
-            return
-        }
-
-        unset request_data($chan)
-        chan event $chan readable {}
-        my respond $chan $request
-    }
-
-    method complete_request {request_data} {
-        set header_end [string first "\r\n\r\n" $request_data]
-        if {$header_end < 0} { return {} }
-
-        set content_length 0
-        # Example match: "Content-Length: 123"
-        if {[regexp -nocase {\mContent-Length:\s*([0-9]+)} [string range $request_data 0 [expr {$header_end - 1}]] -> content_length]} {
-            set request_length [expr {$header_end + 4 + $content_length}]
-            if {[string length $request_data] < $request_length} {
-                return {}
-            }
-            return [string range $request_data 0 [expr {$request_length - 1}]]
-        }
-
-        return [string range $request_data 0 [expr {$header_end + 3}]]
-    }
-
-    method parse_headers {request} {
-        set header_end [string first "\r\n\r\n" $request]
-        if {$header_end < 0} {
-            return [dict create]
-        }
-
-        set header_block [string range $request 0 [expr {$header_end - 1}]]
-        set header_lines [::tclcurl::testserver::http_header_lines $header_block]
-        set headers [dict create]
-
-        foreach header_line [lrange $header_lines 1 end] {
-            # Example match: "Host: 127.0.0.1:8990"
-            if {![regexp {^([^:]+):\s*(.*)$} $header_line -> name value]} {
-                continue
-            }
-            dict set headers [string tolower $name] $value
-        }
-
-        return $headers
-    }
-
+    # Convert either an absolute proxy target or an origin-form target plus
+    # Host header into the upstream host/port/path tuple the proxy should use.
     method parse_target {target headers} {
         # Example match: "http://127.0.0.1:8990/proxy-target"
         if {[regexp {^http://([^/:]+)(?::([0-9]+))?(/.*)?$} $target -> host port path]} {
@@ -136,6 +53,8 @@ oo::class create ::tclcurl::testserver::proxy_service {
         return [expr {$path eq "/proxy-auth-target"}]
     }
 
+    # Validate the Proxy-Authorization header against the fixed credentials used
+    # by the proxy authentication tests.
     method validate_proxy_auth {headers} {
         set authorization {}
         if {[dict exists $headers proxy-authorization]} {
@@ -154,6 +73,8 @@ oo::class create ::tclcurl::testserver::proxy_service {
         return ok
     }
 
+    # Emit a simple proxy-generated response directly back to the client
+    # without involving an upstream origin server.
     method proxy_response {chan status reason body headers} {
         set response_headers [concat [list \
             "HTTP/1.1 $status $reason" \
@@ -169,6 +90,8 @@ oo::class create ::tclcurl::testserver::proxy_service {
         my close_client $chan
     }
 
+    # Convert lower-cased header names from parse_headers back into the title
+    # case form expected when forwarding headers upstream.
     method forwarded_header_name {name} {
         set parts {}
         foreach part [split $name -] {
@@ -177,20 +100,86 @@ oo::class create ::tclcurl::testserver::proxy_service {
         return [join $parts -]
     }
 
-    method respond {chan request} {
-        set request_line [lindex [split $request "\r\n"] 0]
-        # Example match: "GET http://127.0.0.1:8990/proxy-target HTTP/1.1"
-        if {![regexp {^([A-Z]+) ([^ ]+) HTTP/([0-9.]+)$} $request_line -> method target version]} {
-            my proxy_response $chan 400 "Bad Request" "bad proxy request\n" {}
+    # Extract the buffered request body so the proxy can forward it unchanged
+    # once it has rewritten the request line and filtered the headers.
+    method request_body {request} {
+        set header_end [string first "\r\n\r\n" $request]
+        if {$header_end < 0} {
+            return {}
+        }
+        return [string range $request [expr {$header_end + 4}] end]
+    }
+
+    # Read the upstream response without blocking the event loop. The proxy and
+    # origin services run in the same test server process, so a blocking read
+    # would deadlock while the origin waits for the event loop to dispatch its
+    # own readable callbacks.
+    method read_upstream_response {upstream} {
+        chan configure $upstream -blocking 0 -buffering none -translation binary
+
+        set response {}
+        set wait_var ::tclcurl::testserver::proxy_wait_[string map {: _} $upstream]
+        while 1 {
+            set chunk [chan read $upstream]
+            if {$chunk ne {}} {
+                append response $chunk
+            }
+            if {[chan eof $upstream]} {
+                break
+            }
+            if {[chan blocked $upstream]} {
+                set $wait_var 0
+                chan event $upstream readable [list set $wait_var 1]
+                vwait $wait_var
+                chan event $upstream readable {}
+                catch {unset $wait_var}
+                continue
+            }
+            break
+        }
+
+        catch {unset $wait_var}
+        return $response
+    }
+
+    # Build the standard proxy reply for malformed requests before any upstream
+    # forwarding is attempted.
+    method bad_request_response {} {
+        return [dict create \
+            status 400 \
+            reason "Bad Request" \
+            body "bad proxy request\n" \
+            headers {}]
+    }
+
+    # Parse the proxy request, enforce proxy-specific policy and forward the
+    # request upstream. The base class already guarantees that the request is
+    # fully buffered before this method runs.
+    method handle_request {chan request} {
+        ::tclcurl::test::msgoutput \
+            "proxy handle_request chan=$chan request-bytes=[string length $request]"
+        set request_info [my parse_request_line $request]
+        if {$request_info eq {}} {
+            ::tclcurl::test::msgoutput \
+                "proxy bad request chan=$chan reason=request-line-parse-failed"
+            dict with [my bad_request_response] {}
+            my proxy_response $chan $status $reason $body $headers
             return
         }
 
+        dict with request_info {}
+        ::tclcurl::test::msgoutput \
+            "proxy request-line chan=$chan method=$method target=$target version=$version"
         set headers [my parse_headers $request]
         set target_info [my parse_target $target $headers]
         set path [dict get $target_info path]
+        ::tclcurl::test::msgoutput \
+            "proxy target chan=$chan path=$path target-info=$target_info"
 
         if {[my auth_required $path]} {
             set auth_status [my validate_proxy_auth $headers]
+            ::tclcurl::test::msgoutput \
+                "proxy auth chan=$chan path=$path status=$auth_status"
             if {$auth_status ne "ok"} {
                 my proxy_response $chan 407 \
                     "Proxy Authentication Required" "proxy-auth=$auth_status\n" \
@@ -202,7 +191,11 @@ oo::class create ::tclcurl::testserver::proxy_service {
         set host [dict get $target_info host]
         set port [dict get $target_info port]
         set origin_path [dict get $target_info path]
+        ::tclcurl::test::msgoutput \
+            "proxy connect chan=$chan host=$host port=$port origin-path=$origin_path"
         if {[catch {set upstream [socket $host $port]} socket_error]} {
+            ::tclcurl::test::msgoutput \
+                "proxy connect failed chan=$chan error=$socket_error"
             my proxy_response $chan 502 "Bad Gateway" "proxy-error=$socket_error\n" {}
             return
         }
@@ -215,11 +208,16 @@ oo::class create ::tclcurl::testserver::proxy_service {
             }
             lappend upstream_headers "[my forwarded_header_name $name]: $value"
         }
+        ::tclcurl::test::msgoutput \
+            "proxy forward headers chan=$chan count=[llength $upstream_headers]"
 
-        set header_end [string first "\r\n\r\n" $request]
-        set request_body [string range $request [expr {$header_end + 4}] end]
+        set request_body [my request_body $request]
+        ::tclcurl::test::msgoutput \
+            "proxy forward body chan=$chan bytes=[string length $request_body]"
 
         try {
+            ::tclcurl::test::msgoutput \
+                "proxy upstream write start chan=$chan upstream=$upstream"
             puts -nonewline $upstream "$method $origin_path HTTP/$version\r\n"
             puts -nonewline $upstream "[join $upstream_headers "\r\n"]"
             puts -nonewline $upstream "\r\n\r\n"
@@ -227,21 +225,25 @@ oo::class create ::tclcurl::testserver::proxy_service {
                 puts -nonewline $upstream $request_body
             }
             flush $upstream
-            set response [read $upstream]
+            ::tclcurl::test::msgoutput \
+                "proxy upstream read start chan=$chan upstream=$upstream"
+            set response [my read_upstream_response $upstream]
+            ::tclcurl::test::msgoutput \
+                "proxy upstream read done chan=$chan response-bytes=[string length $response]"
         } finally {
+            ::tclcurl::test::msgoutput \
+                "proxy upstream close chan=$chan upstream=$upstream"
             catch {close $upstream}
         }
 
         catch {
+            ::tclcurl::test::msgoutput \
+                "proxy client write chan=$chan response-bytes=[string length $response]"
             puts -nonewline $chan $response
             flush $chan
         }
+        ::tclcurl::test::msgoutput "proxy complete chan=$chan"
         my close_client $chan
-    }
-
-    method close_client {chan} {
-        catch {unset request_data($chan)}
-        catch {close $chan}
     }
 }
 

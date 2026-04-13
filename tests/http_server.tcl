@@ -48,7 +48,11 @@ proc ::tclcurl::testserver::parse_query {target} {
     return $params
 }
 
-oo::class create ::tclcurl::testserver::http_service {
+# Shared HTTP connection plumbing for test services that speak HTTP on the
+# client-facing side. Concrete subclasses keep their own request completion
+# details and response behavior, but they all share the same listener setup,
+# per-channel buffering, header parsing and socket cleanup.
+oo::class create ::tclcurl::testserver::http_endpoint_service {
     superclass ::tclcurl::testserver::service
 
     variable request_data
@@ -71,10 +75,6 @@ oo::class create ::tclcurl::testserver::http_service {
         my set_listener $listener
         my log [my listening_message]
         return $listener
-    }
-
-    method description {} {
-        return "HTTP origin test server"
     }
 
     method accept {chan host port} {
@@ -102,9 +102,95 @@ oo::class create ::tclcurl::testserver::http_service {
 
         unset request_data($chan)
         chan event $chan readable {}
-        my respond $chan $request
+        if {[catch {my handle_request $chan $request} request_error request_options]} {
+            ::tclcurl::test::msgoutput \
+                "request handling failed chan=$chan error=$request_error options=$request_options"
+            my close_client $chan
+        }
     }
 
+    # Default request framing for simple HTTP services: a complete header block
+    # plus an optional fixed-size body announced by Content-Length.
+    method complete_request {request_data} {
+        set header_end [string first "\r\n\r\n" $request_data]
+        if {$header_end < 0} {
+            return {}
+        }
+
+        set headers [my parse_headers $request_data]
+        set content_length 0
+        if {[dict exists $headers content-length]} {
+            set content_length [dict get $headers content-length]
+        }
+        set request_length [expr {$header_end + 4 + $content_length}]
+        if {[string length $request_data] < $request_length} {
+            return {}
+        }
+
+        return [string range $request_data 0 [expr {$request_length - 1}]]
+    }
+
+    # Parse the header block into a lower-cased dictionary so subclasses can
+    # reason about headers without repeating the same parsing logic.
+    method parse_headers {request} {
+        set header_end [string first "\r\n\r\n" $request]
+        if {$header_end < 0} {
+            return [dict create]
+        }
+
+        set header_block [string range $request 0 [expr {$header_end - 1}]]
+        set header_lines [::tclcurl::testserver::http_header_lines $header_block]
+        set headers [dict create]
+
+        foreach header_line [lrange $header_lines 1 end] {
+            # Example match: "Content-Type: text/plain"
+            if {![regexp {^([^:]+):\s*(.*)$} $header_line -> name value]} {
+                continue
+            }
+            dict set headers [string tolower $name] $value
+        }
+
+        return $headers
+    }
+
+    # Parse the request line and return the method, target and HTTP version in
+    # a dictionary that both origin and proxy handlers can consume.
+    method parse_request_line {request} {
+        set request_line [lindex [split $request "\r\n"] 0]
+        # Example matches:
+        #   "GET /request-inspect HTTP/1.1"
+        #   "GET http://127.0.0.1:8990/proxy-target HTTP/1.1"
+        if {![regexp {^([A-Z]+) ([^ ]+) HTTP/([0-9.]+)$} $request_line -> method target version]} {
+            return {}
+        }
+
+        return [dict create method $method target $target version $version]
+    }
+
+    # Subclasses receive a fully buffered request and are responsible for
+    # producing the service-specific response or forwarding behavior.
+    method handle_request {chan request} {
+        error "handle_request must be implemented by subclasses"
+    }
+
+    method close_client {chan} {
+        catch {unset request_data($chan)}
+        catch {close $chan}
+    }
+}
+
+# HTTP origin service used by the tests. The shared base handles connection
+# lifecycle and buffering; this class adds origin-specific request framing,
+# routing and response generation.
+oo::class create ::tclcurl::testserver::http_service {
+    superclass ::tclcurl::testserver::http_endpoint_service
+
+    method description {} {
+        return "HTTP origin test server"
+    }
+
+    # Origin tests also exercise chunked uploads, so request completion needs
+    # to understand both fixed-size and chunked request bodies.
     method complete_request {request_data} {
         set header_end [string first "\r\n\r\n" $request_data]
         if {$header_end < 0} { return {} }
@@ -137,19 +223,25 @@ oo::class create ::tclcurl::testserver::http_service {
         return [string range $request_data 0 $request_end]
     }
 
-    method respond {chan request} {
-        set request_line [lindex [split $request "\r\n"] 0]
-        # Example match: "GET /request-inspect HTTP/1.1"
-        if {![regexp {^([A-Z]+) ([^ ]+) HTTP/([0-9.]+)$} $request_line -> method target version]} {
-            set response [my build_response_dict [dict create \
-                status 400 \
-                reason "Bad Request" \
-                body "bad request\n" \
-                head_only 0]]
-            my send_response $chan $response
+    # Build the standard origin-server reply for malformed HTTP requests.
+    method bad_request_response {} {
+        return [my build_response_dict [dict create \
+            status 400 \
+            reason "Bad Request" \
+            body "bad request\n" \
+            head_only 0]]
+    }
+
+    # Dispatch a parsed origin request to the route table, then normalize and
+    # emit the resulting response dictionary.
+    method handle_request {chan request} {
+        set request_info [my parse_request_line $request]
+        if {$request_info eq {}} {
+            my send_response $chan [my bad_request_response]
             return
         }
 
+        dict with request_info {}
         set path [lindex [split $target ?] 0]
         ::tclcurl::test::msgoutput "route request method=$method path=$path"
         set headers [my parse_headers $request]
@@ -166,28 +258,8 @@ oo::class create ::tclcurl::testserver::http_service {
         }
         my send_response $chan $response
     }
-
-    method parse_headers {request} {
-        set header_end [string first "\r\n\r\n" $request]
-        if {$header_end < 0} {
-            return [dict create]
-        }
-
-        set header_block [string range $request 0 [expr {$header_end - 1}]]
-        set header_lines [::tclcurl::testserver::http_header_lines $header_block]
-        set headers [dict create]
-
-        foreach header_line [lrange $header_lines 1 end] {
-            # Example match: "Content-Type: text/plain"
-            if {![regexp {^([^:]+):\s*(.*)$} $header_line -> name value]} {
-                continue
-            }
-            dict set headers [string tolower $name] $value
-        }
-
-        return $headers
-    }
-
+    # Extract the request body after the header block and transparently decode
+    # chunked uploads so route handlers can inspect the payload directly.
     method request_body {request} {
         set header_end [string first "\r\n\r\n" $request]
         if {$header_end < 0} {
@@ -408,6 +480,7 @@ oo::class create ::tclcurl::testserver::http_service {
                 "Content-Type: multipart/byteranges; boundary=$boundary"]]
     }
 
+    # Map origin-server paths to the behavior expected by the test suite.
     method route_request {method path target version headers request} {
         # Example matches: "/redir_1" and "/redir_5"
         if {[regexp {^/redir_([0-9]+)$} $path -> redirect_step]} {
@@ -623,6 +696,8 @@ oo::class create ::tclcurl::testserver::http_service {
         }
     }
 
+    # Normalize partially specified route results into a complete response
+    # dictionary so sending code can follow one path.
     method build_response_dict {response} {
         set completed_response [dict create \
             status 200 \
@@ -641,6 +716,8 @@ oo::class create ::tclcurl::testserver::http_service {
         return $completed_response
     }
 
+    # Serialize a normalized response dictionary to the client socket, handling
+    # HEAD requests, chunked transfers and delayed streaming responses.
     method send_response {chan response} {
         dict with response {}
         if {$status_line eq {}} {
@@ -686,10 +763,6 @@ oo::class create ::tclcurl::testserver::http_service {
         my close_client $chan
     }
 
-    method close_client {chan} {
-        catch {unset request_data($chan)}
-        catch {close $chan}
-    }
 }
 
 ::tclcurl::testserver register_service_class http ::tclcurl::testserver::http_service
