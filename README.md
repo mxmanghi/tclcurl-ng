@@ -36,14 +36,19 @@ the make of tcl for most of its configuration parameters.
  * --with-curlinclude: overrrides the curl include files directory (default $curl_prefix/include)
 
  * --with-md-converter: this options controls which MD converter has to be invoked in order
-   to generate the man page out of the markdown source
+   to generate the man page out of the markdown source. Accepted values are `lowdown` (default)
+   and `pandoc`
 
- * --enable-deprecated-code: with tclcurl 8 by default the options deprecated 
-   by cURL have been removed. You can re-enable deprecated or obsoleted options
-   by passing the argument `--enable-deprecated-code:all`. 
-
-
-Starting with version 8 of tclcurl more configure options were added
+ * --enable-deprecated-code: starting with tclcurl 8 options and features deprecated 
+   by cURL have been removed. You can re-enable all deprecated or obsoleted options
+   by passing the argument `--enable-deprecated-code:all`. You can also selectively
+   enable deprecated code passing a comma separated list of the milestone versions which
+   deprecated specific features. Accepted arguments
+   are:
+     + 7.56 - re-enable old style method to construct mime multipart/form-data messages)
+     + 7.84 - re-enable deprecated options `-randomfile` and `-egdsocket`
+     + 7.11.1 - re-enable `-dnsuseglobalcache`
+     + 8.17.0 - re-enable `-krb4level`
 
  ### OS Support
 
@@ -51,8 +56,8 @@ On a properly Linux/Unix install the package shouldn't have problems to build an
 To build tclcurl no more than the typical packages for building applications based on
 libcurl and libtcl are needed.
 
-*We retained the ReadMeW32.txt that explains how to compile in Windows, but this fork
-is currently tested only for Unix*
+*We retained the ReadMeW32.txt that explains how to compile tclcurl on Windows, but this fork
+is currently tested only on Linux/Unix*
 
 ## Troubleshooting
 
