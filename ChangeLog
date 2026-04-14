@@ -1,3 +1,7 @@
+2026-04-14 Massimo Manghi <massimo.manghi@rivetweb.org>
+    * tests/: test suite completed
+    * Release tclcurl 8.0.0
+
 2026-03-30 Massimo Manghi <massimo.manghi@rivetweb.org>
     * tests/legacy/: moving old test file into this directory while I'm trying to
     implement a new test suite
