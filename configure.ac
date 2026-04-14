@@ -117,16 +117,20 @@ fi
 case "$md_converter_choice" in
     lowdown)
         TCLCURL_DOC_GEN="$LOWDOWN -s -Tman -o"
+        TCLCURL_HTML_GEN="$LOWDOWN -s -Thtml -o"
         ;;
     pandoc)
         TCLCURL_DOC_GEN="$PANDOC -f markdown -t man -o"
+        TCLCURL_HTML_GEN="$PANDOC -f markdown -t html -o"
         ;;
     none)
         TCLCURL_DOC_GEN=
+        TCLCURL_HTML_GEN=
         ;;
 esac
 
 AC_SUBST(TCLCURL_DOC_GEN)
+AC_SUBST(TCLCURL_HTML_GEN)
 
 #--------------------------------------------------------------------
 # Find libcurl, if it's not present, it makes no sense to compile

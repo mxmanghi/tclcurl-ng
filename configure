@@ -671,6 +671,7 @@ SHARED_BUILD
 TCL_THREADS
 TCL_INCLUDES
 curl
+TCLCURL_HTML_GEN
 TCLCURL_DOC_GEN
 PANDOC
 LOWDOWN
@@ -5645,14 +5646,18 @@ fi
 case "$md_converter_choice" in
     lowdown)
         TCLCURL_DOC_GEN="$LOWDOWN -s -Tman -o"
+        TCLCURL_HTML_GEN="$LOWDOWN -s -Thtml -o"
         ;;
     pandoc)
         TCLCURL_DOC_GEN="$PANDOC -f markdown -t man -o"
+        TCLCURL_HTML_GEN="$PANDOC -f markdown -t html -o"
         ;;
     none)
         TCLCURL_DOC_GEN=
+        TCLCURL_HTML_GEN=
         ;;
 esac
+
 
 
 
