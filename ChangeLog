@@ -58,7 +58,7 @@
 
 2011-09-24 Andres Garcia <fandom@telefonica.net>
 
-    * pkgIndex.tcl.in: Fixed the reason why 'curl::transfer' didn't work.
+	* pkgIndex.tcl.in: Fixed the reason why 'curl::transfer' didn't work.
 
 2011-09-09 Andres Garcia <fandom@telefonica.net>
 
