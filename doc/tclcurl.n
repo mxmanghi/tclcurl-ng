@@ -1,5 +1,5 @@
 .\" -*- mode: troff; coding: utf-8 -*-
-.TH "TclCurl" "n" "12 April 2026" "TclCurl 8.0.0" "TclCurl Easy Interface"
+.TH "TclCurl" "n" "12 April 2026" "TclCurl 8.0.1" "TclCurl Easy Interface"
 .SH NAME
 .LP
 TclCurl: - get  a  URL with FTP, FTPS, HTTP, HTTPS, SCP, SFTP, TFTP, TELNET,

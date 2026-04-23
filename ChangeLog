@@ -1,7 +1,8 @@
 2026-04-23 Massimo Manghi <massimo.manghi@rivetweb.org>
-	* pkgIndex.tcl.in: Adopting Tcl9 form as per sampleextension repository
-	* doc/: unset -x bits from manual pages
+	* pkgIndex.tcl.in: Adopting Tcl9 form as per Tcl's core sampleextension repository
+	* doc/: unset -x bits from manual pages, regenerate docs
 	* tclconfig/install-sh: update from Tcl's core tclconfig repository
+	* VERSION: bump version number 8.0.1
 
 2026-04-14 Massimo Manghi <massimo.manghi@rivetweb.org>
 	* tests/: test suite completed
@@ -1156,100 +1157,74 @@
 
 
 2001-06-10 Andres Garcia <fandom@telefonica.net>
-
-    * Used libcurl's mprintf funtions to improve TclCurl portability.
-
-    * CURLOPT_TIMEOUT was defined two times.
-
-    * Fixed the bug by which TclCurl would return two many possible options
-      after using a wrong one.
-
-    * Changed the way the curlObjData struct is initialized.
-
-    * Changed the syntax of the 'getinfo' command options.
+	* Used libcurl's mprintf funtions to improve TclCurl portability.
+	* CURLOPT_TIMEOUT was defined two times.
+	* Fixed the bug by which TclCurl would return two many possible options
+	after using a wrong one.
+	* Changed the way the curlObjData struct is initialized.
+	* Changed the syntax of the 'getinfo' command options.
 
 
 2001-06-08 Andres Garcia <fandom@telefonica.net>
-
-    * Passed all the tests cases to the new 'configure' option.
+	* Passed all the tests cases to the new 'configure' option.
 
 
 2001-06-06 Andres Garcia <fandom@telefonica.net>
-
-    * Created the 'configure' command.
+	* Created the 'configure' command.
 
 
 2001-06-03 Andres Garcia <fandom@telefonica.net>
-
-    * TclCurl won't install the 'tclcurl.h' file.
+	* TclCurl won't install the 'tclcurl.h' file.
 
 
 2001-05-21 Andres Garcia <fandom@telefonica.net>
-
-    * It is now possible to remove the CURLOPT_FILE, CURLOPT_INFILE and
-      CURLOPT_STDERR options between transfers in a persistant connection.
-
+	* It is now possible to remove the CURLOPT_FILE, CURLOPT_INFILE and
+	CURLOPT_STDERR options between transfers in a persistant connection.
 
 2001-05-30  Andres Garcia <fandom@telefonica.net>
-
-    * Version 0.6.1 released.
+	* Version 0.6.1 released.
 
 
 2001-05-04  Andres Garcia <fandom@telefonica.net>
-
-    * Trying to set a HTTPPOST would provoke a seg fault.
+	* Trying to set a HTTPPOST would provoke a seg fault.
 
 
 2001-05-03  Andres Garcia <fandom@telefonica.net>
-
-    * Prevented segfault when saving to a file without the right permissions or
-      reading for a file that does not exist.
+	* Prevented segfault when saving to a file without the right permissions or
+	reading for a file that does not exist.
 
 
 2001-05-02  Andres Garcia <fandom@telefonica.net>
-
-    * Added the CURLOPT_CANCELTRANSVAR option.
-
-    * I think I removed some memory leaks by checking that strings are empty
-      before filling them with strdup.
+	* Added the CURLOPT_CANCELTRANSVAR option.
+	* I think I removed some memory leaks by checking that strings are empty
+	before filling them with strdup.
 
 
 2001-05-01  Andres Garcia <fandom@telefonica.net>
-
-    * Added the CURLOPT_PROGRESSPROC option.
+	* Added the CURLOPT_PROGRESSPROC option.
 
 
 2001-04-30  Andres Garcia <fandom@telefonica.net>
-
-    * Added the CURLOPT_BODYVAR option to put the body of a request into
-      a Tcl variable.
-
-    * Removed the alternative strdup implementation, if the system does not
-      have it libcurl will (I think).
+	* Added the CURLOPT_BODYVAR option to put the body of a request into
+	 a Tcl variable.
+	* Removed the alternative strdup implementation, if the system does not
+	have it libcurl will (I think).
 
 
 2001-04-28  Andres Garcia <fandom@telefonica.net>
-
-    * tclcurl.h: Added interp field to curlObjData.
-
-    * Added support for the 'CURLOPT_HEADERFUNCTION' option
-      through 'CURLOPT_HEADERVAR'.
-
+	* tclcurl.h: Added interp field to curlObjData.
+	* Added support for the 'CURLOPT_HEADERFUNCTION' option
+	through 'CURLOPT_HEADERVAR'.
 
 2001-04-25  Andres Garcia <fandom@telefonica.net>
-
-    * Makefile.in: Modified to be able to install tclcurl.tcl.
-
-    * tclcurl.tcl: Created this file to host the curl::curlConfig procedure.
-
+	* Makefile.in: Modified to be able to install tclcurl.tcl.
+	* tclcurl.tcl: Created this file to host the curl::curlConfig procedure.
 
 2001-04-23  Andres Garcia <fandom@telefonica.net>
-
-    * tests/getinfo.tcl: Added the option CURLOPT_FILETIME so
-      CURLINFO_FILETIME would work.
-
+	* tests/getinfo.tcl: Added the option CURLOPT_FILETIME so
+	CURLINFO_FILETIME would work.
 
 2001-04-12  Andres Garcia <fandom@telefonica.net>
 
-    * First release.
+	* First release.
 
