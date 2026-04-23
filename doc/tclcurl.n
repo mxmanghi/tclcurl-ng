@@ -594,7 +594,7 @@ It should be used in same way as the \fB-proxyuserpwd\fR is used, except that
 it allows the username to contain a colon, like in the following example:
 \(lqsip:\c
 .MT user@example.com
-.ME
+.ME \c
 \(rq.
 .IP
 Note the \fB-proxyusername\fR option is an alternative way to set the user

@@ -1,13 +1,18 @@
+2026-04-23 Massimo Manghi <massimo.manghi@rivetweb.org>
+	* pkgIndex.tcl.in: Adopting Tcl9 form as per sampleextension repository
+	* doc/: unset -x bits from manual pages
+	* tclconfig/install-sh: update from Tcl's core tclconfig repository
+
 2026-04-14 Massimo Manghi <massimo.manghi@rivetweb.org>
-    * tests/: test suite completed
-    * Release tclcurl 8.0.0
+	* tests/: test suite completed
+	* Release tclcurl 8.0.0
 
 2026-03-30 Massimo Manghi <massimo.manghi@rivetweb.org>
-    * tests/legacy/: moving old test file into this directory while I'm trying to
-    implement a new test suite
-    * tests/all.tcl: now a real hub for tests
-    * tests/http_server.tcl: A tiny webserver taylored for the test suite
-    * tests/http.tcl: initial set of HTTP features being tested
+	* tests/legacy/: moving old test file into this directory while I'm trying to
+	implement a new test suite
+	* tests/all.tcl: now a real hub for tests
+	* tests/http_server.tcl: A tiny webserver taylored for the test suite
+	* tests/http.tcl: initial set of HTTP features being tested
 
 2026-03-28 Massimo Manghi <massimo.manghi@rivetweb.org>
 	* generic/curl_setopts.c: adhere to better code standards by removing empty lines
@@ -18,53 +23,38 @@
 	long switch...case construct, removing obsolete macros
 
 2011-10-03 Andres Garcia <fandom@telefonica.net>
-
 	* Release version 7.22.0
 
 2011-10-01 Andres Garcia <fandom@telefonica.net>
-
 	* generic/tclcurl.c: Fix 'bodyvar' bug.
 
 2011-09-29 Andres Garcia <fandom@telefonica.net>
-
 	* generic/tclcurl.h,
 	  generic/tclcurl.c: Added support for CURLAUTH_NTLM_WB, and CURLOPT_TELNETOPTIONS.
 
 2011-09-29 Andres Garcia <fandom@telefonica.net>
-
-	* generic/tclcurl.h,
-	  generic/tclcurl.c,
-      tests/getInfo.tcl: Added support for the 'getinfo' options CURLINFO_PRIMARY_PORT,
-      CURLINFO_LOCAL_IP and CURLINFO_LOCAL_PORT
+	* generic/tclcurl.h,generic/tclcurl.c,tests/getInfo.tcl: Added support for the
+	'getinfo' options CURLINFO_PRIMARY_PORT,CURLINFO_LOCAL_IP and CURLINFO_LOCAL_PORT
 
 2011-09-27 Andres Garcia <fandom@telefonica.net>
-
-    * generic/tclcurl.h,
-      generic/tclcurl.c: Added support for the proxy type: socks5_hostname and the new
-      protocols for '-protocols' and '-protocolsredir'
+	* generic/tclcurl.h,generic/tclcurl.c: Added support for the proxy type: socks5_hostname and the new
+	protocols for '-protocols' and '-protocolsredir'
 
 2011-09-27 Andres Garcia <fandom@telefonica.net>
+	* generic/tclcurl.h,generic/tclcurl.c: Added support for CURLOPT_GSSAPI_DELEGATION.
 
-    * generic/tclcurl.h,
-      generic/tclcurl.c: Added support for CURLOPT_GSSAPI_DELEGATION.
-
-    * configure.in,
-      generic/tclcurl.h,
-      generic/tclcurl.c,
-      generic/tclcurl.tcl: Tclcurl now reports to be version 7.22.0
+	* configure.in,generic/tclcurl.h,
+	generic/tclcurl.c,generic/tclcurl.tcl: Tclcurl now reports to be version 7.22.0
 
 2011-09-26 Andres Garcia <fandom@telefonica.net>
 
-    * generic/tclcurl.h,
-      generic/tclcurl.c: Added support for CURLOPT_RESOLVE, CURLOPT_TLSAUTH_USERNAME, 
-      CURLOPT_TLSAUTH_PASSWORD, CURLOPT_TLSAUTH_TYPE and CURLOPT_TRANSFER_ENCODING
+	* generic/tclcurl.h,generic/tclcurl.c: Added support for CURLOPT_RESOLVE, CURLOPT_TLSAUTH_USERNAME, 
+	CURLOPT_TLSAUTH_PASSWORD, CURLOPT_TLSAUTH_TYPE and CURLOPT_TRANSFER_ENCODING
 
 2011-09-25 Andres Garcia <fandom@telefonica.net>
 
-    * generic/tclcurl.h,
-      generic/tclcurl.c,
-      tests/ftpWildcard.tcl: Added support for CURLOPT_WILDCARDMATCH, CURLOPT_CHUNK_BGN_FUNCTION, 
-      CURLOPT_CHUNK_END_FUNCTION and CURLOPT_FNMATCH_FUNCTION.
+	* generic/tclcurl.h,generic/tclcurl.c,tests/ftpWildcard.tcl: Added support for CURLOPT_WILDCARDMATCH,
+	CURLOPT_CHUNK_BGN_FUNCTION,CURLOPT_CHUNK_END_FUNCTION and CURLOPT_FNMATCH_FUNCTION.
 
 2011-09-24 Andres Garcia <fandom@telefonica.net>
 
