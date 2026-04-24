@@ -1,6 +1,6 @@
 2026-04-24 Massimo Manghi <massimo.manghi@rivetweb.org>
 	* Makefile.in: add support for script handling
-	* pkgIndex.tcl: extending the model proposed by Tcl's sampleextension to
+	* pkgIndex.tcl.in: extending the model proposed by Tcl's sampleextension to
 	load both binary extension and tclcurl.tcl scripts
 
 2026-04-23 Massimo Manghi <massimo.manghi@rivetweb.org>
