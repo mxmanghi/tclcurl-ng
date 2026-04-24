@@ -1,3 +1,8 @@
+2026-04-24 Massimo Manghi <massimo.manghi@rivetweb.org>
+	* Makefile.in: add support for script handling
+	* pkgIndex.tcl: extending the model proposed by Tcl's sampleextension to
+	load both binary extension and tclcurl.tcl scripts
+
 2026-04-23 Massimo Manghi <massimo.manghi@rivetweb.org>
 	* pkgIndex.tcl.in: Adopting Tcl9 form as per Tcl's core sampleextension repository
 	* doc/: unset -x bits from manual pages, regenerate docs
@@ -43,7 +48,6 @@
 
 2011-09-27 Andres Garcia <fandom@telefonica.net>
 	* generic/tclcurl.h,generic/tclcurl.c: Added support for CURLOPT_GSSAPI_DELEGATION.
-
 	* configure.in,generic/tclcurl.h,
 	generic/tclcurl.c,generic/tclcurl.tcl: Tclcurl now reports to be version 7.22.0
 

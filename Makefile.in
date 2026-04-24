@@ -36,6 +36,7 @@ TCLCURL_HTML_GEN = @TCLCURL_HTML_GEN@
 #========================================================================
 
 PKG_SOURCES	= @PKG_SOURCES@
+TCLCURL_SCRIPTS = @TCLCURL_SCRIPTS@
 PKG_OBJECTS	= @PKG_OBJECTS@
 
 PKG_STUB_SOURCES = @PKG_STUB_SOURCES@
@@ -205,6 +206,8 @@ binaries: $(BINARIES)
 
 libraries:
 
+scripts: $(TCLCURL_SCRIPTS)
+
 #========================================================================
 # Your doc target should differentiate from doc builds (by the developer)
 # and doc installs (see install-doc), which just install the docs on the
@@ -227,7 +230,7 @@ doc/tclcurl.html: doc/tclcurl.n.md
 	    $(TCLCURL_HTML_GEN) doc/tclcurl.html doc/tclcurl.n.md; \
 	fi
 
-install: all install-binaries install-libraries install-doc
+install: all install-binaries install-scripts install-libraries install-doc
 
 install-binaries: binaries install-lib-binaries install-bin-binaries
 
@@ -463,6 +466,16 @@ install-bin-binaries: binaries
 	    $(INSTALL_PROGRAM) $$p "$(DESTDIR)$(bindir)/$$p"; \
 	  fi; \
 	done
+
+#========================================================================
+# This rule installs the scripts that are part of TclCurl.
+#========================================================================
+
+install-scripts: scripts
+	@for i in generic/$(TCLCURL_SCRIPTS) ; do    \
+		echo "Installing $$i" ;              \
+		$(INSTALL_DATA) $(srcdir)/$$i $(DESTDIR)$(pkglibdir) ; \
+	done;
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
