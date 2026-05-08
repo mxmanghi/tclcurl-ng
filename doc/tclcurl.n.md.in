@@ -86,7 +86,7 @@ many other neat tricks, for more information check <http://curl.haxx.se>
 # curl::init
 
 This procedure must be the first one to call, it returns a curlHandle that you
-need to use to invoke TclCurl procedures. The init calls intializes curl and
+need to use to invoke TclCurl procedures. The init calls initializes curl and
 this call MUST have a corresponding call to cleanup when the operation is
 completed. You should perform all your sequential file transfers using the same
 curlHandle. This enables TclCurl to use persistent connections when possible.
@@ -218,7 +218,7 @@ default with **curlHandle reset**.
     empty or it may be thousands of bytes.
 
 -file
-:   File in which the transfered data will be saved.
+:   File in which the transferred data will be saved.
 
 -readproc
 :   Sets a Tcl procedure to be called by TclCurl as soon as it needs to read
@@ -237,12 +237,12 @@ default with **curlHandle reset**.
     server end and the transfer will end there.
 
 -infile
-:   File from which the data will be transfered.
+:   File from which the data will be transferred.
 
 -progressproc
 :   Name of the Tcl procedure that will invoked by TclCurl  with a frequent
     interval during operation (roughly once per second or sooner), no matter if
-    data is being transfered or not.  Unknown/unused argument values passed to
+    data is being transferred or not.  Unknown/unused argument values passed to
     the callback will be set to zero (like if you only download data, the
     upload size will remain 0), the prototype of the procedure must be:
 
@@ -278,18 +278,18 @@ default with **curlHandle reset**.
     incoming SSL data, 6 outgoing SSL data).
 
 -chunkbgnproc
-:   Name of the procedure that will be called before a file will be transfered
+:   Name of the procedure that will be called before a file will be transferred
     by ftp, it should match the following prototype:
 
     **ChunkBgnProc {remains}**
 
-    Where remains is the number of files left to be transfered (or skipped)
+    Where remains is the number of files left to be transferred (or skipped)
 
     This callback makes sense only when using the **-wildcard** option.
 
 -chunkbgnvar
 :   Name of the variable in the global scope that will contain the data of the
-    file about to be transfered. If you don't use this option '::fileData' will
+    file about to be transferred. If you don't use this option '::fileData' will
     be used.
 
     The available data is: filename, filetype (file, directory, symlink, device
@@ -297,7 +297,7 @@ default with **curlHandle reset**.
     identified), time, perm, uid, gid, size, hardlinks and flags.
 
 -chunkendproc
-:   Name of the procedure that will be called after a file is transfered (or
+:   Name of the procedure that will be called after a file is transferred (or
     skipped) by ftp, it should match the following prototype:
 
     **ChunkEndProc {}**
@@ -413,7 +413,7 @@ default with **curlHandle reset**.
 
     If you set it to *http1.0*, it will only affect how libcurl speaks to a
     proxy when CONNECT is used. The HTTP version used for "regular" HTTP
-    requests is instead controled with *httpversion*.
+    requests is instead controlled with *httpversion*.
 
 -noproxy
 :   Pass a string, a comma-separated list of hosts which do not use a proxy, if
@@ -923,7 +923,7 @@ default with **curlHandle reset**.
     request. The format of the string should be '[NAME]=[CONTENTS];'. Where
     NAME is the cookie name and  CONTENTS is what the cookie should contain.
 
-    If  you  need  to  set mulitple cookies, you need to set them all using a
+    If  you  need  to  set multiple cookies, you need to set them all using a
     single option and thus you need to concatenate them all in one single
     string. Set multiple cookies in one string like this: "name1=content1;
     name2=content2;" etc.
@@ -981,7 +981,7 @@ default with **curlHandle reset**.
     When setting **httpget** to 1, **nobody** will automatically be set to 0.
 
 -httpversion
-:   Set to one of the values decribed below, they force TclCurl to use the
+:   Set to one of the values described below, they force TclCurl to use the
     specific http versions. It should only be used if you really MUST do that
     because of a silly remote server.
 
@@ -1383,7 +1383,7 @@ tftpblksize
 
 -maxconnects
 :   Sets the persistent connection cache size in all the protocols that support
-    persistent conecctions. The set amount will be the maximum amount of
+    persistent connections. The set amount will be the maximum amount of
     simultaneous connections that TclCurl may cache in this easy handle.
     Default is 5, and there isn't much point in changing this value unless you
     are perfectly aware of how this work and changes TclCurl's behaviour.
@@ -1464,7 +1464,7 @@ try
 :   Try using SSL, proceed anyway otherwise.
 
 control
-:   Use SSL for the control conecction or fail with "use ssl failed" (64).
+:   Use SSL for the control connection or fail with "use ssl failed" (64).
 
 all
 :   Use SSL for all communication or fail with "use ssl failed" (64).
@@ -1760,7 +1760,7 @@ maxtlsv1_3
 
 -sshhostpublickeymd5
 :   Pass a string containing 32 hexadecimal digits. The string should be the
-    128 bit MD5 cheksum of the remote host public key, and TclCurl will reject
+    128 bit MD5 checksum of the remote host public key, and TclCurl will reject
     the connection to the host unless the md5sums match. This option is only
     for SCP and SFTP transfers.
 
@@ -1792,7 +1792,7 @@ maxtlsv1_3
     It gets passed a list with three elements, the first one is a list with the
     type of the key from the known_hosts file and the key itself, the second is
     another list with the type of the key from the remote site and the key
-    itslef, the third tells you what TclCurl thinks about the matching status.
+    itself, the third tells you what TclCurl thinks about the matching status.
 
     The known key types are: "rsa", "rsa1" and "dss", in any other case
     "unknown" is given.
@@ -1966,7 +1966,7 @@ RETURN VALUE
     binary or ascii.
 
     18
-    :   Partial file. Only a part of the file was transfered, this happens
+    :   Partial file. Only a part of the file was transferred, this happens
     when the server first reports an expected transfer size and then delivers
     data that doesn't match the given size.
 
@@ -2223,7 +2223,7 @@ pretransfertime
 
 starttransfertime
 :   Returns the time, in seconds, it took from the start until the first byte
-    is just about to be transfered. This includes the **pretransfertime**, and
+    is just about to be transferred. This includes the **pretransfertime**, and
     also the time the server needs to calculate the result.
 
 totaltime
@@ -2324,7 +2324,7 @@ proxyauthavail
 
 oserrno
 :   Returns the errno value from a connect failure. This value is only set on
-    failure, it is no reset after a successfull operation.
+    failure, it is no reset after a successful operation.
 
 cookielist
 :   Returns a list of all cookies TclCurl knows (expired ones, too). If there
@@ -2462,7 +2462,7 @@ changed independent of applications.
 :   Returns the version of libcurl we are using.
 
 -versionnum
-:   Retuns the version of libcurl we are using in hexadecimal with 8 bits for
+:   Returns the version of libcurl we are using in hexadecimal with 8 bits for
     each part; major, minor, patch. So  that  libcurl 7.7.4 would appear as
     070704 and libcurl 12.13.14 would appear as 0c0d0e... Note that the initial
     zero might be omitted.

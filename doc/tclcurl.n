@@ -79,7 +79,7 @@ many other neat tricks, for more information check \c
 .SH curl::init
 .LP
 This procedure must be the first one to call, it returns a curlHandle that you
-need to use to invoke TclCurl procedures. The init calls intializes curl and
+need to use to invoke TclCurl procedures. The init calls initializes curl and
 this call MUST have a corresponding call to cleanup when the operation is
 completed. You should perform all your sequential file transfers using the same
 curlHandle. This enables TclCurl to use persistent connections when possible.
@@ -215,7 +215,7 @@ cannot possibly make any assumptions. It may be nothing if the file is
 empty or it may be thousands of bytes.
 .TP 3
 -file
-File in which the transfered data will be saved.
+File in which the transferred data will be saved.
 .TP 3
 -readproc
 Sets a Tcl procedure to be called by TclCurl as soon as it needs to read
@@ -234,12 +234,12 @@ that the callback wants, or it will be considered the final packet by the
 server end and the transfer will end there.
 .TP 3
 -infile
-File from which the data will be transfered.
+File from which the data will be transferred.
 .TP 3
 -progressproc
 Name of the Tcl procedure that will invoked by TclCurl  with a frequent
 interval during operation (roughly once per second or sooner), no matter if
-data is being transfered or not.  Unknown/unused argument values passed to
+data is being transferred or not.  Unknown/unused argument values passed to
 the callback will be set to zero (like if you only download data, the
 upload size will remain 0), the prototype of the procedure must be:
 .IP
@@ -275,18 +275,18 @@ incoming header, 2 outgoing header, 3 incoming data, 4 outgoing data, 5
 incoming SSL data, 6 outgoing SSL data).
 .TP 3
 -chunkbgnproc
-Name of the procedure that will be called before a file will be transfered
+Name of the procedure that will be called before a file will be transferred
 by ftp, it should match the following prototype:
 .IP
 \fBChunkBgnProc {remains}\fR
 .IP
-Where remains is the number of files left to be transfered (or skipped)
+Where remains is the number of files left to be transferred (or skipped)
 .IP
 This callback makes sense only when using the \fB-wildcard\fR option.
 .TP 3
 -chunkbgnvar
 Name of the variable in the global scope that will contain the data of the
-file about to be transfered. If you don\(cqt use this option \(oq::fileData\(cq will
+file about to be transferred. If you don\(cqt use this option \(oq::fileData\(cq will
 be used.
 .IP
 The available data is: filename, filetype (file, directory, symlink, device
@@ -294,7 +294,7 @@ block, device char, named pipe, socket, door or error if it couldn\(cqt be
 identified), time, perm, uid, gid, size, hardlinks and flags.
 .TP 3
 -chunkendproc
-Name of the procedure that will be called after a file is transfered (or
+Name of the procedure that will be called after a file is transferred (or
 skipped) by ftp, it should match the following prototype:
 .IP
 \fBChunkEndProc {}\fR
@@ -411,7 +411,7 @@ default.
 .IP
 If you set it to \fIhttp1.0\fR, it will only affect how libcurl speaks to a
 proxy when CONNECT is used. The HTTP version used for \(lqregular\(rq HTTP
-requests is instead controled with \fIhttpversion\fR.
+requests is instead controlled with \fIhttpversion\fR.
 .TP 3
 -noproxy
 Pass a string, a comma-separated list of hosts which do not use a proxy, if
@@ -939,7 +939,7 @@ Pass a string as parameter. It will be used to set a cookie in the http
 request. The format of the string should be \(oq[NAME]=[CONTENTS];\(cq. Where
 NAME is the cookie name and  CONTENTS is what the cookie should contain.
 .IP
-If  you  need  to  set mulitple cookies, you need to set them all using a
+If  you  need  to  set multiple cookies, you need to set them all using a
 single option and thus you need to concatenate them all in one single
 string. Set multiple cookies in one string like this: \(lqname1=content1;
 name2=content2;\(rq etc.
@@ -997,7 +997,7 @@ or a custom request have been used previously with the same handle.
 When setting \fBhttpget\fR to 1, \fBnobody\fR will automatically be set to 0.
 .TP 3
 -httpversion
-Set to one of the values decribed below, they force TclCurl to use the
+Set to one of the values described below, they force TclCurl to use the
 specific http versions. It should only be used if you really MUST do that
 because of a silly remote server.
 .RS
@@ -1404,7 +1404,7 @@ unlimited speed.
 .TP 3
 -maxconnects
 Sets the persistent connection cache size in all the protocols that support
-persistent conecctions. The set amount will be the maximum amount of
+persistent connections. The set amount will be the maximum amount of
 simultaneous connections that TclCurl may cache in this easy handle.
 Default is 5, and there isn\(cqt much point in changing this value unless you
 are perfectly aware of how this work and changes TclCurl\(cqs behaviour.
@@ -1485,7 +1485,7 @@ try
 Try using SSL, proceed anyway otherwise.
 .TP 3
 control
-Use SSL for the control conecction or fail with \(lquse ssl failed\(rq (64).
+Use SSL for the control connection or fail with \(lquse ssl failed\(rq (64).
 .TP 3
 all
 Use SSL for all communication or fail with \(lquse ssl failed\(rq (64).
@@ -1788,7 +1788,7 @@ To let TclCurl pick one
 .TP 3
 -sshhostpublickeymd5
 Pass a string containing 32 hexadecimal digits. The string should be the
-128 bit MD5 cheksum of the remote host public key, and TclCurl will reject
+128 bit MD5 checksum of the remote host public key, and TclCurl will reject
 the connection to the host unless the md5sums match. This option is only
 for SCP and SFTP transfers.
 .TP 3
@@ -1820,7 +1820,7 @@ is also set.
 It gets passed a list with three elements, the first one is a list with the
 type of the key from the known_hosts file and the key itself, the second is
 another list with the type of the key from the remote site and the key
-itslef, the third tells you what TclCurl thinks about the matching status.
+itself, the third tells you what TclCurl thinks about the matching status.
 .IP
 The known key types are: \(lqrsa\(rq, \(lqrsa1\(rq and \(lqdss\(rq, in any other case
 \(lqunknown\(rq is given.
@@ -1993,7 +1993,7 @@ FTP couldn\(cqt set type. Couldn\(cqt change transfer method to either
 binary or ascii.
 .TP 3
 18
-Partial file. Only a part of the file was transfered, this happens
+Partial file. Only a part of the file was transferred, this happens
 when the server first reports an expected transfer size and then delivers
 data that doesn\(cqt match the given size.
 .TP 3
@@ -2250,7 +2250,7 @@ and negotiations that are specific to the particular protocol(s) involved.
 .TP 3
 starttransfertime
 Returns the time, in seconds, it took from the start until the first byte
-is just about to be transfered. This includes the \fBpretransfertime\fR, and
+is just about to be transferred. This includes the \fBpretransfertime\fR, and
 also the time the server needs to calculate the result.
 .TP 3
 totaltime
@@ -2351,7 +2351,7 @@ athentication.
 .TP 3
 oserrno
 Returns the errno value from a connect failure. This value is only set on
-failure, it is no reset after a successfull operation.
+failure, it is no reset after a successful operation.
 .TP 3
 cookielist
 Returns a list of all cookies TclCurl knows (expired ones, too). If there
@@ -2478,7 +2478,7 @@ changed independent of applications.
 Returns the version of libcurl we are using.
 .TP 3
 -versionnum
-Retuns the version of libcurl we are using in hexadecimal with 8 bits for
+Returns the version of libcurl we are using in hexadecimal with 8 bits for
 each part; major, minor, patch. So  that  libcurl 7.7.4 would appear as
 070704 and libcurl 12.13.14 would appear as 0c0d0e\[u2026] Note that the initial
 zero might be omitted.

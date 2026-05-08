@@ -49,7 +49,7 @@ written by <strong>Daniel Stenberg</strong>, with it you can download urls, uplo
 many other neat tricks, for more information check <a href="http://curl.haxx.se">http:&#47;&#47;curl.haxx.se</a></p>
 <h1 id="curlinit">curl::init</h1>
 <p>This procedure must be the first one to call, it returns a curlHandle that you
-need to use to invoke TclCurl procedures. The init calls intializes curl and
+need to use to invoke TclCurl procedures. The init calls initializes curl and
 this call MUST have a corresponding call to cleanup when the operation is
 completed. You should perform all your sequential file transfers using the same
 curlHandle. This enables TclCurl to use persistent connections when possible.</p>
@@ -160,7 +160,7 @@ empty or it may be thousands of bytes.</p>
 </dd>
 <dt>-file</dt>
 <dd>
-<p>File in which the transfered data will be saved.</p>
+<p>File in which the transferred data will be saved.</p>
 </dd>
 <dt>-readproc</dt>
 <dd>
@@ -179,13 +179,13 @@ server end and the transfer will end there.</p>
 </dd>
 <dt>-infile</dt>
 <dd>
-<p>File from which the data will be transfered.</p>
+<p>File from which the data will be transferred.</p>
 </dd>
 <dt>-progressproc</dt>
 <dd>
 <p>Name of the Tcl procedure that will invoked by TclCurl  with a frequent
 interval during operation (roughly once per second or sooner), no matter if
-data is being transfered or not.  Unknown&#47;unused argument values passed to
+data is being transferred or not.  Unknown&#47;unused argument values passed to
 the callback will be set to zero (like if you only download data, the
 upload size will remain 0), the prototype of the procedure must be:</p>
 <p><strong>proc ProgressCallback {dltotal dlnow ultotal ulnow}</strong></p>
@@ -217,16 +217,16 @@ incoming SSL data, 6 outgoing SSL data).</p>
 </dd>
 <dt>-chunkbgnproc</dt>
 <dd>
-<p>Name of the procedure that will be called before a file will be transfered
+<p>Name of the procedure that will be called before a file will be transferred
 by ftp, it should match the following prototype:</p>
 <p><strong>ChunkBgnProc {remains}</strong></p>
-<p>Where remains is the number of files left to be transfered (or skipped)</p>
+<p>Where remains is the number of files left to be transferred (or skipped)</p>
 <p>This callback makes sense only when using the <strong>-wildcard</strong> option.</p>
 </dd>
 <dt>-chunkbgnvar</dt>
 <dd>
 <p>Name of the variable in the global scope that will contain the data of the
-file about to be transfered. If you don&#8217;t use this option &#8216;::fileData&#8217; will
+file about to be transferred. If you don&#8217;t use this option &#8216;::fileData&#8217; will
 be used.</p>
 <p>The available data is: filename, filetype (file, directory, symlink, device
 block, device char, named pipe, socket, door or error if it couldn&#8217;t be
@@ -234,7 +234,7 @@ identified), time, perm, uid, gid, size, hardlinks and flags.</p>
 </dd>
 <dt>-chunkendproc</dt>
 <dd>
-<p>Name of the procedure that will be called after a file is transfered (or
+<p>Name of the procedure that will be called after a file is transferred (or
 skipped) by ftp, it should match the following prototype:</p>
 <p><strong>ChunkEndProc {}</strong></p>
 <p>It should return &#8216;0&#8217; if everyhting is fine and &#8216;1&#8217; if some error occurred.</p>
@@ -345,7 +345,7 @@ port 1080 for proxies.</p>
 default.</p>
 <p>If you set it to <em>http1.0</em>, it will only affect how libcurl speaks to a
 proxy when CONNECT is used. The HTTP version used for &#8220;regular&#8221; HTTP
-requests is instead controled with <em>httpversion</em>.</p>
+requests is instead controlled with <em>httpversion</em>.</p>
 </dd>
 <dt>-noproxy</dt>
 <dd>
@@ -884,7 +884,7 @@ alias matched.</p>
 <p>Pass a string as parameter. It will be used to set a cookie in the http
 request. The format of the string should be &#8216;[NAME]=[CONTENTS];&#8217;. Where
 NAME is the cookie name and  CONTENTS is what the cookie should contain.</p>
-<p>If  you  need  to  set mulitple cookies, you need to set them all using a
+<p>If  you  need  to  set multiple cookies, you need to set them all using a
 single option and thus you need to concatenate them all in one single
 string. Set multiple cookies in one string like this: &#8220;name1=content1;
 name2=content2;&#8221; etc.</p>
@@ -941,7 +941,7 @@ or a custom request have been used previously with the same handle.</p>
 </dd>
 <dt>-httpversion</dt>
 <dd>
-<p>Set to one of the values decribed below, they force TclCurl to use the
+<p>Set to one of the values described below, they force TclCurl to use the
 specific http versions. It should only be used if you really MUST do that
 because of a silly remote server.</p>
 <dl>
@@ -1387,7 +1387,7 @@ unlimited speed.</p>
 <dt>-maxconnects</dt>
 <dd>
 <p>Sets the persistent connection cache size in all the protocols that support
-persistent conecctions. The set amount will be the maximum amount of
+persistent connections. The set amount will be the maximum amount of
 simultaneous connections that TclCurl may cache in this easy handle.
 Default is 5, and there isn&#8217;t much point in changing this value unless you
 are perfectly aware of how this work and changes TclCurl&#8217;s behaviour.</p>
@@ -1470,7 +1470,7 @@ connection and the data connection.</p>
 </dd>
 <dt>control</dt>
 <dd>
-<p>Use SSL for the control conecction or fail with &#8220;use ssl failed&#8221; (64).</p>
+<p>Use SSL for the control connection or fail with &#8220;use ssl failed&#8221; (64).</p>
 </dd>
 <dt>all</dt>
 <dd>
@@ -1785,7 +1785,7 @@ at compile-time.</p>
 <dt>-sshhostpublickeymd5</dt>
 <dd>
 <p>Pass a string containing 32 hexadecimal digits. The string should be the
-128 bit MD5 cheksum of the remote host public key, and TclCurl will reject
+128 bit MD5 checksum of the remote host public key, and TclCurl will reject
 the connection to the host unless the md5sums match. This option is only
 for SCP and SFTP transfers.</p>
 </dd>
@@ -1820,7 +1820,7 @@ is also set.</p>
 <p>It gets passed a list with three elements, the first one is a list with the
 type of the key from the known_hosts file and the key itself, the second is
 another list with the type of the key from the remote site and the key
-itslef, the third tells you what TclCurl thinks about the matching status.</p>
+itself, the third tells you what TclCurl thinks about the matching status.</p>
 <p>The known key types are: &#8220;rsa&#8221;, &#8220;rsa1&#8221; and &#8220;dss&#8221;, in any other case
 &#8220;unknown&#8221; is given.</p>
 <p>TclCurl opinion about how they match may be: &#8220;match&#8221;, &#8220;mismatch&#8221;, &#8220;missing&#8221;
@@ -2011,7 +2011,7 @@ binary or ascii.
 </dd>
 <dt>18</dt>
 <dd>
-  Partial file. Only a part of the file was transfered, this happens
+  Partial file. Only a part of the file was transferred, this happens
 when the server first reports an expected transfer size and then delivers
 data that doesn&#8217;t match the given size.
 </dd>
@@ -2336,7 +2336,7 @@ and negotiations that are specific to the particular protocol(s) involved.</p>
 <dt>starttransfertime</dt>
 <dd>
 <p>Returns the time, in seconds, it took from the start until the first byte
-is just about to be transfered. This includes the <strong>pretransfertime</strong>, and
+is just about to be transferred. This includes the <strong>pretransfertime</strong>, and
 also the time the server needs to calculate the result.</p>
 </dd>
 <dt>totaltime</dt>
@@ -2460,7 +2460,7 @@ athentication.</p>
 <dt>oserrno</dt>
 <dd>
 <p>Returns the errno value from a connect failure. This value is only set on
-failure, it is no reset after a successfull operation.</p>
+failure, it is no reset after a successful operation.</p>
 </dd>
 <dt>cookielist</dt>
 <dd>
@@ -2598,7 +2598,7 @@ changed independent of applications.</p>
 </dd>
 <dt>-versionnum</dt>
 <dd>
-<p>  Retuns the version of libcurl we are using in hexadecimal with 8 bits for
+<p>  Returns the version of libcurl we are using in hexadecimal with 8 bits for
 each part; major, minor, patch. So  that  libcurl 7.7.4 would appear as
 070704 and libcurl 12.13.14 would appear as 0c0d0e&#8230; Note that the initial
 zero might be omitted.</p>

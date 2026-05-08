@@ -46,16 +46,16 @@ Version 7.22.0 released 03-Oct-2011
 
           Returns '0' if it matches, '1' if it doesn't.
 
-        * chunkbgnproc: Name of the procedure that will be called before a file will be transfered
+        * chunkbgnproc: Name of the procedure that will be called before a file will be transferred
           by ftp, it should match the following prototype:
 
                 ChunkBgnProc {remains}
 
-          Where remains is the number of files still to be transfered (or skipped)
+          Where remains is the number of files still to be transferred (or skipped)
 
           This callback makes sense only when using the 'wildcard' option.
 
-        * chunkendproc: Name of the procedure that will be called after a file is transfered
+        * chunkendproc: Name of the procedure that will be called after a file is transferred
           (or skipped) by ftp when using the wildcard option, it should match the following
           prototype:
 
@@ -64,7 +64,7 @@ Version 7.22.0 released 03-Oct-2011
           It should return '0' if everyhting is fine and '1' if some error occurred.
 
         * chunkbgnvar: Name of the variable in the global scope that will contain the data of
-          the file about to be transfered. If you don't use this option '::fileData' will be used.
+          the file about to be transferred. If you don't use this option '::fileData' will be used.
 
           The available data is: filename, filetype (file, directory, symlink, device block,
           device char, named pipe, socket, door or error if it couldn't be identified), time, perm,
@@ -181,7 +181,7 @@ Version 7.17.1 released 1-Nov-2007
           usually do.
 
         * sshhostpublickeymd5: Pass a string containing 32 hexadecimal
-          digits. The string should be the 128 bit MD5 cheksum of the
+          digits. The string should be the 128 bit MD5 checksum of the
           remote host public key, and TclCurl will reject the connection
           to the host unless the md5sums match.
 
@@ -555,7 +555,7 @@ Version 0.11.0 released 04-febrary-04
 
               * 'try': Try using SSL, proceed anyway otherwise.
 
-              * 'control': Use SSL for the control conecction or fail.
+              * 'control': Use SSL for the control connection or fail.
 
               * 'all': Use SSL for all communication or fail.
 
