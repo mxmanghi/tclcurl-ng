@@ -1,4 +1,3 @@
-#!/usr/local/bin/tclsh
 # escape.test --
 #
 # Tests URL escaping and unescaping helpers.
