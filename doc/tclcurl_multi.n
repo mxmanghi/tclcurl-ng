@@ -223,7 +223,7 @@ the multi handle.
 
 The \fBcommand\fP option allows you to specify a command to invoke after all the easy
 handles have finished their transfers, even though I say it is an option, the truth is
-you must use this command to cleanup all the handles, otherwise the transfered files
+you must use this command to cleanup all the handles, otherwise the transferred files
 may not be complete.
 
 This support is still in a very experimental state, it may still change without warning.

@@ -47,7 +47,7 @@ upload them and many other neat tricks, for more information check
 .SH curl::init
 This procedure must be the first one to call, it returns a
 .I curlHandle
-that you need to use to invoke TclCurl procedures. The init calls intializes
+that you need to use to invoke TclCurl procedures. The init calls initializes
 curl and this call MUST have a corresponding call to
 .I cleanup
 when the operation is completed.
@@ -192,7 +192,7 @@ empty or it may be thousands of bytes.
 
 .TP
 .B -file
-File in which the transfered data will be saved.
+File in which the transferred data will be saved.
 
 .TP
 .B -readproc
@@ -213,13 +213,13 @@ server end and the transfer will end there.
 
 .TP
 .B -infile
-File from which the data will be transfered.
+File from which the data will be transferred.
 
 .TP
 .B -progressproc
 Name of the Tcl procedure that will invoked by TclCurl  with a frequent
 interval during operation (roughly once per second or sooner), no matter if data
-is being transfered or not.  Unknown/unused
+is being transferred or not.  Unknown/unused
 argument values passed to the callback will be set to zero (like if you
 only download data, the upload size will remain 0), the prototype of the
 procedure must be:
@@ -260,20 +260,20 @@ where \fBinfoType\fP specifies what kind of information it is (0 text,
 
 .TP
 .B -chunkbgnproc
-Name of the procedure that will be called before a file will be transfered by
+Name of the procedure that will be called before a file will be transferred by
 ftp, it should match the following prototype:
 .sp
 .B ChunkBgnProc {remains}
 .sp
 
-Where remains is the number of files left to be transfered (or skipped)
+Where remains is the number of files left to be transferred (or skipped)
 
 This callback makes sense only when using the \fB-wildcard\fP option.
 
 .TP
 .B -chunkbgnvar
 Name of the variable in the global scope that will contain the data of the file about
-to be transfered. If you don't use this option '::fileData' will be used.
+to be transferred. If you don't use this option '::fileData' will be used.
 
 The available data is: filename, filetype (file, directory, symlink, device block, device char,
 named pipe, socket, door or error if it couldn't be identified), time, perm, uid, gid, 
@@ -281,7 +281,7 @@ size, hardlinks and flags.
 
 .TP
 .B -chunkendproc
-Name of the procedure that will be called after a file is transfered (or skipped) 
+Name of the procedure that will be called after a file is transferred (or skipped) 
 by ftp, it should match the following prototype:
 .sp
 .B ChunkEndProc {}
@@ -406,7 +406,7 @@ Pass the type of  the  proxy. Available options are 'http', 'http1.0', 'socks4',
 
 If you set it to \fIhttp1.0\fP, it will only affect how libcurl speaks to a proxy
 when CONNECT is used. The HTTP version used for "regular" HTTP requests is instead
-controled with \fIhttpversion\fP.
+controlled with \fIhttpversion\fP.
 
 .TP
 .B -noproxy
@@ -966,7 +966,7 @@ It will be used to set a cookie in the http request. The format of
 the string should be '[NAME]=[CONTENTS];'. Where NAME is the cookie
 name and  CONTENTS is what the cookie should contain.
 
-If  you  need  to  set mulitple cookies, you need to set them all using
+If  you  need  to  set multiple cookies, you need to set them all using
 a single option and thus you need to concatenate them all in one single string.
 Set multiple cookies in one string like this: "name1=content1; name2=content2;"
 etc.
@@ -1032,7 +1032,7 @@ When setting \fBhttpget\fP to 1, \fBnobody\fP will automatically be set to 0.
 
 .TP
 .B -httpversion
-Set to one of the values decribed below, they force TclCurl to use the
+Set to one of the values described below, they force TclCurl to use the
 specific http versions. It should only be used if you really MUST do
 that because of a silly remote server.
 .RS
@@ -1477,7 +1477,7 @@ than or equal to the parameter value. Defaults to unlimited speed.
 .TP
 .B -maxconnects
 Sets the persistent connection cache size in all the protocols that support 
-persistent conecctions. The set amount will be the maximum amount of simultaneous
+persistent connections. The set amount will be the maximum amount of simultaneous
 connections that TclCurl may cache in this easy handle. Default is 5, and there
 isn't much point in changing this value unless you are perfectly aware of how this
 work and changes TclCurl's behaviour.
@@ -1567,7 +1567,7 @@ Do not attempt to use SSL
 Try using SSL, proceed anyway otherwise.
 .TP
 .B control
-Use SSL for the control conecction or fail with "use ssl failed" (64).
+Use SSL for the control connection or fail with "use ssl failed" (64).
 .TP
 .B all
 Use SSL for all communication or fail with "use ssl failed" (64).
@@ -1866,7 +1866,7 @@ To let TclCurl pick one
 .TP
 .B -sshhostpublickeymd5
 Pass a string containing 32 hexadecimal digits. The string should be the 128
-bit MD5 cheksum of the remote host public key, and TclCurl will reject the
+bit MD5 checksum of the remote host public key, and TclCurl will reject the
 connection to the host unless the md5sums match. This option is only for SCP
 and SFTP transfers.
 
@@ -1897,7 +1897,7 @@ callback will only be called if \fB-knownhosts\fP is also set.
 
 It gets passed a list with three elements, the first one is a list with the type of the
 key from the known_hosts file and the key itself, the second is another list with
-the type of the key from the remote site and the key itslef, the third tells you
+the type of the key from the remote site and the key itself, the third tells you
 what TclCurl thinks about the matching status. 
 
 The known key types are: "rsa", "rsa1" and "dss", in any other case "unknown" is given.
@@ -2055,7 +2055,7 @@ FTP can't get host. Couldn't resolve the host IP we got in the 227-line.
 FTP couldn't set type. Couldn't change transfer method to either binary or
 ascii.
 .IP 18
-Partial file. Only a part of the file was transfered, this happens when
+Partial file. Only a part of the file was transferred, this happens when
 the server first reports an expected transfer size and then delivers data
 that doesn't match the given size.
 .IP 19
@@ -2256,7 +2256,7 @@ negotiations that are specific to the particular protocol(s) involved.
 .TP
 .B starttransfertime
 Returns the time, in seconds, it took from the start until the first byte
-is just about to be transfered. This includes the \fBpretransfertime\fP,
+is just about to be transferred. This includes the \fBpretransfertime\fP,
 and also the time the server needs to calculate the result.
 
 .TP
@@ -2376,7 +2376,7 @@ proxy athentication.
 .TP
 .B oserrno
 Returns the errno value from a connect failure. This value is only set on
-failure, it is no reset after a successfull operation.
+failure, it is no reset after a successful operation.
 
 .TP
 .B cookielist
@@ -2519,7 +2519,7 @@ Returns the version of libcurl we are using.
 
 .TP
 .B -versionnum
-Retuns the version of libcurl we are using in hexadecimal with 8 bits for each
+Returns the version of libcurl we are using in hexadecimal with 8 bits for each
 part; major, minor, patch. So  that  libcurl 7.7.4 would appear as 070704 and
 libcurl 12.13.14 would appear as 0c0d0e... Note that the initial zero might be
 omitted.
