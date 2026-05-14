@@ -2,8 +2,9 @@
 .TH "TclCurl" "n" "12 April 2026" "TclCurl 8.0.1" "TclCurl Easy Interface"
 .SH NAME
 .LP
-TclCurl: - get  a  URL with FTP, FTPS, HTTP, HTTPS, SCP, SFTP, TFTP, TELNET,
-DICT, FILE, LDAP, LDAPS, IMAP, IMAPS, POP, POP3, SMTP, SMTPS and gopher syntax.
+TclCurl - Transfer data to and from URLs using FTP, FTPS, HTTP, HTTPS, SCP,
+SFTP, TFTP, TELNET, DICT, FILE, LDAP, LDAPS, IMAP, IMAPS, POP, POP3, SMTP,
+SMTPS, and GOPHER.
 .SH SYNOPSIS
 .LP
 .EX
@@ -11,39 +12,39 @@ curl::init
 .EE
 .LP
 .EX
-curlHandle  configure  ?options?
+curlHandle configure ?options?
 .EE
 .LP
 .EX
-curlHandle  perform
+curlHandle perform
 .EE
 .LP
 .EX
-curlHandle  getinfo  curlinfo_option
+curlHandle getinfo curlinfo_option
 .EE
 .LP
 .EX
-curlhandle  cleanup
+curlHandle cleanup
 .EE
 .LP
 .EX
-curlhandle  reset
+curlHandle reset
 .EE
 .LP
 .EX
-curlHandle  duphandle
+curlHandle duphandle
 .EE
 .LP
 .EX
-curlHandle  pause
+curlHandle pause
 .EE
 .LP
 .EX
-curlHandle  resume
+curlHandle resume
 .EE
 .LP
 .EX
-curl::transfer  ?options?
+curl::transfer ?options?
 .EE
 .LP
 .EX
@@ -51,115 +52,118 @@ curl::version
 .EE
 .LP
 .EX
-curl::escape  url
+curl::escape url
 .EE
 .LP
 .EX
-curl::unescape  url
+curl::unescape url
 .EE
 .LP
 .EX
-curl::curlConfig  option
+curl::curlConfig option
 .EE
 .LP
 .EX
-curl::versioninfo  option
+curl::versioninfo option
 .EE
 .LP
 .EX
-curl::easystrerror  errorCode
+curl::easystrerror errorCode
 .EE
 .SH DESCRIPTION
 .LP
 The TclCurl extension gives Tcl programmers access to the libcurl library
-written by \fBDaniel Stenberg\fR, with it you can download urls, upload them and
-many other neat tricks, for more information check \c
+written by \fBDaniel Stenberg\fR. With TclCurl, you can download from URLs,
+upload to them, and perform many other network transfer operations. For more
+information, see \c
 .UR http://curl.haxx.se
-.UE
+.UE \c
+\&.
 .SH curl::init
 .LP
-This procedure must be the first one to call, it returns a curlHandle that you
-need to use to invoke TclCurl procedures. The init calls initializes curl and
-this call MUST have a corresponding call to cleanup when the operation is
-completed. You should perform all your sequential file transfers using the same
-curlHandle. This enables TclCurl to use persistent connections when possible.
+This procedure must be called first. It returns a \f(CRcurlHandle\fR, which you use
+to invoke TclCurl procedures. Calling \f(CRinit\fR initializes TclCurl, and each
+call to \f(CRinit\fR MUST have a corresponding call to \f(CRcleanup\fR when the operation
+is complete.
+.PP
+You should perform all sequential file transfers using the same \f(CRcurlHandle\fR.
+This allows TclCurl to reuse persistent connections when possible.
 .PP
 \fBRETURN VALUE\fR
 .PP
-curlHandle to use.
+The \f(CRcurlHandle\fR to use.
 .SH curlHandle configure ?options?
 .LP
 \fBconfigure\fR
 .PP
-is called to set the options for the transfer. Most operations in TclCurl have
-default actions, and by using the appropriate options you can make them behave
-differently (as documented). All options are set with the \fIoption\fR followed by
-a parameter.
+is used to set the options for a transfer. Most operations in TclCurl have
+default behavior, and you can change that behavior by setting the appropriate
+options as documented. Each option is specified as the \fIoption\fR followed by a
+parameter.
 .PP
 \fBNotes:\fR
 .PP
-the options set with this procedure are valid for the forthcoming data
-transfers that are performed when you invoke perform
+The options set with this procedure apply to subsequent data transfers
+performed when you invoke \f(CRperform\fR.
 .PP
 The options are not reset between transfers (except where noted), so if you
 want subsequent transfers with different options, you must change them between
 the transfers. You can optionally reset all options back to the internal
 default with \fBcurlHandle reset\fR.
 .PP
-\f(CRcurlHandle\fR is the return code from the \f(CRcurl::init\fR call.
+\f(CRcurlHandle\fR is the value returned by the \f(CRcurl::init\fR call.
 .PP
 \fBOPTIONS\fR
 .SH Behaviour options
 .TP 3
--verbose
-Set the parameter to 1 to get the library to display a lot of verbose
-information about its operations. Very useful for libcurl and/or protocol
-debugging and understanding.
+\fB-verbose\fR
+Set this option to 1 to make the library display detailed
+information about its operations. This option is useful when debugging
+libcurl and protocol-related problems.
 .IP
-You hardly ever want this set in production use, you will almost always
-want this when you debug/report problems. Another neat option for debugging
-is
+You will rarely want to enable this in production, but it is often helpful
+when debugging or reporting problems. Another useful debugging option is
 .IP
 \fB-debugproc\fR
 .TP 3
--header
-A 1 tells the extension to include the headers in the body output. This is
-only relevant for protocols that actually have headers preceding the data
-(like HTTP).
+\fB-header\fR
+Set this option to 1 to include headers in the body output.
+This is relevant only for protocols that actually send headers before the
+data, such as HTTP.
 .TP 3
--noprogress
-A 1 tells the extension to turn on the progress meter completely. It will
-also prevent the \fIprogessproc\fR from getting called.
+\fB-noprogress\fR
+Set this option to 1 to disable the progress meter
+completely. It also prevents \fIprogressproc\fR from being called.
 .TP 3
--nosignal
-A 1 tells TclCurl not use any functions that install signal handlers or any
-functions that cause signals to be sent to the process. This option is
-mainly here to allow multi-threaded unix applications to still set/use all
-timeout options etc, without risking getting signals.
+\fB-nosignal\fR
+Set this option to 1 to make TclCurl avoid functions that
+install signal handlers or cause signals to be sent to the process. This
+option exists mainly so that multi-threaded Unix applications can still
+use timeout options without risking signal-related side effects.
 .IP
 If this option is set and libcurl has been built with the standard name
-resolver, timeouts will not occur while the name resolve takes place.
+resolver, timeouts will not occur while name resolution is in progress.
 Consider building libcurl with c-ares support to enable asynchronous DNS
-lookups, which enables nice timeouts for name resolves without signals.
+lookups, which allows proper timeouts for name resolution without signals.
 .IP
-Setting \fInosignal\fR to 1 makes libcurl NOT ask the system to ignore SIGPIPE
-signals, which otherwise are sent by the system when trying to send data to
-a socket which is closed in the other end. libcurl makes an effort to never
-cause such SIGPIPEs to trigger, but some operating systems have no way to
-avoid them and even on those that have there are some corner cases when
-they may still happen, contrary to our desire. In addition, using \fIntlm_Wb\fR
-authentication could cause a SIGCHLD signal to be raised.
+Setting \fInosignal\fR to 1 makes libcurl stop asking the system to ignore
+SIGPIPE signals. Such signals may otherwise be sent by the system when
+data is written to a socket that has been closed by the peer. libcurl
+tries to avoid triggering SIGPIPE, but some operating systems provide no
+reliable way to prevent it, and even on those that do, some corner cases
+remain. In addition, using \fIntlm_Wb\fR authentication may cause a SIGCHLD
+signal to be raised.
 .TP 3
--wildcard
-Set this option to 1 if you want to transfer multiple files according to a
+\fB-wildcard\fR
+Set this option to 1 to transfer multiple files that match a
 file name pattern. The pattern can be specified as part of the \fB-url\fR
-option, using an fnmatch-like pattern (Shell Pattern Matching) in the last
-part of URL (file name).
+option, using an fnmatch-like pattern (shell pattern matching) in the last
+part of the URL, that is, the file name.
 .IP
 By default, TclCurl uses its internal wildcard matching implementation. You
-can provide your own matching function by the \fB-fnmatchproc\fR option.
+can provide your own matching function with the \fB-fnmatchproc\fR option.
 .IP
-This feature is only supported by the FTP download for now.
+At present, this feature is supported only for FTP downloads.
 .IP
 A brief introduction of its syntax follows:
 .RS
@@ -167,16 +171,13 @@ A brief introduction of its syntax follows:
 * - ASTERISK
 .RE
 .IP
-.UR ftp://example.com/some/path/***.txt**
-.UE
-(for all txt\(cqs from the root
+\f(CRftp://example.com/some/path/***.txt**\fR (for all \f(CR.txt\fR files from the root
 directory)
 - ? - QUESTION MARK
 .IP
-Question mark matches any (exactly one) character.
+The question mark matches any single character.
 .IP
-.UR ftp://example.com/some/path/**photo?.jpeg**
-.UE
+\f(CRftp://example.com/some/path/**photo?.jpeg**\fR
 - [ - BRACKET EXPRESSION
 .IP
 The left bracket opens a bracket expression. The question mark and asterisk
@@ -201,53 +202,51 @@ characters have no special purpose.
 .IP
 Using the rules above, a file name pattern can be constructed:
 .IP
-.UR ftp://example.com/some/path/**[a-z[:upper:]%5C%5C%5C%5C].jpeg**
-.UE
+\f(CRftp://example.com/some/path/**[a-z[:upper:]\e\e\e\e].jpeg**\fR
 .SH Callback options
 .TP 3
--writeproc
-Use it to set a Tcl procedure that will be invoked by TclCurl as soon as
-there is received data that needs to be saved. The procedure will receive a
-single parameter with the data to be saved.
+\fB-writeproc\fR
+Sets a Tcl procedure that TclCurl invokes whenever received data is
+available to be handled. The callback procedure must have a single
+argument. When the procedure is invoked, that argument refers to the
+contents of a data buffer managed by libcurl.
 .IP
-NOTE: you will be passed as much data as possible in all invokes, but you
-cannot possibly make any assumptions. It may be nothing if the file is
-empty or it may be thousands of bytes.
+NOTE: The amount of data passed on each invocation is not fixed. The
+callback may be invoked with an empty buffer, or with a buffer containing
+a large amount of data.
 .TP 3
--file
+\fB-file\fR
 File in which the transferred data will be saved.
 .TP 3
--readproc
-Sets a Tcl procedure to be called by TclCurl as soon as it needs to read
-data in order to send it to the peer. The procedure has to take one
-parameter, which will contain the maximun numbers of bytes to read. It
-should return the actual number of bytes read, or \(oq0\(cq if you want to stop
-the transfer.
+\fB-readproc\fR
+Sets a Tcl procedure that TclCurl calls whenever it needs to read data to
+send to the peer. The procedure must take one parameter, which contains the
+maximum number of bytes to read. It should return the actual number of
+bytes read, or \f(CR0\fR if you want to stop the transfer.
 .IP
-If you stop the current transfer by returning 0 \(lqpre-maturely\(rq (i.e before
-the server expected it, like when you\(cqve said you will upload N bytes and
-you upload less than N bytes), you may experience that the server \(lqhangs\(rq
-waiting for the rest of the data that won\(cqt come.
+If you stop the current transfer by returning \f(CR0\fR prematurely, for example
+after indicating that you would upload \fIN\fR bytes but uploading fewer than
+\fIN\fR, the server may appear to hang while waiting for the remaining data.
 .IP
-Bugs: when doing TFTP uploads, you must return the exact amount of data
-that the callback wants, or it will be considered the final packet by the
-server end and the transfer will end there.
+When doing TFTP uploads, you must return exactly the amount of data
+requested by the callback. Otherwise, the server may treat it as the final
+packet and end the transfer.
 .TP 3
--infile
+\fB-infile\fR
 File from which the data will be transferred.
 .TP 3
--progressproc
-Name of the Tcl procedure that will invoked by TclCurl  with a frequent
-interval during operation (roughly once per second or sooner), no matter if
-data is being transferred or not.  Unknown/unused argument values passed to
-the callback will be set to zero (like if you only download data, the
-upload size will remain 0), the prototype of the procedure must be:
+\fB-progressproc\fR
+Name of the Tcl procedure that TclCurl invokes at regular intervals during
+an operation, roughly once per second or more often, whether or not data is
+currently being transferred. Unknown or unused argument values passed to
+the callback are set to zero. For example, if you only download data, the
+upload size remains \f(CR0\fR. The procedure must have the following prototype:
 .IP
 \fBproc ProgressCallback {dltotal dlnow ultotal ulnow}\fR
 .IP
-In order to this option to work you have to set the \fBnoprogress\fR option
-to \(oq0\(cq. Setting this option to the empty string will restore the original
-progress function.
+For this option to work, you must set the \fB-noprogress\fR option to \f(CR0\fR.
+Setting this option to the empty string restores the original progress
+function.
 .IP
 If you transfer data with the multi interface, this procedure will not be
 called during periods of idleness unless you call the appropriate procedure
@@ -256,247 +255,245 @@ that performs transfers.
 You can pause and resume a transfer from within this procedure using the
 \fBpause\fR and \fBresume\fR commands.
 .TP 3
--writeheader
-Pass a the file name to be used to write the header part of the received
-data to. The headers are guaranteed to be written one-by-one to this file
-and only complete lines are written. Parsing headers should be easy enough
-using this.
+\fB-writeheader\fR
+Pass the file name to which the header part of the received data will be
+written. Headers are written to this file one by one, and only complete
+lines are written. This makes header parsing straightforward.
 .IP
 See also the \fB-headervar\fR option to get the headers into an array.
 .TP 3
--debugproc
-Name of the procedure that will receive the debug data produced by the
-\fB-verbose\fR option, it should match the following prototype:
+\fB-debugproc\fR
+Name of the procedure that receives the debug data produced by the
+\fB-verbose\fR option. The callback procedure must have two arguments:
 .IP
 \fBdebugProc {infoType data}\fR
 .IP
-where \fBinfoType\fR specifies what kind of information it is (0 text, 1
-incoming header, 2 outgoing header, 3 incoming data, 4 outgoing data, 5
-incoming SSL data, 6 outgoing SSL data).
+The \fBinfoType\fR argument identifies the kind of debug information:
+\f(CR0\fR text, \f(CR1\fR incoming header, \f(CR2\fR outgoing header, \f(CR3\fR incoming data,
+\f(CR4\fR outgoing data, \f(CR5\fR incoming SSL data, and \f(CR6\fR outgoing SSL data.
+The \fBdata\fR argument contains the corresponding data buffer.
 .TP 3
--chunkbgnproc
-Name of the procedure that will be called before a file will be transferred
-by ftp, it should match the following prototype:
+\fB-chunkbgnproc\fR
+Name of the procedure that is called before a file is transferred by FTP.
+The callback procedure must have one argument:
 .IP
 \fBChunkBgnProc {remains}\fR
 .IP
-Where remains is the number of files left to be transferred (or skipped)
+The \fIremains\fR argument is the number of files left to be transferred or
+skipped.
 .IP
 This callback makes sense only when using the \fB-wildcard\fR option.
 .TP 3
--chunkbgnvar
-Name of the variable in the global scope that will contain the data of the
-file about to be transferred. If you don\(cqt use this option \(oq::fileData\(cq will
-be used.
+\fB-chunkbgnvar\fR
+Name of the variable in the global scope that will contain the data for the
+file about to be transferred. If you do not use this option, \f(CR::fileData\fR
+is used.
 .IP
-The available data is: filename, filetype (file, directory, symlink, device
-block, device char, named pipe, socket, door or error if it couldn\(cqt be
-identified), time, perm, uid, gid, size, hardlinks and flags.
+The available data is: \f(CRfilename\fR, \f(CRfiletype\fR (\f(CRfile\fR, \f(CRdirectory\fR,
+\f(CRsymlink\fR, \f(CRdevice block\fR, \f(CRdevice char\fR, \f(CRnamed pipe\fR, \f(CRsocket\fR, \f(CRdoor\fR,
+or \f(CRerror\fR if it could not be identified), \f(CRtime\fR, \f(CRperm\fR, \f(CRuid\fR, \f(CRgid\fR,
+\f(CRsize\fR, \f(CRhardlinks\fR, and \f(CRflags\fR.
 .TP 3
--chunkendproc
-Name of the procedure that will be called after a file is transferred (or
-skipped) by ftp, it should match the following prototype:
+\fB-chunkendproc\fR
+Name of the procedure that is called after a file has been transferred or
+skipped by FTP. The callback procedure takes no arguments:
 .IP
 \fBChunkEndProc {}\fR
 .IP
-It should return \(oq0\(cq if everyhting is fine and \(oq1\(cq if some error occurred.
+It should return \f(CR0\fR if everything is fine and \f(CR1\fR if an error occurred.
 .TP 3
--fnmatchProc
-Name of the procedure that will be called instead of the internal wildcard
-matching function, it should match the following prototype:
+\fB-fnmatchProc\fR
+Name of the procedure that is called instead of the internal wildcard
+matching function. The callback procedure must have two arguments:
 .IP
 \fBFnMatchProc {pattern string}\fR
 .IP
-Returns \(oq0\(cq if it matches, \(oq1\(cq if it doesn\(cqt.
+The \fIpattern\fR argument contains the pattern to be matched. The \fIstring\fR
+argument contains the candidate string. The procedure must return \f(CR0\fR if
+the string matches the pattern and \f(CR1\fR otherwise.
 .SH Error Options
 .TP 3
--errorbuffer
-Pass a variable name where TclCurl may store human readable error messages
-in. This may be more helpful than just the return code from the command.
+\fB-errorbuffer\fR
+Pass the name of a variable in which TclCurl may store human-readable
+error messages. This can provide more information than the command return
+code alone.
 .TP 3
--stderr
-Pass a file name as parameter. This is the stream to use internally instead
-of stderr when reporting errors.
+\fB-stderr\fR
+Pass a file name. TclCurl uses this stream instead of \f(CRstderr\fR when
+reporting errors.
 .TP 3
--failonerror
-A 1 parameter tells the extension to fail silently if the HTTP code
-returned is equal or larger than 400. The default action would be to return
-the page normally, ignoring that code.
+\fB-failonerror\fR
+Set this option to 1 to make the transfer fail if the returned HTTP status
+code is 400 or greater. By default, TclCurl returns the page normally and
+does not treat such status codes as transfer errors.
 .IP
-This method is not fail-safe and there are occasions where non-successful
-response codes will slip through, especially when authentication is
-involved (response codes 401 and 407).
+This behavior is not fail-safe, and in some cases non-successful response
+codes may still pass through, especially when authentication is involved,
+as with status codes 401 and 407.
 .IP
-You might get some amounts of headers transferred before this situation is
-detected, like for when a \(lq100-continue\(rq is received as a response to a
-POST/PUT and a 401 or 407 is received immediately afterwards.
+Some header data may be transferred before this condition is detected. For
+example, a \f(CR100-continue\fR response may be received for a POST or PUT
+request before a subsequent \f(CR401\fR or \f(CR407\fR response is returned.
 .SH Network options
 .TP 3
--url
-The actual URL to deal with.
+\fB-url\fR
+The URL to use for the transfer.
 .IP
-If the given URL lacks the protocol part (\(lq or \(lqftp://\(rq etc), it
-will attempt to guess which protocol to use based on the given host name.
-If the given protocol of the set URL is not supported, TclCurl will return
-the \fBunsupported protocol\fR error when you call \fBperform\fR. Use
-\fBcurl::versioninfo\fR for detailed info on which protocols are supported.
+If the URL does not include a protocol part, such as \f(CRhttp://\fR or
+\f(CRftp://\fR, TclCurl attempts to guess the protocol from the host name.
+If the protocol specified in the URL is not supported, TclCurl returns the
+\fBunsupported protocol\fR error when you call \fBperform\fR. Use
+\fBcurl::versioninfo\fR for detailed information about the supported
+protocols.
 .IP
-Starting with version 7.22.0, the fragment part of the URI will not be send
-as part of the path, which was the case previously.
+Starting with version 7.22.0, the fragment part of the URI is no longer
+sent as part of the path, unlike earlier versions.
 .IP
-\fBNOTE\fR: this is the one option required to be set before \fBperform\fR is
+\fBNOTE\fR: This is the only option that must be set before \fBperform\fR is
 called.
 .TP 3
--protocols
-Pass a list in lowecase of protocols to limit what protocols TclCurl may
-use in the transfer. This allows you to have a TclCurl built to support a
-wide range of protocols but still limit specific transfers to only be
-allowed to use a subset of them.
+\fB-protocols\fR
+Pass a lowercase list of protocols to limit which protocols TclCurl may
+use for the transfer. This allows a TclCurl build that supports a wide
+range of protocols to be restricted for specific transfers to a subset of
+them.
 .IP
-Accepted protocols are \(oqhttp\(cq, \(oqhttps\(cq, \(oqftp\(cq, \(oqftps\(cq, \(oqscp\(cq, \(oqsftp\(cq,
-\(oqtelnet\(cq, \(oqldap\(cq, \(oqldaps\(cq, \(oqdict\(cq, \(oqfile\(cq,\(cqtftp\(cq, \(oqimap\(cq, \(oqimaps\(cq, \(oqpop\(cq,
-\(oqpop3\(cq, \(oqsmtp\(cq, \(oqsmtps\(cq, \(oqgopher\(cq and \(oqall\(cq.
+Accepted protocols are \f(CRhttp\fR, \f(CRhttps\fR, \f(CRftp\fR, \f(CRftps\fR, \f(CRscp\fR, \f(CRsftp\fR,
+\f(CRtelnet\fR, \f(CRldap\fR, \f(CRldaps\fR, \f(CRdict\fR, \f(CRfile\fR, \f(CRtftp\fR, \f(CRimap\fR, \f(CRimaps\fR,
+\f(CRpop\fR, \f(CRpop3\fR, \f(CRsmtp\fR, \f(CRsmtps\fR, \f(CRgopher\fR, and \f(CRall\fR.
 .TP 3
--redirprotocols
-Pass a list in lowercase of accepted protocols to limit what protocols
-TclCurl may use in a transfer that it follows to in a redirect when
-\fB-followlocation\fR is enabled. This allows you to limit specific transfers
-to only be allowed to use a subset of protocols in redirections.
+\fB-redirprotocols\fR
+Pass a lowercase list of accepted protocols to limit which protocols
+TclCurl may use when following a redirect with \fB-followlocation\fR
+enabled. This allows specific transfers to be restricted to a subset of
+protocols for redirections.
 .IP
-By default TclCurl will allow all protocols except for FILE and SCP. This
-is a difference compared to pre-7.19.4 versions which unconditionally would
-follow to all protocols supported.
+By default, TclCurl allows all protocols except \f(CRFILE\fR and \f(CRSCP\fR. This
+differs from versions before 7.19.4, which would follow redirects to all
+supported protocols unconditionally.
 .TP 3
--proxy
-If you need to use a http proxy to access the outside world, set the proxy
-string with this option. To specify port number in this string, append
-:[port] to the end of the host name. The proxy string may be prefixed with
-[protocol]:// since any such prefix will be ignored.
+\fB-proxy\fR
+If you need to use an HTTP proxy, set the proxy string with this option.
+To specify a port number in the string, append \f(CR:[port]\fR to the end of
+the host name. The proxy string may be prefixed with \f(CR[protocol]://\fR,
+although such a prefix is ignored unless noted otherwise below.
 .IP
-When you tell the extension to use a HTTP proxy, TclCurl will transparently
-convert operations to HTTP even if you specify a FTP URL etc. This may have
-an impact on what other features of the library you can use, such as
-\fBquote\fR and similar FTP specifics that will not work unless you tunnel
-through the HTTP proxy. Such tunneling is activated with \fBproxytunnel\fR.
+When you configure an HTTP proxy, TclCurl transparently converts
+operations to HTTP even if you specify an FTP URL or another protocol.
+This may affect which library features are available. For example,
+\fBquote\fR and similar FTP-specific features do not work unless you tunnel
+through the HTTP proxy. Such tunneling is enabled with \fB-proxytunnel\fR.
 .IP
-TclCurl respects the environment variables http\fIproxy, ftp\fRproxy, all_proxy
-etc, if any of those are set. The use of this option does however override
-any possibly set environment variables.
+TclCurl respects the environment variables \f(CRhttp_proxy\fR, \f(CRftp_proxy\fR,
+\f(CRall_proxy\fR, and others of the same kind, if they are set. Using this
+option overrides any such environment variables.
 .IP
-Setting the proxy string to \(lq\(lq (an empty string) will explicitly disable
-the use of a proxy, even if there is an environment variable set for it.
+Setting the proxy string to \f(CR\(dq\(dq\fR explicitly disables proxy use, even if a
+corresponding environment variable is set.
 .IP
-The proxy host string can be specified the exact same way as the proxy
-environment variables, include protocol prefix (\c
-.UR http://)
-.UE
-and embedded
-user + password.
+The proxy host string can be specified in the same way as the proxy
+environment variables, including a protocol prefix such as \f(CRhttp://\fR and
+embedded user name and password information.
 .IP
-Since 7.22.0, the proxy string may be specified with a protocol:// prefix
-to specify alternative proxy protocols. Use socks4://, socks4a://,
-socks5:// or socks5h:// (the last one to enable socks5 and asking the proxy
-to do the resolving) to request the specific SOCKS version to be used. No
-protocol specified, http:// and all others will be treated as HTTP proxies.
+Since 7.22.0, the proxy string may include a \f(CRprotocol://\fR prefix to
+specify alternative proxy protocols. Use \f(CRsocks4://\fR, \f(CRsocks4a://\fR,
+\f(CRsocks5://\fR, or \f(CRsocks5h://\fR to request a specific SOCKS version. The
+last form enables SOCKS5 and asks the proxy to perform name resolution.
+If no protocol is specified, and for \f(CRhttp://\fR and all other prefixes,
+the proxy is treated as an HTTP proxy.
 .TP 3
--proxyport
-Use this option to set the proxy port to use unless it is specified in the
-proxy string by \fB-proxy\fR. If not specified, TclCurl will default to using
-port 1080 for proxies.
+\fB-proxyport\fR
+Use this option to set the proxy port unless it is already specified in
+the proxy string passed with \fB-proxy\fR. If not specified, TclCurl uses
+port \f(CR1080\fR by default.
 .TP 3
--proxytype
-Pass the type of  the  proxy. Available options are \(oqhttp\(cq, \(oqhttp1.0\(cq,
-\(oqsocks4\(cq, \(oqsocks4a\(cq, \(oqsocks5\(cq and \(oqsocks5h\(cq, with the HTTP one being the
-default.
+\fB-proxytype\fR
+Pass the proxy type. Available values are \f(CRhttp\fR, \f(CRhttp1.0\fR, \f(CRsocks4\fR,
+\f(CRsocks4a\fR, \f(CRsocks5\fR, and \f(CRsocks5h\fR. The default is \f(CRhttp\fR.
 .IP
 If you set it to \fIhttp1.0\fR, it will only affect how libcurl speaks to a
-proxy when CONNECT is used. The HTTP version used for \(lqregular\(rq HTTP
-requests is instead controlled with \fIhttpversion\fR.
+proxy when CONNECT is used. The HTTP version used for ordinary HTTP
+requests is instead controlled by \fIhttpversion\fR.
 .TP 3
--noproxy
-Pass a string, a comma-separated list of hosts which do not use a proxy, if
-one is specified. The only wildcard is a single * character, which matches
-all hosts, and effectively disables the proxy. Each name in this list is
-matched as either a domain which contains the hostname, or the hostname
-itself. For example, local.com would match local.com, local.com:80, and
-.UR http://www.local.com
-.UE \c
-, but not \c
-.UR http://www.notlocal.com
-.UE \c
-\&.
+\fB-noproxy\fR
+Pass a string containing a comma-separated list of hosts that should not
+use a proxy, if one is specified. The only wildcard is a single \f(CR*\fR
+character, which matches all hosts and effectively disables the proxy.
+Each name in this list is matched either as a domain containing the host
+name, or as the host name itself. For example, \f(CRlocal.com\fR matches
+\f(CRlocal.com\fR, \f(CRlocal.com:80\fR, and \f(CRwww.local.com\fR, but not
+\f(CRwww.notlocal.com\fR.
 .TP 3
--httpproxytunnel
-Set the parameter to 1 to get the extension to tunnel all non-HTTP
-operations through the given HTTP proxy. Do note that there is a big
-difference between using a proxy and tunneling through it. If you don\(cqt
-know what this means, you probably don\(cqt want this tunnel option.
+\fB-httpproxytunnel\fR
+Set this option to 1 to tunnel all non-HTTP operations through the given
+HTTP proxy. Using a proxy and tunneling through a proxy are different
+behaviors. This option should be enabled only when that distinction is
+required.
 .TP 3
--socks5gssapiservice
-Pass the name of the service. The default service name for a SOCKS5 server
-is rcmd/server-fqdn. This option allows you to change it.
+\fB-socks5gssapiservice\fR
+Pass the service name. The default service name for a SOCKS5 server is
+\f(CRrcmd/server-fqdn\fR. This option allows you to change it.
 .TP 3
--socks5gssapinec
-Pass a 1 to enable or 0 to disable. As part of the gssapi negotiation a
-protection mode is negotiated. The rfc1961 says in section 4.3/4.4 it
-should be protected, but the NEC reference implementation does not. If
-enabled, this option allows the unprotected exchange of the protection mode
-negotiation.
+\fB-socks5gssapinec\fR
+Pass \f(CR1\fR to enable this option or \f(CR0\fR to disable it. As part of the
+GSSAPI negotiation, a protection mode is negotiated. RFC 1961 specifies in
+sections 4.3 and 4.4 that this exchange should be protected, but the NEC
+reference implementation does not do so. When enabled, this option allows
+the protection mode negotiation to be exchanged unprotected.
 .TP 3
--interface
-Pass the interface name to use as outgoing network interface. The name can
-be an interface name, an IP address or a host name.
+\fB-interface\fR
+Pass the interface name to use as the outgoing network interface. The name
+may be an interface name, an IP address, or a host name.
 .TP 3
--localport
-This sets the local port number of the socket used for connection. This can
-be used in combination with \fB-interface\fR and you are recommended to use
-\fBlocalportrange\fR as well when this is set. Valid port numbers are 1 -
-65535.
+\fB-localport\fR
+Sets the local port number of the socket used for the connection. This can
+be used together with \fB-interface\fR, and it is recommended to use
+\fB-localportrange\fR as well when this option is set. Valid port numbers
+are \f(CR1\fR through \f(CR65535\fR.
 .TP 3
--localportrange
-This is the number of attempts TclCurl should do to find a working local
-port number. It starts with the given \fB-localport\fR and adds one to the
-number for each retry. Setting this value to 1 or below will make TclCurl
-do only one try for each port number. Port numbers by nature are a scarce
-resource that will be busy at times so setting this value to something too
-low might cause unnecessary connection setup failures.
+\fB-localportrange\fR
+Number of attempts TclCurl should make to find a working local port
+number. It starts with the port specified by \fB-localport\fR and increments
+it by one for each retry. Setting this value to \f(CR1\fR or less makes TclCurl
+try only one port number. Because port numbers are a limited resource and
+may already be in use, setting this value too low may cause unnecessary
+connection setup failures.
 .TP 3
--dnscachetimeout
-Pass the timeout in seconds. Name resolves will be kept in memory for this
-number of seconds. Set to \(oq0\(cq to completely disable caching, or \(oq-1\(cq to
-make the cached entries remain forever. By default, TclCurl caches this
-info for 60 seconds.
+\fB-dnscachetimeout\fR
+Pass the timeout in seconds. Name resolution results are kept in memory
+for this number of seconds. Set this option to \f(CR0\fR to disable caching
+completely, or to \f(CR-1\fR to keep cached entries indefinitely. By default,
+TclCurl caches this information for \f(CR60\fR seconds.
 .IP
-The name resolve functions of various libc implementations don\(cqt re-read
-name server information unless explicitly told so (for example, by calling
-\fIres_init(3)\fR). This may cause TclCurl to keep using the older server even
-if DHCP has updated the server info, and this may look like a DNS cache
-issue.
+The name resolution functions in various libc implementations do not
+re-read name server information unless explicitly told to do so, for
+example by calling \fIres_init(3)\fR. As a result, TclCurl may continue to use
+older server information even after DHCP has updated it, which may appear
+to be a DNS cache issue.
 .TP 3
--dnsuseglobalcache
-If the value passed is 1, it tells TclCurl to use a global DNS cache that
-will survive between curl handles creations and deletions. This is not
-thread-safe as it uses a global varible. \fIThis option was deprecated in
-libcurl v7.11.1 and removed by default in tclcurl build. See README.md
-for instructions on how to re-enable this option\fR
+\fB-dnsuseglobalcache\fR
+If this option is set to \f(CR1\fR, TclCurl uses a global DNS cache that
+survives the creation and deletion of curl handles. This is not
+thread-safe because it relies on a global variable. \fIThis option was
+deprecated in libcurl v7.11.1 and is disabled by default in the TclCurl
+build. See \f(CIREADME.md\fI for instructions on how to re-enable it.\fR
 .IP
-\fBWARNING:\fR this option is considered obsolete. Stop using it. Switch over
-to using the share interface instead! See \fItclcurl_share\fR.
+\fBWARNING:\fR This option is obsolete. Use the share interface instead. See
+\fItclcurl_share\fR.
 .TP 3
--buffersize
-Pass your preferred size for the receive buffer in TclCurl. The main point
-of this would be that the write callback gets called more often and with
-smaller chunks. This is just treated as a request, not an order. You cannot
-be guaranteed to actually get the given size.
+\fB-buffersize\fR
+Pass the preferred size for the TclCurl receive buffer. A smaller buffer
+may cause the write callback to be invoked more often with smaller chunks.
+This value is treated as a request, not as a guarantee.
 .TP 3
--port
-Pass the number specifying what remote port to connect to, instead of the
-one specified in the URL or the default port for the used protocol.
+\fB-port\fR
+Pass the remote port number to connect to instead of the port specified
+in the URL or the default port for the protocol in use.
 .TP 3
--tcpnodelay
-Pass a number to specify whether the TCP_NODELAY option should be set or
-cleared (1 = set, 0 = clear). The option is cleared by default. This will
-have no effect after the connection has been established.
+\fB-tcpnodelay\fR
+Pass a number to specify whether the \f(CRTCP_NODELAY\fR option should be set or
+cleared (\f(CR1\fR = set, \f(CR0\fR = clear). This option is cleared by default. It
+has no effect after the connection has been established.
 .IP
 Setting this option will disable TCP\(cqs Nagle algorithm. The purpose of this
 algorithm is to try to minimize the number of small packets on the network
@@ -509,58 +506,56 @@ telnet or rlogin) small segments may need to be sent without delay. This is
 less efficient than sending larger amounts of data at a time, and can
 contribute to congestion on the network if overdone.
 .TP 3
--addressscope
-Pass a number specifying the scope_id value to use when connecting to IPv6
-link-local or site-local addresses.
+\fB-addressscope\fR
+Pass a number specifying the \f(CRscope_id\fR value to use when connecting to
+IPv6 link-local or site-local addresses.
 .SH Names and Passwords options
 .TP 3
--netrc
-A 1 parameter tells the extension to scan your \fB\(ti/.netrc\fR file to find
-user name and password for the remote site you are about to access. Do note
-that TclCurl does not verify that the file has the correct properties set
-(as the standard unix ftp client does), and that only machine name, user
-name and password is taken into account (init macros and similar things are
-not supported).
+\fB-netrc\fR
+Set this option to make TclCurl scan your \fB\(ti/.netrc\fR file for the user
+name and password of the remote site you are about to access. TclCurl does
+not verify that the file has the correct properties set, as the standard
+Unix \f(CRftp\fR client does. Only machine name, user name, and password are
+taken into account; \f(CRinit\fR macros and similar entries are not supported.
 .IP
-You can set it to the following values:
+Accepted values:
 .RS
 .TP 3
-optional
-The use of your \(ti/.netrc file is optional, and information in
-the URL is to be preferred. The file will be scanned with the host and user
-name (to find the password only) or with the host only, to find the first
-user name and password after that machine, which ever information is not
-specified in the URL.
+\f(CRoptional\fR
+Use of \fB\(ti/.netrc\fR is optional, and information in the URL takes
+precedence. The file is searched using the host and user name, to find
+the password only, or using the host name alone, to find the first
+user name and password for that machine, depending on which
+information is not specified in the URL.
 .RE
 .IP
-Undefined values of the option will have this effect.
+Undefined values for this option have the same effect.
 .RS
 .TP 3
-ignored
-The extension will ignore the file and use only the information
-in the URL. This is the default.
+\f(CRignored\fR
+TclCurl ignores the file and uses only the information in the URL.
+This is the default.
 .TP 3
-required
-This value tells the library that use of the file is required,
-to ignore the information in the URL, and to search the file with the host
-only.
+\f(CRrequired\fR
+TclCurl requires use of the file, ignores the information in the URL,
+and searches the file using the host name only.
 .RE
 .TP 3
--netrcfile
-Pass a string containing the full path name to the file you want to use as
-\&.netrc file. For the option to work, you have to set the \fBnetrc\fR option
-to \fBrequired\fR. If this option is omitted, and \fBnetrc\fR is set, TclCurl
-will attempt to find the a .netrc file in the current user\(cqs home
-directory.
+\fB-netrcfile\fR
+Pass a string containing the full path name of the file to use as the
+\f(CR.netrc\fR file. For this option to work, you must set \fB-netrc\fR to
+\fBrequired\fR. If this option is omitted and \fB-netrc\fR is set, TclCurl
+attempts to find a \f(CR.netrc\fR file in the current user\(cqs home directory.
 .TP 3
--userpwd
-Pass a string as parameter, which should be [username]:[password] to use
-for the connection. Use \fB-httpauth\fR to decide authentication method.
+\fB-userpwd\fR
+Pass a string in the form \f(CR[username]:[password]\fR to use for the
+connection. Use \fB-httpauth\fR to select the authentication method.
 .IP
-When using NTLM, you can set domain by prepending it to the user name and
-separating the domain and name with a forward (/) or backward slash (\e).
-Like this: \(lqdomain/user:password\(rq or \(lqdomain\euser:password\(rq. Some HTTP
-servers (on Windows) support this style even for Basic authentication.
+When using NTLM, you can specify a domain by prepending it to the user
+name and separating the domain and name with a forward slash (\f(CR/\fR) or
+backward slash (\f(CR\e\e\fR), for example \f(CRdomain/user:password\fR or
+\f(CRdomain\e\euser:password\fR. Some HTTP servers on Windows also support this
+form for Basic authentication.
 .IP
 When using HTTP and \fB-followlocation\fR, TclCurl might perform several
 requests to possibly different hosts. TclCurl will only send this user and
@@ -569,78 +564,75 @@ password information to hosts using the initial host name (unless
 hosts it will not send the user and password to those. This is enforced to
 prevent accidental information leakage.
 .TP 3
--proxyuserpwd
-Pass a string as parameter, which should be [username]:[password] to use
-for the connection to the HTTP proxy.
+\fB-proxyuserpwd\fR
+Pass a string in the form \f(CR[username]:[password]\fR to use for the
+connection to the HTTP proxy.
 .TP 3
--username
-Pass a string with the user name to use for the transfer. It sets the user
-name to be used in protocol authentication. You should not use this option
-together with the (older) \fB-userpwd\fR option.
+\fB-username\fR
+Pass a string containing the user name to use for the transfer. It sets
+the user name used in protocol authentication. This option should not be
+used together with the older \fB-userpwd\fR option.
 .IP
-In order to specify the password to be used in conjunction with the user
-name use the \fB-password\fR option.
+To specify the password to use together with the user name, use the
+\fB-password\fR option.
 .TP 3
--password
-Pass a string with the password to use for the transfer.
+\fB-password\fR
+Pass a string containing the password to use for the transfer.
 .IP
-It should be used in conjunction with the \fB-username\fR option.
+This option should be used together with \fB-username\fR.
 .TP 3
--proxyusername
-Pass a string with the user name to use for the transfer while connecting
-to Proxy.
+\fB-proxyusername\fR
+Pass a string containing the user name to use for the transfer while
+connecting to the proxy.
 .IP
-It should be used in same way as the \fB-proxyuserpwd\fR is used, except that
-it allows the username to contain a colon, like in the following example:
-\(lqsip:\c
-.MT user@example.com
-.ME \c
-\(rq.
+This option is used in the same way as \fB-proxyuserpwd\fR, except that it
+allows the user name to contain a colon, as in
+\f(CRsip:user@example.com\fR.
 .IP
-Note the \fB-proxyusername\fR option is an alternative way to set the user
-name while connecting to Proxy. It doesn\(cqt make sense to use them together.
+\fB-proxyusername\fR is an alternative way to set the user name while
+connecting to the proxy. It should not be used together with
+\fB-proxyuserpwd\fR.
 .TP 3
--proxypassword
-Pass a string with the password to use for the transfer while connecting to
-Proxy. It is meant to use together with \fB-proxyusername\fR.
+\fB-proxypassword\fR
+Pass a string containing the password to use for the transfer while
+connecting to the proxy. This option is intended to be used together with
+\fB-proxyusername\fR.
 .TP 3
--httpauth
-Set to the authentication method you want, the available ones are:
+\fB-httpauth\fR
+Set this option to the authentication method to use. Accepted values are:
 .RS
 .TP 3
-basic
-HTTP Basic authentication. This is the default choice, and the
-only method that is in widespread use and supported virtually everywhere.
-It sends the user name and password over the network in plain text, easily
-captured by others.
+\f(CRbasic\fR
+HTTP Basic authentication. This is the default choice and the only
+method in widespread use that is supported almost everywhere. It sends
+the user name and password over the network in plain text.
 .TP 3
-digest
-HTTP Digest authentication. Digest authentication is a more
-secure way to do authentication over public networks than the regular
-old-fashioned Basic method.
+\f(CRdigest\fR
+HTTP Digest authentication. Over public networks, this is generally
+more secure than Basic authentication.
 .TP 3
-digestie
-HTTP Digest authentication with an IE flavor. TclCurl will use
-a special \(lqquirk\(rq that IE is known to have used before version 7 and that
-some servers require the client to use.
+\f(CRdigestie\fR
+HTTP Digest authentication with an Internet Explorer-specific variant.
+TclCurl uses a compatibility behavior known to have been used by
+Internet Explorer before version 7 and still required by some servers.
 .TP 3
-gssnegotiate
-HTTP GSS-Negotiate authentication. The GSS-Negotiate
-method, also known as plain \(lqNegotiate\(rq,was designed by Microsoft and is
-used in their web applications. It is primarily meant as a support for
-Kerberos5 authentication but may be also used along with another
-authentication methods.
+\f(CRgssnegotiate\fR
+HTTP GSS-Negotiate authentication. This method, also known simply as
+\f(CRNegotiate\fR, was designed by Microsoft and is used in Microsoft web
+applications. It is primarily intended to support Kerberos 5
+authentication, but it may also be used with other authentication
+methods.
 .TP 3
-ntlm
-HTTP NTLM authentication. A proprietary protocol invented and used
-by Microsoft. It uses a challenge-response and hash concept similar to
-Digest, to prevent the password from being eavesdropped.
+\f(CRntlm\fR
+HTTP NTLM authentication. This is a proprietary protocol developed and
+used by Microsoft. It uses a challenge-response mechanism and hashing,
+similar to Digest, to avoid sending the password in clear text.
 .TP 3
-ntlmwb
-NTLM delegating to winbind helper. Authentication is performed
-by a separate binary application that is executed when needed. The name of
-the application is specified at libcurl\(cqs compile time but is typically
-/usr/bin/ntlm_auth.
+\f(CRntlmwb\fR
+NTLM delegated to the winbind helper. Authentication is performed by a
+separate binary application that is executed when needed. The name of
+that application is specified when libcurl is built, but it is
+typically \f(CR/usr/bin/ntlm_auth\fR.
 .RE
 .IP
 Note that libcurl will fork when necessary to run the winbind application
@@ -650,395 +642,419 @@ to be raised (regardless of whether \fB-nosignal\fR is set). This behavior is
 subject to change in future versions of libcurl.
 .RS
 .TP 3
-any
-TclCurl will automatically select the one it finds most secure.
+\f(CRany\fR
+TclCurl automatically selects the method it considers the most secure.
 .TP 3
-anysafe
-It may use anything but basic, TclCurl will automatically
-select the one it finds most secure.
+\f(CRanysafe\fR
+TclCurl may use any method except Basic and automatically selects the
+one it considers the most secure.
 .RE
 .TP 3
--tlsauthtype
-Use it to tell TclCurl which authentication method(s) you want it to use
-for TLS authentication.
+\fB-tlsauthtype\fR
+Selects the authentication method to use for TLS authentication.
+.IP
+Accepted values:
 .RS
 .TP 3
-tlsauthsrp
-TLS-SRP authentication. Secure Remote Password
-authentication for TLS is defined in RFC 5054 and provides mutual
-authentication if both sides have a shared secret. To use TLS-SRP, you must
-also set the \fB-tlsauthusername\fR and \fB-tlsauthpassword\fR options.
+\f(CRtlsauthsrp\fR
+Uses TLS-SRP authentication. Secure Remote Password authentication for
+TLS is defined in RFC 5054 and provides mutual authentication if both
+sides share a secret. To use this value, you must also set
+\fB-tlsauthusername\fR and \fB-tlsauthpassword\fR.
 .RE
 .IP
-You need to build libcurl with GnuTLS or OpenSSL with TLS-SRP support for
+libcurl must be built with GnuTLS or with OpenSSL support for TLS-SRP for
 this to work.
 .TP 3
--tlsauthusername
-Pass a string with the username to use for the TLS authentication method
-specified with the \fB-tlsauthtype\fR option. Requires that the
-\fB-tlsauthpassword\fR option also be set.
+\fB-tlsauthusername\fR
+Pass a string containing the user name to use for the TLS authentication
+method specified with \fB-tlsauthtype\fR. This option requires
+\fB-tlsauthpassword\fR to be set as well.
 .TP 3
--tlsauthpassword
-Pass a string with the password to use for the TLS authentication method
-specified with the \fB-tlsauthtype\fR option. Requires that the
-\fB-tlsauthusername\fR option also be set.
+\fB-tlsauthpassword\fR
+Pass a string containing the password to use for the TLS authentication
+method specified with \fB-tlsauthtype\fR. This option requires
+\fB-tlsauthusername\fR to be set as well.
 .TP 3
--proxyauth
-Use it to tell TclCurl which authentication method(s) you want it to use
-for your proxy authentication. Note that for some methods, this will induce
-an extra network round-trip. Set the actual name and password with the
-\fBproxyuserpwd\fR option.
+\fB-proxyauth\fR
+Use this option to tell TclCurl which authentication method to use for
+proxy authentication. For some methods, this causes an extra network
+round trip. Set the actual user name and password with
+\fB-proxyuserpwd\fR.
 .IP
 The methods are those listed above for the \fBhttpauth\fR option. As of this
 writing, only Basic and NTLM work.
 .SH HTTP options
 .TP 3
--autoreferer
-Pass an 1 parameter to enable this. When enabled, TclCurl will
-automatically set the Referer: field in requests where it follows a
-Location: redirect.
+\fB-autoreferer\fR
+Set this option to \f(CR1\fR to enable automatic updates of the \f(CRReferer:\fR
+header when TclCurl follows a \f(CRLocation:\fR redirect.
 .TP 3
--encoding
-Sets the contents of the Accept-Encoding: header sent in an HTTP request,
-and enables decoding of a response when a Content-Encoding: header is
-received.  Three encodings are supported: \fIidentity\fR, which does nothing,
-\fIdeflate\fR which requests the server to compress its response using the zlib
-algorithm, and \fIgzip\fR which requests the gzip algorithm.  Use \fIall\fR to send
-an Accept-Encoding: header containing all supported encodings.
+\fB-encoding\fR
+Sets the contents of the \f(CRAccept-Encoding:\fR header sent in an HTTP
+request, and enables decoding of a response when a \f(CRContent-Encoding:\fR
+header is received.
 .IP
-This is a request, not an order; the server may or may not do it.  This
-option must be set or else any unsolicited encoding done by the server is
-ignored. See the special file lib/README.encoding in libcurl docs for
+Accepted values:
+.RS
+.TP 3
+\f(CRidentity\fR
+Requests no encoding.
+.TP 3
+\f(CRdeflate\fR
+Requests compression using the zlib algorithm.
+.TP 3
+\f(CRgzip\fR
+Requests gzip compression.
+.TP 3
+\f(CRall\fR
+Sends an \f(CRAccept-Encoding:\fR header containing all supported
+encodings.
+.RE
+.IP
+This is a request, not a requirement; the server may or may not honor it.
+This option must be set or any unsolicited encoding used by the server is
+ignored. See \f(CRlib/README.encoding\fR in the libcurl documentation for
 details.
 .TP 3
--transferencoding
-Adds a request for compressed Transfer Encoding in the outgoing HTTP
-request. If the server supports this and so desires, it can respond with
-the HTTP response sent using a compressed Transfer-Encoding that will be
-automatically uncompressed by TclCurl on receival.
+\fB-transferencoding\fR
+Adds a request for compressed \f(CRTransfer-Encoding\fR in the outgoing HTTP
+request. If the server supports this and chooses to use it, the response
+may use a compressed \f(CRTransfer-Encoding\fR, which TclCurl then decompresses
+automatically when receiving the data.
 .IP
-Transfer-Encoding differs slightly from the Content-Encoding you ask for
-with \fB-encoding\fR in that a Transfer-Encoding is strictly meant to be for
-the transfer and thus MUST be decoded before the data arrives in the
-client. Traditionally, Transfer-Encoding has been much less used and
-supported by both HTTP clients and HTTP servers.
+\f(CRTransfer-Encoding\fR differs from the \f(CRContent-Encoding\fR requested with
+\fB-encoding\fR in that \f(CRTransfer-Encoding\fR applies strictly to the
+transfer and therefore must be decoded before the data reaches the client.
+Traditionally, \f(CRTransfer-Encoding\fR has been used less widely and is less
+consistently supported by HTTP clients and servers.
 .TP 3
--followlocation
-An 1 tells the library to follow any
+\fB-followlocation\fR
+Set this option to \f(CR1\fR to make TclCurl follow any
 .IP
-\fBLocation: header\fR
+\f(CRLocation:\fR header
 .IP
-that the server sends as part of a HTTP header.
+sent by the server as part of an HTTP response.
 .IP
-This means that the extension will re-send the  same request on the new
-location and follow new \fBLocation: headers\fR all the way until no more
-such headers are returned. \fB-maxredirs\fR can be used to limit the number
-of redirects TclCurl will follow.
+TclCurl resends the request to the new location and continues to follow
+further \f(CRLocation:\fR headers until no more are returned. Use
+\fB-maxredirs\fR to limit the number of redirects TclCurl follows.
 .IP
-Since 7.19.4, TclCurl can limit what protocols it will automatically
-follow. The accepted protocols are set with \fB-redirprotocols\fR and it
-excludes the FILE protocol by default.
+Since 7.19.4, TclCurl can also restrict which protocols it follows
+automatically. The accepted protocols are set with \fB-redirprotocols\fR.
+By default, the \f(CRFILE\fR protocol is excluded.
 .TP 3
--unrestrictedauth
-An 1 parameter tells the extension it can continue to  send authentication
-(user+password) when following locations, even when hostname changed. Note
-that  this is  meaningful  only  when setting \fB-followlocation\fR.
+\fB-unrestrictedauth\fR
+Set this option to \f(CR1\fR to allow TclCurl to continue sending authentication
+credentials when following redirects, even if the host name changes. This
+option is meaningful only when \fB-followlocation\fR is enabled.
 .TP 3
--maxredirs
-Sets the redirection limit. If that many redirections have been followed,
-the next redirect will cause an error. This option only makes sense if the
-\fB-followlocation\fR option is used at the same time. Setting the limit to 0
-will make libcurl refuse any redirect. Set it to -1 for an infinite number
-of redirects (which is the default)
+\fB-maxredirs\fR
+Sets the redirection limit. After that many redirects have been followed,
+the next redirect causes an error. This option is meaningful only when
+\fB-followlocation\fR is enabled. Set the limit to \f(CR0\fR to refuse all
+redirects. Set it to \f(CR-1\fR for an unlimited number of redirects, which is
+the default.
 .TP 3
 -postredir
-Controls how TclCurl acts on redirects after POSTs that get a 301, 302 or
-303 response back. A \(lq301\(rq parameter tells TclCurl to keep POST requests as
-POST when following a 301 redirect. Passing a \(lq302\(rq makes TclCurl maintain
-the request method after a 302 redirect, while \(lq303\(rq does the same for a
-303 redirect. \(lqall\(rq is a convenience string that activates all three
-behaviours.
+Controls how TclCurl acts on redirects after POST requests that receive a
+\f(CR301\fR, \f(CR302\fR, or \f(CR303\fR response. Accepted values are \f(CR301\fR, \f(CR302\fR, \f(CR303\fR,
+and \f(CRall\fR. The values \f(CR301\fR, \f(CR302\fR, and \f(CR303\fR make TclCurl preserve the
+POST request method for the corresponding redirect status code. The value
+\f(CRall\fR enables all three behaviors.
 .IP
-The non-RFC behaviour is ubiquitous in web browsers, so the extension does
-the conversion by default to maintain consistency. However, a server may
+The non-RFC behavior is common in web browsers, so TclCurl performs this
+conversion by default to maintain consistency. However, a server may
 require a POST to remain a POST after such a redirection.
 .IP
-This option is meaningful only when setting \fB-followlocation\fR
+This option is meaningful only when \fB-followlocation\fR is enabled.
 .IP
 The legacy alias \fB-post301\fR is accepted for compatibility and uses the
 same values.
 .TP 3
--put
-An 1 parameter tells the extension to use HTTP PUT a file. The file to put
-must be set with \fB-infile\fR and \fB-infilesize\fR.
+\fB-put\fR
+Set this option to \f(CR1\fR to make TclCurl upload a file using HTTP \f(CRPUT\fR. The
+file to upload must be specified with \fB-infile\fR and \fB-infilesize\fR.
 .IP
-This option is deprecated starting with version 0.12.1, you should use
+This option is deprecated as of version 0.12.1. Use
 \fB-upload\fR.
 .IP
 This option does not limit how much data TclCurl will actually send, as
 that is controlled entirely by what the read callback returns.
 .TP 3
--post
-An 1 parameter tells the library to do a regular HTTP post. This is a
-normal application/x-www-form-urlencoded kind, which is the most commonly
-used one by HTML forms. See the \fB-postfields\fR option for how to specify
-the data to post and \fB-postfieldsize\fR about how to set the data size.
+\fB-post\fR
+Set this option to \f(CR1\fR to make TclCurl perform a regular HTTP \f(CRPOST\fR
+request using the \f(CRapplication/x-www-form-urlencoded\fR format commonly used
+by HTML forms. Use \fB-postfields\fR to specify the data to post and
+\fB-postfieldsize\fR to specify its size.
 .IP
 Use the \fB-postfields\fR option to specify what data to post and
-\fB-postfieldsize\fR to set the data size. Optionally, you can provide data
-to POST using the \fB-readproc\fR options.
+\fB-postfieldsize\fR to set the data size. Optionally, you can also provide
+\f(CRPOST\fR data using \fB-readproc\fR.
 .IP
-You can override the default POST Content-Type: header by setting your own
+You can override the default \f(CRPOST\fR \f(CRContent-Type:\fR header by setting your own
 with \fB-httpheader\fR.
 .IP
-Using POST with HTTP 1.1 implies the use of a \(lqExpect: 100-continue\(rq
+Using \f(CRPOST\fR with HTTP 1.1 implies the use of an \f(CRExpect: 100-continue\fR
 header. You can disable this header with \fB-httpheader\fR as usual.
 .IP
-If you use POST to a HTTP 1.1 server, you can send data without knowing the
-size before starting the POST if you use chunked encoding. You enable this
-by adding a header like \(lqTransfer-Encoding: chunked\(rq with \fB-httpheader\fR.
-With HTTP 1.0 or without chunked transfer, you must specify the size in the
-request.
+If you use \f(CRPOST\fR with an HTTP 1.1 server, you can send data without
+knowing the size in advance by using chunked encoding. Enable this by
+adding a header such as \f(CRTransfer-Encoding: chunked\fR with \fB-httpheader\fR.
+With HTTP 1.0, or without chunked transfer encoding, you must specify the
+size in the request.
 .IP
-When setting \fBpost\fR to an 1 value, it will automatically set \fBnobody\fR
-to 0.
+Setting \fB-post\fR to \f(CR1\fR also sets \fB-nobody\fR to \f(CR0\fR.
 .IP
-NOTE: if you have issued a POST request and want to make a HEAD or GET
-instead, you must explicitly pick the new request type using \fB-nobody\fR or
-\fB-httpget\fR or similar.
+\fBNOTE:\fR If you have issued a \f(CRPOST\fR request and later want to make a
+\f(CRHEAD\fR or \f(CRGET\fR request instead, you must explicitly select the new
+request type with \fB-nobody\fR, \fB-httpget\fR, or a similar option.
 .TP 3
--postfields
-Pass a string as parameter, which should be the full data to post in a HTTP
-POST operation. You must make sure that the data is formatted the way you
-want the server to receive it. TclCurl will not convert or encode it for
-you. Most web servers will assume this data to be url-encoded.
+\fB-postfields\fR
+Pass a string containing the complete data to send in an HTTP \f(CRPOST\fR
+request. You must ensure that the data is formatted exactly as you want
+the server to receive it. TclCurl does not convert or encode it for you.
+Most web servers assume this data is URL-encoded.
 .IP
-This is a normal application/x-www-form-urlencoded  kind, which is the most
+This is the normal \f(CRapplication/x-www-form-urlencoded\fR form, which is the most
 commonly used one by HTML forms.
 .IP
 If you want to do a zero-byte POST, you need to set \fB-postfieldsize\fR
-explicitly to zero, as simply setting \fB-postfields\fR to NULL or \(lq\(lq just
-effectively disables the sending of the specified string. TclCurl will
-instead assume that the POST data will be sent using the read callback!
+explicitly to zero, because setting \fB-postfields\fR to \f(CRNULL\fR or \f(CR\(dq\(dq\fR
+effectively disables sending the specified string. TclCurl then assumes
+that the \f(CRPOST\fR data is supplied through the read callback.
 .IP
-Using POST with HTTP 1.1 implies the use of a \(lqExpect: 100-continue\(rq
+Using \f(CRPOST\fR with HTTP 1.1 implies the use of an \f(CRExpect: 100-continue\fR
 header. You can disable this header with \fB-httpheader\fR as usual.
 .IP
-\fBNote\fR: to make multipart/formdata posts (aka rfc1867-posts), check out
-\fB-httppost\fR option.
+\fBNOTE:\fR To make \f(CRmultipart/form-data\fR posts, see \fB-httppost\fR.
 .TP 3
--postfieldsize
-If you want to post data to the server without letting TclCurl do a
-strlen() to measure the data size, this option must be used. Also, when
-this option is used, you can post fully binary data which otherwise is
-likely to fail. If this size is set to zero, the library will use strlen()
-to get the data size.
+\fB-postfieldsize\fR
+Use this option to post data without letting TclCurl call \f(CRstrlen()\fR to
+determine the data size. This is also required if you want to post fully
+binary data, which would otherwise likely fail. If this size is set to
+zero, the library uses \f(CRstrlen()\fR to determine the data size.
 .TP 3
--httppost
-Tells TclCurl you want a multipart/formdata HTTP POST to be made and you
-instruct what data to pass on to the server through a \fBTcl list\fR.
+\fB-httppost\fR
+Makes TclCurl perform an HTTP \f(CRmultipart/form-data\fR \f(CRPOST\fR request. The
+data to send is described through a Tcl list.
 .IP
 \fBThis is the only case where the data is reset after a transfer.\fR
 .IP
-First, there are some basics you need to understand about
-multipart/formdata posts. Each part consists of at least a \fBNAME\fR and a
-\fBCONTENTS\fR part. If the part is made for file upload, there are also a
-stored \fBCONTENT-TYPE\fR and a \fBFILENAME\fR. Below, we\(cqll discuss which
-options set these properties in the parts you want to add to your post.
+Each part consists of at least a \fBNAME\fR and a \fBCONTENTS\fR part. If the
+part is used for file upload, it may also contain \fBCONTENT-TYPE\fR and
+\fBFILENAME\fR information.
 .IP
-The list must contain a \fB\(oqname\(cq\fR tag with the name of the section
-followed by a string with the name, there are three tags to indicate the
-value of the section: \fB\(oqvalue\(cq\fR followed by a string with the data to
-post, \fB\(oqfile\(cq\fR followed by the name of the file to post and
-\fB\(oqcontenttype\(cq\fR with the type of the data (text/plain, image/jpg, \[u2026]),
-you can also indicate a \fIfalse\fR file name with \fB\(oqfilename\(cq\fR, this is
-useful in case the server checks if the given file name is valid, for
-example, by testing if it starts with \(oqc:\e\(cq as any real file name does or
-if you want to include the full path of the file to post. You can also post
-the content of a variable as if it were a file with the options
-\fB\(oqbufferName\(cq\fR and \fB\(oqbuffer\(cq\fR or use \fB\(oqfilecontent\(cq\fR followed by a
-file name to read that file and use the contents as data.
+The list must contain a \fB\(oqname\(cq\fR tag followed by the section name. The
+section value can then be described with \fB\(oqvalue\(cq\fR, followed by a string
+containing the data to post, \fB\(oqfile\(cq\fR, followed by the name of the file
+to post, or \fB\(oqcontenttype\(cq\fR, followed by the content type
+(\f(CRtext/plain\fR, \f(CRimage/jpg\fR, and so on). You can also supply an alternate
+file name with \fB\(oqfilename\(cq\fR. This is useful if the server checks whether
+the provided file name is valid, or if you want to include the full path
+of the file being posted. You can also post the contents of a variable as
+if it were a file by using \fB\(oqbufferName\(cq\fR and \fB\(oqbuffer\(cq\fR, or use
+\fB\(oqfilecontent\(cq\fR followed by a file name to read that file and use its
+contents as data.
 .IP
-Should you need to specify extra headers for the form POST section, use
-\fB\(oqcontentheader\fR\(cq followed by a list with the headers to post.
+To specify additional headers for a form section, use \fB\(oqcontentheader\(cq\fR
+followed by a list of headers.
 .IP
-Please see \(oqhttpPost.tcl\(cq and \(oqhttpBufferPost.tcl\(cq for examples.
+See \f(CRhttpPost.tcl\fR and \f(CRhttpBufferPost.tcl\fR for examples.
 .IP
-If TclCurl can\(cqt set the data to post an error will be returned:
+Return values:
 .RS
 .TP 3
-1
+\f(CR1\fR
 If the memory allocation fails.
 .TP 3
-2
+\f(CR2\fR
 If one option is given twice for one form.
 .TP 3
-3
+\f(CR3\fR
 If an empty string was given.
 .TP 3
-4
+\f(CR4\fR
 If an unknown option was used.
 .TP 3
-5
-If the some form info is not complete (or error)
+\f(CR5\fR
+If some form information is incomplete or invalid.
 .TP 3
-6
+\f(CR6\fR
 If an illegal option is used in an array.
 .TP 3
-7
-TclCurl has no http support.
+\f(CR7\fR
+If TclCurl has no HTTP support.
 .RE
 .TP 3
--referer
-Pass a string as parameter. It will be used to set the \fBreferer\fR header
-in the http request sent to the remote server. This can be used to fool
-servers or scripts. You can also set any custom header with
-\fB-httpheader\fR.
-.TP 3
--useragent
-Pass a string as parameter. It will be used to set the \fBuser-agent:\fR
-header in the http request sent to the remote server. This can be used to
-fool servers or scripts. You can also set any custom header with
-\fB-httpheader\fR.
-.TP 3
--httpheader
-Pass a \fBlist\fR with the HTTP headers to pass to the server in your
-request. If you add a header that is otherwise generated and used by
-TclCurl internally, your added one will be used instead. If you add a
-header with no contents as in \(oqAccept:\(cq, the internally used header will
-just get disabled. Thus, using this option you can add new headers, replace
-and remove internal headers.
+\fB-referer\fR
+Pass a string to set the \f(CRReferer:\fR header in the HTTP request sent to the
+remote server.
 .IP
-The headers included in the linked list must not be CRLF-terminated,
-because TclCurl adds CRLF after each header item. Failure to comply with
-this will result in strange bugs because the server will most likely ignore
-part of the headers you specified.
+The \f(CRReferer:\fR header identifies the resource from which the target URI
+was obtained. Servers may use it for logging, analytics, backlink
+generation, caching decisions, or request-flow checks.
 .IP
-The first line in a request (containing the method, usually a GET or POST)
-is not a header and cannot be replaced using this option. Only the lines
-following the request-line are headers. Adding this method line in this
-list of headers will only cause your request to send an invalid header.
+This option is useful when a scripted client must reproduce the request
+context normally sent by a web browser, or when a server expects a
+specific referring URI.
 .IP
-\fBNOTE\fR: The most commonly replaced headers have \(lqshortcuts\(rq in the
-options: \fBcookie\fR, \fBuseragent\fR, and \fBreferer\fR.
+The header value should normally be a URI identifying the referring
+resource. Fragments and userinfo components are not part of a valid
+\f(CRReferer:\fR field value.
+.IP
+The field name \f(CRReferer\fR is a historical misspelling of \f(CRreferrer\fR, but
+the misspelled form is the standardized HTTP header name.
+.IP
+Because this header may reveal navigation context or sensitive URI data,
+it should be set with care. It should not be relied upon as a secure means
+of authentication or access control.
+.IP
+You can also set this header through \fB-httpheader\fR.
 .TP 3
--http200aliases
+\fB-useragent\fR
+Pass a string to set the \f(CRUser-Agent:\fR header in the HTTP request sent to
+the remote server. You can also set custom headers with \fB-httpheader\fR.
+.TP 3
+\fB-httpheader\fR
+Pass a list of HTTP headers to send in the request. If you add a header
+that TclCurl would otherwise generate internally, your header is used
+instead. If you add a header with no value, such as \f(CRAccept:\fR, the
+internal header is disabled. This option can therefore be used to add,
+replace, or remove internal headers.
+.IP
+This option is useful when the request must include headers not exposed by
+dedicated TclCurl options, or when you need exact control over the final
+HTTP request. Common uses include setting custom authentication-related
+headers, API-specific headers, cache-control directives, or overriding
+headers such as \f(CRContent-Type:\fR or \f(CRAccept:\fR.
+.IP
+The headers in the list must not be CRLF-terminated, because TclCurl adds
+CRLF after each header item. If you include CRLF yourself, the server will
+likely ignore part of the headers you specified.
+.IP
+The first line of a request, containing the method, usually \f(CRGET\fR or
+\f(CRPOST\fR, is not a header and cannot be replaced with this option. Only the
+lines following the request line are headers. Adding the method line to
+this list causes an invalid header to be sent.
+.IP
+\fBNOTE:\fR The most commonly replaced headers have dedicated shortcut
+options: \fB-cookie\fR, \fB-useragent\fR, and \fB-referer\fR.
+.TP 3
+\fB-http200aliases\fR
 Pass a list of aliases to be treated as valid HTTP 200 responses. Some
-servers respond with a custom header response line. For example, IceCast
-servers respond with \(lqICY 200 OK\(rq. By including this string in your list of
-aliases, the response will be treated as a valid HTTP header line such as
-\(lqHTTP/1.0 200 OK\(rq.
+servers return a custom response line. For example, IceCast servers may
+return \f(CRICY 200 OK\fR. If you include such a string in the list, it is
+treated as a valid HTTP status line such as \f(CRHTTP/1.0 200 OK\fR.
 .IP
-\fBNOTE\fR:The alias itself is not parsed for any version strings. Before
-version 7.16.3, TclCurl used the value set by option \fBhttpversion\fR, but
-starting with 7.16.3 the protocol is assumed to match HTTP 1.0 when an
-alias matched.
+\fBNOTE:\fR The alias itself is not parsed for a version string. Before
+version 7.16.3, TclCurl used the value set by \fB-httpversion\fR, but since
+7.16.3 the protocol is assumed to match HTTP 1.0 when an alias matches.
 .TP 3
--cookie
-Pass a string as parameter. It will be used to set a cookie in the http
-request. The format of the string should be \(oq[NAME]=[CONTENTS];\(cq. Where
-NAME is the cookie name and  CONTENTS is what the cookie should contain.
+\fB-cookie\fR
+Pass a string to set a cookie in the HTTP request. The string should use
+the format \f(CR[NAME]=[CONTENTS];\fR, where \f(CRNAME\fR is the cookie name and
+\f(CRCONTENTS\fR is the cookie value.
 .IP
-If  you  need  to  set multiple cookies, you need to set them all using a
-single option and thus you need to concatenate them all in one single
-string. Set multiple cookies in one string like this: \(lqname1=content1;
-name2=content2;\(rq etc.
+If you need to set multiple cookies, you must set them all in a single
+option value by concatenating them into one string, for example
+\f(CRname1=content1; name2=content2;\fR.
 .IP
 This option sets the cookie header explicitly in the outgoing request(s).
-If multiple requests are done due to authentication, followed redirections
-or similar, they will all get this cookie passed on.
+If multiple requests are performed because of authentication, redirects,
+or similar causes, they all receive this cookie header.
 .IP
-Using this option multiple times will only make the latest string override
-the previous ones.
+If this option is used multiple times, only the last value is kept.
 .TP 3
--cookiefile
-Pass a string as parameter. It should contain the name of your file holding
-cookie data. The cookie data may be in netscape cookie data format or just
-regular HTTP-style headers dumped to a file.
+\fB-cookiefile\fR
+Pass the name of a file containing cookie data. The cookie data may be in
+Netscape cookie file format or in regular HTTP-style headers written to a
+file.
 .IP
-Given an empty or non-existing file, this option will enable cookies for
-this curl handle, making it understand and parse received cookies and then
-use matching cookies in future requests.
+If the file is empty or does not exist, this option still enables cookies
+for the handle, causing TclCurl to parse received cookies and use matching
+cookies in later requests.
 .IP
-If you use this option multiple times, you add more files to read.
+If you use this option multiple times, each use adds another file to read.
 .TP 3
--cookiejar
-Pass a file name in which TclCurl will dump all internally known cookies
-when \fBcurlHandle cleanup\fR is called. If no cookies are known, no file
-will be created. Specify \(lq-\(rq to have the cookies written to stdout.
+\fB-cookiejar\fR
+Pass a file name to which TclCurl writes all internally known cookies when
+\fBcurlHandle cleanup\fR is called. If no cookies are known, no file is
+created. Specify \f(CR-\fR to write the cookies to standard output.
 .IP
-Using this option also enables cookies for this session, so if you, for
-example, follow a location it will make matching cookies get sent
-accordingly.
+Using this option also enables cookies for the session, so matching
+cookies are sent on later requests, including those caused by redirects.
 .IP
-TclCurl will not and cannot report an error for  this. Using  \(oq\fBverbose\fR\(cq
-will get a warning to display, but that is the only visible feedback you
-get about this possibly lethal situation.
+TclCurl cannot report an error if writing the cookie jar fails. If
+\fB-verbose\fR is enabled, a warning is displayed, but that is the only
+visible feedback in this case.
 .TP 3
--cookiesession
-Pass an 1 to mark this as a new cookie \(lqsession\(rq. It will force TclCurl to
-ignore all cookies it is about to load that are \(lqsession cookies\(rq from the
-previous session. By default, TclCurl always stores and loads all cookies,
-independent of whether they are session cookies are not. Session cookies
-are cookies without expiry date and they are meant to be alive and existing
-for this \(lqsession\(rq only.
+\fB-cookiesession\fR
+Set this option to \f(CR1\fR to mark the current run as a new cookie session.
+This makes TclCurl ignore session cookies loaded from a previous session.
+By default, TclCurl stores and loads all cookies, including session
+cookies. Session cookies are cookies without an expiry date and are meant
+to exist only for the current session.
 .TP 3
--cookielist
-Pass a string with a cookie. The cookie can be either in Netscape / Mozilla
-format or just regular HTTP-style header (Set-Cookie: \[u2026]) format. If the
-cookie engine was not enabled it will be enabled.  Passing a magic string
-\(lqALL\(rq will erase all known cookies while \(lqFLUSH\(rq will write all cookies
-known by TclCurl to the file specified by \fB-cookiejar\fR.
-.TP 3
--httpget
-If set to 1 forces the HTTP request to get back to GET, usable if POST, PUT
-or a custom request have been used previously with the same handle.
+\fB-cookielist\fR
+Pass a string containing a cookie. The cookie may be in Netscape/Mozilla
+format or in regular HTTP-style header form, such as \f(CRSet-Cookie: ...\fR.
+If the cookie engine is not enabled, it is enabled automatically.
 .IP
-When setting \fBhttpget\fR to 1, \fBnobody\fR will automatically be set to 0.
+Special values are \f(CRALL\fR, which erases all known cookies, and \f(CRFLUSH\fR,
+which writes all known cookies to the file specified by \fB-cookiejar\fR.
 .TP 3
--httpversion
-Set to one of the values described below, they force TclCurl to use the
-specific http versions. It should only be used if you really MUST do that
-because of a silly remote server.
+\fB-httpget\fR
+Set this option to \f(CR1\fR to force the HTTP request method back to \f(CRGET\fR.
+This is useful if \f(CRPOST\fR, \f(CRPUT\fR, or a custom request has previously been
+used with the same handle.
+.IP
+Setting \fB-httpget\fR to \f(CR1\fR also sets \fB-nobody\fR to \f(CR0\fR.
+.TP 3
+\fB-httpversion\fR
+Selects the HTTP version to use. This option should be used only when it
+is necessary to override the default behavior because of server-side
+requirements.
+.IP
+Accepted values:
 .RS
 .TP 3
-none
-We do not care about what version the library uses. TclCurl will
-use whatever it thinks fit.
+\f(CRnone\fR
+Lets TclCurl use the HTTP version it considers appropriate.
 .TP 3
-1.0
+\f(CR1.0\fR
 Enforce HTTP 1.0 requests.
 .TP 3
-1.1
+\f(CR1.1\fR
 Enforce HTTP 1.1 requests.
 .TP 3
-2.0
+\f(CR2.0\fR
 Enforce HTTP version 2 requests.
 .TP 3
-2TLS
+\f(CR2TLS\fR
 Enforce version 2 requests for HTTPS, version 1.1 for HTTP.
 .TP 3
-2\fIPRIOR\fRKNOWLEDGE
-Enforce HTTP 2 requests without performing HTTP/1.1
-Upgrade first.
+\f(CR2_PRIOR_KNOWLEDGE\fR
+Enforce HTTP 2 requests without performing an HTTP/1.1 \f(CRUpgrade\fR
+first.
 .RE
 .TP 3
--ignorecontentlength
-Ignore the Content-Length header. This is useful for Apache 1.x (and
-similar servers) which will report incorrect content length for files over
-2 gigabytes. If this option is used, TclCurl will not be able to accurately
-report progress, and will simply stop the download when the server ends the
+\fB-ignorecontentlength\fR
+Ignores the \f(CRContent-Length\fR header. This is useful for Apache 1.x and
+similar servers, which may report an incorrect content length for files
+larger than 2 gigabytes. If this option is used, TclCurl cannot report
+progress accurately and stops the download only when the server closes the
 connection.
 .TP 3
--httpcontentdecoding
-Set to zero to disable content decoding. If set to 1 it is enabled. Note
-however that TclCurl has no default content decoding but requires you to
-use \fBencoding\fR for that.
+\fB-httpcontentdecoding\fR
+Set this option to \f(CR0\fR to disable content decoding, or to \f(CR1\fR to enable
+it. TclCurl does not enable content decoding by default; for that, you
+must also use \fB-encoding\fR.
 .TP 3
--httptransferencoding
-Set to zero to disable transfer decoding, if set to 1 it is enabled
-(default). TclCurl does chunked transfer decoding by default unless this
-option is set to zero.
+\fB-httptransferencoding\fR
+Set this option to \f(CR0\fR to disable transfer decoding, or to \f(CR1\fR to enable
+it. The default is \f(CR1\fR. TclCurl performs chunked transfer decoding by
+default unless this option is disabled.
 .SH SMTP options
 .TP 3
 -mailfrom
@@ -1199,15 +1215,17 @@ You may need this option because of servers like BSDFTPD-SSL from
 \(lqwhich won\(cqt work properly  when \(lqAUTH SSL\(rq is
 issued (although the server responds fine and everything) but requires
 \(lqAUTH TLS\(rq instead.
+.IP
+Accepted values:
 .RS
 .TP 3
-default
+\f(CRdefault\fR
 Allows TclCurl to decide.
 .TP 3
-ssl
+\f(CRssl\fR
 Try \(lqAUTH SSL\(rq first, and only if that fails try \(lqAUTH TLS\(rq.
 .TP 3
-tls
+\f(CRtls\fR
 Try \(lqAUTH TLS\(rq first, and only if that fails try \(lqAUTH SSL\(rq.
 .RE
 .TP 3
@@ -1215,17 +1233,17 @@ Try \(lqAUTH TLS\(rq first, and only if that fails try \(lqAUTH SSL\(rq.
 Set it to make TclCurl use CCC (Clear Command Channel). It shuts down the
 SSL/TLS layer after authenticating. The rest of the control channel
 communication will be unencrypted. This allows NAT routers to follow the
-FTP transaction. Possible values are:
+FTP transaction. Accepted values are:
 .RS
 .TP 3
-none
+\f(CRnone\fR
 Do not attempt to use CCC.
 .TP 3
-passive
+\f(CRpassive\fR
 Do not initiate the shutdown, wait for the server to do it. Do
 not send a reply.
 .TP 3
-active
+\f(CRactive\fR
 Initiate the shutdown and wait for a reply.
 .RE
 .TP 3
@@ -1235,19 +1253,19 @@ after user name and password has been provided, this data is sent off using
 the ACCT command.
 .TP 3
 -ftpfilemethod
-It allows three values:
+Selects how TclCurl navigates FTP paths. Accepted values are:
 .RS
 .TP 3
-multicwd
+\f(CRmulticwd\fR
 The default, TclCurl will do a single CWD operation for each
 path part in the given URL. For deep hierarchies this means very many
 commands. This is how RFC1738 says it should be done.
 .TP 3
-nocwd
+\f(CRnocwd\fR
 No CWD at all is done, TclCurl will do SIZE, RETR, STOR, etc and
 give a full path to the server.
 .TP 3
-singlecwd
+\f(CRsinglecwd\fR
 Make one CWD with the full target directory and then operate
 on the file \(lqnormally\(rq. This is somewhat more standards compliant than
 \(oqnocwd\(cq but without the full penalty of \(oqmulticwd\(cq.
@@ -1357,9 +1375,9 @@ files this option has no effect even if the file transfer ends up being
 larger than this given limit. This concerns both FTP and HTTP transfers.
 .TP 3
 -timecondition
-This defines how the \fBtimevalue\fR value is treated. You can set this
-parameter to \fBifmodsince\fR or \fBifunmodsince\fR.  This feature applies to
-HTTP, FTP and FILE.
+Defines how the \fBtimevalue\fR value is treated. Accepted values are
+\f(CRifmodsince\fR and \f(CRifunmodsince\fR. This feature applies to HTTP, FTP, and
+FILE.
 .TP 3
 -timevalue
 This should be the time in seconds since 1 jan 1970, and the time will be
@@ -1437,16 +1455,15 @@ still use full-second resolution for timeouts.
 -ipresolve
 Allows an application to select what kind of IP addresses to use when
 resolving host names. This is only interesting when using host names that
-resolve addresses using more than one version of IP. The allowed values
-are:
+resolve addresses using more than one version of IP. Accepted values are:
 .TP 3
-whatever
+\f(CRwhatever\fR
 Default, resolves addresses to all IP versions that your system allows.
 .TP 3
-v4
+\f(CRv4\fR
 Resolve to ipv4 addresses.
 .TP 3
-v6
+\f(CRv6\fR
 Resolve to ipv6 addresses.
 .TP 3
 -resolve
@@ -1476,18 +1493,18 @@ SMTP, POP3, IMAP etc.
 You can use ftps:// URLs to explicitly switch on SSL/TSL for the control
 connection and the data connection.
 .IP
-Alternatively you can set the option to one of these values:
+Accepted values:
 .TP 3
-nope
+\f(CRnope\fR
 Do not attempt to use SSL
 .TP 3
-try
+\f(CRtry\fR
 Try using SSL, proceed anyway otherwise.
 .TP 3
-control
+\f(CRcontrol\fR
 Use SSL for the control connection or fail with \(lquse ssl failed\(rq (64).
 .TP 3
-all
+\f(CRall\fR
 Use SSL for all communication or fail with \(lquse ssl failed\(rq (64).
 .SH SSL and security options
 .TP 3
@@ -1541,48 +1558,48 @@ crypto operations.
 \fBNOTE:\fRIf the crypto device cannot be set, an error will be returned.
 .TP 3
 -sslversion
-Use it to set what version of SSL/TLS to use. The available options are:
+Use it to set what version of SSL/TLS to use. Accepted values are:
 .TP 3
-default
+\f(CRdefault\fR
 The default action. This will attempt to figure out the remote SSL protocol
 version, i.e. either SSLv3 or TLSv1 (but not SSLv2, which became disabled
 by default with 7.18.1).
 .TP 3
-tlsv1
+\f(CRtlsv1\fR
 Force TLSv1 or later
 .TP 3
-sslv2
+\f(CRsslv2\fR
 Force SSLv2
 .TP 3
-sslv3
+\f(CRsslv3\fR
 Force SSLv3
 .TP 3
-tlsv1_0
+\f(CRtlsv1_0\fR
 Force TLSv1.0 or later
 .TP 3
-tlsv1_1
+\f(CRtlsv1_1\fR
 Force TLSv1.1 or later
 .TP 3
-tlsv1_2
+\f(CRtlsv1_2\fR
 Force TLSv1.2 or later
 .TP 3
-tlsv1_3
+\f(CRtlsv1_3\fR
 Force TLSv1.3 or later
 .TP 3
-maxdefault
+\f(CRmaxdefault\fR
 Use the maximum supported TLS version by libcurl or the default value from
 the SSL library.
 .TP 3
-maxtlsv1_0
+\f(CRmaxtlsv1_0\fR
 Define maximum supported TLS version as TLSv1.0
 .TP 3
-maxtlsv1_1
+\f(CRmaxtlsv1_1\fR
 Define maximum supported TLS version as TLSv1.1
 .TP 3
-maxtlsv1_2
+\f(CRmaxtlsv1_2\fR
 Define maximum supported TLS version as TLSv1.2
 .TP 3
-maxtlsv1_3
+\f(CRmaxtlsv1_3\fR
 Define maximum supported TLS version as TLSv1.3
 .TP 3
 -sslverifypeer
@@ -1752,37 +1769,37 @@ this in order for you to succeed.
 .TP 3
 -krblevel
 Set the kerberos security level for FTP, this also enables kerberos
-awareness. This is a string, \(oqclear\(cq, \(oqsafe\(cq, \(oqconfidential\(cq or \(oqprivate\(cq.
-If the string is set but does not match one of these, \(oqprivate\(cq will be
+awareness. Accepted values are \f(CRclear\fR, \f(CRsafe\fR, \f(CRconfidential\fR, and
+\f(CRprivate\fR. If the string is set but does not match one of these, \f(CRprivate\fR will be
 used. Set the string to NULL to disable kerberos4. Set the string to \(lq\(lq to
 disable kerberos support for FTP.
 .TP 3
 -gssapidelegation
-Set the option to \(oqflag\(cq to allow unconditional GSSAPI credential
-delegation. The delegation is disabled by default since 7.21.7. Set the
-parameter to \(oqpolicyflag\(cq to delegate only if the OK-AS-DELEGATE flag is
-set in the service ticket in case this feature is supported by the GSSAPI
-implementation and the definition of GSS\fIC\fRDELEG\fIPOLICY\fRFLAG was available
-at compile-time.
+Selects the GSSAPI credential delegation mode. Accepted values are \f(CRflag\fR
+and \f(CRpolicyflag\fR. Use \f(CRflag\fR to allow unconditional delegation. Use
+\f(CRpolicyflag\fR to delegate only if the \f(CROK-AS-DELEGATE\fR flag is set in the
+service ticket, provided that this feature is supported by the GSSAPI
+implementation and that \f(CRGSS_C_DELEG_POLICY_FLAG\fR was available at
+compile time. Delegation is disabled by default since 7.21.7.
 .SH SSH options
 .TP 3
 -sshauthtypes
-The allowed types are:
+Selects the allowed SSH authentication types. Accepted values are:
 .RS
 .TP 3
-publickey
+\f(CRpublickey\fR
 Use public key authentication.
 .TP 3
-password
+\f(CRpassword\fR
 Use password authentication.
 .TP 3
-host
+\f(CRhost\fR
 Use host-based authentication.
 .TP 3
-keyboard
+\f(CRkeyboard\fR
 Use keyboard-interactive authentication.
 .TP 3
-any
+\f(CRany\fR
 To let TclCurl pick one
 .RE
 .TP 3
