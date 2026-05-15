@@ -256,6 +256,32 @@ test ftp-4.2 {-ftpcreatemissingdirs creates remote directories before upload} -c
     }
 } -result {0 1 1 1 1}
 
+test ftp-4.3 {-filetime retrieves the remote modification time for an FTP file} -constraints ftp_server -body {
+    set body {}
+    set remote_name filetime-fixture.txt
+    set temp_path [file join [::tcltest::temporaryDirectory] $remote_name]
+    set payload "filetime fixture\n"
+    set expected_mtime 1735689600
+    ::tclcurl::test::write_binary_file $temp_path $payload
+    file mtime $temp_path $expected_mtime
+    ::tclcurl::test::ftp_reset_root
+    ::tclcurl::test::seed_ftp_file $temp_path $remote_name
+    file mtime [file join [::tclcurl::test::ftp_root] $remote_name] $expected_mtime
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::ftp_base_url $remote_name] \
+                          -filetime 1 \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [$handle getinfo filetime] \
+             [expr {$body eq $payload}]
+    }
+} -cleanup {
+    catch {file delete -force [file join [::tcltest::temporaryDirectory] filetime-fixture.txt]}
+} -result [list 0 226 1735689600 1]
+
 test ftp-5.1 {-resumefrom downloads the remaining tail of an FTP file} -constraints ftp_server -body {
     set body {}
     set payload [string range [::tclcurl::test::range_fixture] 0 4095]

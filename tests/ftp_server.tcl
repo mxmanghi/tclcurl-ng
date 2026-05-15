@@ -102,6 +102,7 @@ oo::class create ::tclcurl::testserver::ftp_service {
                 puts $chan " EPSV"
                 puts $chan " PASV"
                 puts $chan " SIZE"
+                puts $chan " MDTM"
                 puts $chan "211 End"
                 flush $chan
             }
@@ -160,6 +161,16 @@ oo::class create ::tclcurl::testserver::ftp_service {
                     return
                 }
                 my send_reply $chan 213 [file size $fs_path]
+            }
+            MDTM {
+                set fs_path [my resolve_path $chan $argument]
+                if {![file exists $fs_path] || [file isdirectory $fs_path]} {
+                    my send_reply $chan 550 "Could not get file modification time"
+                    return
+                }
+                set mtime [file mtime $fs_path]
+                set timestamp [clock format $mtime -gmt 1 -format "%Y%m%d%H%M%S"]
+                my send_reply $chan 213 $timestamp
             }
             REST {
                 if {![string is entier -strict $argument] || $argument < 0} {

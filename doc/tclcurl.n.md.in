@@ -1052,297 +1052,316 @@ default with **curlHandle reset**.
 
 # SMTP options
 
--mailfrom
-:   Pass a string to specify the sender address in a mail when sending an SMTP
-    mail with TclCurl.
+**-mailfrom**
+:   Pass a string specifying the sender address to use in the SMTP envelope.
 
--mailrcpt
-:   Pass a list of recipients to pass to the server in your SMTP mail request.
+    This option controls the envelope sender used at the SMTP protocol level.
+    It does not set or modify the `From:` header field in the message body.
 
-    Each recipient in SMTP lingo is specified with angle brackets (<>), but
-    should you not use an angle bracket as first letter, TclCurl will assume
-    you provide a single email address only and enclose that with angle
-    brackets for you.
+**-mailrcpt**
+:   Pass a list of recipient addresses to use in the SMTP envelope.
+
+    This option controls the envelope recipients used at the SMTP protocol
+    level. It does not set or modify message header fields such as `To:`,
+    `Cc:`, or `Bcc:`.
+
+    In SMTP, recipients are specified with angle brackets (`<>`). If a
+    recipient value does not begin with an angle bracket, TclCurl assumes that
+    it is a plain email address and adds the angle brackets automatically.
 
 # TFTP option
 
-tftpblksize
-:   Specify the block size to use for TFTP data transmission. Valid range as
-    per RFC 2348 is 8-65464 bytes. The default of 512 bytes will be used if
-    this option is not specified. The specified block size will only be used
-    pending support by the remote server. If the server does not return an
-    option acknowledgement or returns an option acknowledgement with no
-    blksize, the default of 512 bytes will be used.
+**-tftpblksize**
+:   Specifies the block size to use for TFTP data transmission. According to
+    RFC 2348, valid values range from `8` to `65464` bytes. If this option is
+    not specified, the default block size is `512` bytes.
+
+    The requested block size is used only if the remote server supports it. If
+    the server does not return an option acknowledgment, or if it returns an
+    acknowledgment without a block size value, the default of `512` bytes is
+    used.
 
 # FTP options
 
--ftpport
-:   Pass a string as parameter. It will be used to get the IP address to use
-    for the ftp PORT instruction. The PORT instruction tells the remote server
-    to connect to our specified IP address. The string may be a plain IP
-    address, a host name, a network interface name (under unix) or just a '-'
-    to let the library use your systems default IP address. Default FTP
-    operations are passive, and thus will not use PORT.
+**-ftpport**
+:   Pass a string identifying the address to use for the FTP `PORT`
+    instruction. The `PORT` instruction tells the remote server to connect to
+    the specified client address. The string may be a plain IP address, a host
+    name, a network interface name on Unix, or simply `-` to let the library
+    use the system's default IP address. By default, FTP transfers are
+    passive, so `PORT` is not used.
 
-    The address can be followed by a ':' to specify a port, optionally followed
-    by a '-' o specify a port range. If the port specified is 0, the operating
-    system will pick a free port. If a range is provided and all ports in the
-    range are not available, libcurl will report CURLE_FTP_PORT_FAILED for the
-    handle. Invalid port/range settings are ignored. IPv6 addresses followed by
-    a port or portrange have to be in brackets. IPv6 addresses without
-    port/range specifier can be in brackets.
+    The address can be followed by `:` and a port number, optionally followed
+    by `-` and a port range. If the port specified is `0`, the operating
+    system chooses a free port. If a range is provided and no port in that
+    range is available, libcurl reports `CURLE_FTP_PORT_FAILED` for the
+    handle. Invalid port or port-range settings are ignored. IPv6 addresses
+    followed by a port or port range must be enclosed in brackets. IPv6
+    addresses without a port or port range may also be enclosed in brackets.
 
-    Examples with specified ports:
+    Examples:
 
-    eth0:0   192.168.1.2:32000-33000   curl.se:32123   [::1]:1234-4567
+    `eth0:0`   `192.168.1.2:32000-33000`   `curl.se:32123`
+    `[::1]:1234-4567`
 
-    You disable PORT again and go back to using the passive version by setting
-    this option to an empty string.
+    To disable `PORT` and return to passive mode, set this option to the empty
+    string.
 
--quote
-:   Pass a **list** list with the FTP or SFTP commands to pass to the server
-    prior to your ftp request. This will be done before any other FTP commands
-    are issued (even before the CWD command).If you do not want to transfer any
-    files, set **nobody** to '1' and **header** to '0'.
+**-quote**
+:   Pass a list of FTP or SFTP commands to send to the server before the FTP
+    transfer request. These commands are sent before any other FTP commands,
+    including `CWD`. If you do not want to transfer any files, set
+    **-nobody** to `1` and **-header** to `0`.
 
-    Prefix the command with an asterisk (*) to make TclCurl continue even if
-    the command fails as by default TclCurl will stop.
+    Prefix a command with an asterisk (`*`) to make TclCurl continue even if
+    that command fails. By default, a failure stops the transfer.
 
-    Disable this operation again by setting an empty string to this option.
+    To disable this option, set it to the empty string.
 
-    Keep in mind the commands to send must be 'raw' ftp commands, for example,
-    to create a directory you need to send **mkd Test**, not **mkdir Test**.
+    The commands must be raw FTP commands. For example, to create a directory
+    you must send `mkd Test`, not `mkdir Test`.
 
-    Valid SFTP commands are: chgrp, chmod, chown, ln, mkdir, pwd, rename, rm,
-    rmdir and symlink.
+    Valid SFTP commands are `chgrp`, `chmod`, `chown`, `ln`, `mkdir`, `pwd`,
+    `rename`, `rm`, `rmdir`, and `symlink`.
 
--postquote
-:   Pass a **list** with the FTP commands to pass to the server after your ftp
-    transfer request. If you do not want to transfer any files, set **nobody**
-    to '1' and **header** to '0'.
+**-postquote**
+:   Pass a list of FTP commands to send to the server after the FTP transfer
+    request. If you do not want to transfer any files, set **-nobody** to `1`
+    and **-header** to `0`.
 
--prequote
-:   Pass a **list** of FTP or SFTP commands to pass to the server after the
-    transfer type is set.
+**-prequote**
+:   Pass a list of FTP or SFTP commands to send to the server after the
+    transfer type has been set.
 
--dirlistonly
-:   A 1 tells the library to just list the names of files in a directory,
-    instead of doing a full directory listing that would include file sizes,
-    dates etc. It works with both FTP and SFTP urls.
+**-dirlistonly**
+:   Set this option to `1` to list only file names in a directory instead of
+    requesting a full directory listing with file sizes, dates, and similar
+    information. This option works with both FTP and SFTP URLs.
 
-    This causes an FTP NLST command to be sent. Beware that some FTP servers
-    list only files in their response to NLST, they might not include
-    subdirectories and symbolic links.
+    For FTP, this causes an `NLST` command to be sent. Some FTP servers return
+    only files in response to `NLST`, and may omit subdirectories and symbolic
+    links.
 
-    Setting this option to 1 also implies a directory listing even if the URL
-    doesn't end with a slash, which otherwise is necessary.
+    Setting this option to `1` also implies a directory listing even if the
+    URL does not end with a slash, which would otherwise be required.
 
-    Do NOT use this option if you also use **-wildcardmatch** as it will
-    effectively break that feature.
+    Do not use this option together with **-wildcardmatch**, as it effectively
+    disables that feature.
 
--append
-:   A 1 parameter tells the extension to append to the remote file instead of
-    overwriting it. This is only useful when uploading to a ftp site.
+**-append**
+:   Set this option to `1` to append to the remote file instead of
+    overwriting it. This is useful only when uploading to an FTP site.
 
--ftpusepret
-:   Set to 1 to tell TclCurl to use the EPRT (and LPRT) command when doing
-    active FTP downloads (which is enabled by '**ftpport**'). Using EPRT means
-    that it will first attempt to use EPRT and then LPRT before using PORT, if
-    you pass zero to this option, it will not try using EPRT or LPRT, only
-    plain PORT.
+**-ftpuseeprt**
+:   Set this option to `1` to make TclCurl use the `EPRT` and `LPRT` commands
+    for active FTP transfers, which are enabled with **-ftpport**. When this
+    option is enabled, TclCurl first attempts `EPRT`, then `LPRT`, and only
+    then falls back to `PORT`. If this option is set to `0`, only `PORT` is
+    used.
 
--ftpuseepvs
-:   Set to one to tell TclCurl to use the EPSV command when doing passive FTP
-    downloads (which it always does by default). Using EPSV means that it will
-    first attempt to use EPSV before using PASV, but if you pass a zero to this
-    option, it will not try using EPSV, only plain PASV.
+**-ftpuseepsv**
+:   Set this option to `1` to make TclCurl use the `EPSV` command for passive
+    FTP transfers. This is the default behavior. When enabled, TclCurl first
+    attempts `EPSV` before using `PASV`. If this option is set to `0`, TclCurl
+    uses only `PASV`.
 
--ftpusepret
-:   Set to one to tell TclCurl to send a PRET command before PASV (and EPSV).
-    Certain FTP servers, mainly drftpd, require this non-standard command for
-    directory listings as well as up and downloads in PASV mode. Has no effect
-    when using the active FTP transfers mode.
+**-ftpusepret**
+:   Set this option to `1` to make TclCurl send a `PRET` command before `PASV`
+    or `EPSV`. Some FTP servers, especially `drftpd`, require this non-standard
+    command for directory listings and uploads or downloads in passive mode.
+    This option has no effect for active FTP transfers.
 
--ftpcreatemissingdirs
-:   If set to 1, TclCurl will attempt to create any remote directory that it
-    fails to CWD into. CWD is the command that changes working directory.
+**-ftpcreatemissingdirs**
+:   Controls whether TclCurl should attempt to create a remote directory when
+    the transfer requires that directory to exist, but a `CWD` command shows
+    that it does not yet exist or cannot yet be entered.
 
-    This setting also applies to SFTP-connections. TclCurl will attempt to
-    create the remote directory if it can't obtain a handle to the
-    target-location. The creation will fail if a file of the same name as the
-    directory to create already exists or lack of permissions prevents
-    creation.
+    This setting also applies to SFTP connections. TclCurl attempts to create
+    the remote directory if it cannot obtain a handle to the target location.
+    Creation fails if a file with the same name already exists, or if
+    permissions do not allow directory creation.
 
-    If set to 2, TclCurl will retry the CWD command again if the subsequent MKD
-    command fails. This is especially useful if you're doing many simultanoeus
-    connections against the same server and they all have this option enabled,
-    as then CWD may first fail but then another connection does MKD before this
-    connection and thus MKD fails but trying CWD works
+    Accepted values:
 
--ftpresponsetimeout
-:   Causes TclCurl to set a timeout period (in seconds) on the amount of time
-    that the server is allowed to take in order to generate a response message
-    for a command before the session is considered hung. Note that while
-    TclCurl is waiting for a response, this value overrides **timeout**. It is
-    recommended that if used in conjunction with **timeout**, you set it to a
-    value smaller than **timeout**.
+    `1`
+    :   After a failed `CWD`, TclCurl attempts to create the missing remote
+        directory and then continues with the transfer.
 
--ftpalternativetouser
-:   Pass a string which will be used to authenticate if the usual FTP "USER
-    user" and "PASS password" negotiation fails. This is currently only known
-    to be required when connecting to Tumbleweed's Secure Transport FTPS server
-    using client certificates for authentication.
+    `2`
+    :   After a failed `CWD`, TclCurl attempts to create the missing remote
+        directory. If the subsequent `MKD` command fails, TclCurl retries the
+        `CWD` command before giving up. This is useful when multiple
+        simultaneous connections target the same server and another connection
+        may have created the directory in the meantime.
 
--ftpskippasvip
-:   If set to 1, it instructs TclCurl not to use the IP address the server
-    suggests in its 227-response to TclCurl's PASV command when TclCurl
-    connects the data connection. Instead TclCurl will re-use the same IP
-    address it already uses for the control connection. But it will use the
-    port number from the 227-response.
+**-ftpresponsetimeout**
+:   Sets a timeout, in seconds, for how long the server may take to return a
+    response to an FTP command before the session is considered hung. While
+    TclCurl is waiting for such a response, this value overrides **-timeout**.
+    If both options are used, **-ftpresponsetimeout** should normally be set
+    to a value smaller than **-timeout**.
 
-    This option has no effect if PORT, EPRT or EPSV is used instead of PASV.
+**-ftpalternativetouser**
+:   Pass a string to use for authentication if the usual FTP `USER user` and
+    `PASS password` negotiation fails. This is known to be required in some
+    cases when connecting to Tumbleweed Secure Transport FTPS servers that use
+    client-certificate authentication.
 
--ftpsslauth
-:   Pass TclCurl one of the values from below, to alter how TclCurl issues
-    "AUTH TLS" or "AUTH SSL" when FTP over SSL is activated (see **-ftpssl**).
+**-ftpskippasvip**
+:   Set this option to `1` to make TclCurl ignore the IP address suggested by
+    the server in its `227` response to TclCurl's `PASV` command when opening
+    the data connection. TclCurl instead reuses the same IP address already in
+    use for the control connection, while still using the port number from the
+    `227` response.
 
-    You may need this option because of servers like BSDFTPD-SSL from
-    <http://bsdftpd-ssl.sc.ru/> "which won't work properly  when "AUTH SSL" is
-    issued (although the server responds fine and everything) but requires
-    "AUTH TLS" instead.
+    This option has no effect if `PORT`, `EPRT`, or `EPSV` is used instead of
+    `PASV`.
+
+**-ftpsslauth**
+:   Selects how TclCurl issues `AUTH TLS` or `AUTH SSL` when FTP over SSL is
+    enabled with **-ftpssl**.
+
+    This option may be needed for servers such as BSDFTPD-SSL, which do not
+    handle `AUTH SSL` correctly and require `AUTH TLS` instead.
 
     Accepted values:
 
     `default`
-    :   Allows TclCurl to decide.
+    :   Lets TclCurl choose.
 
     `ssl`
-    :   Try "AUTH SSL" first, and only if that fails try "AUTH TLS".
+    :   Tries `AUTH SSL` first, and tries `AUTH TLS` only if that fails.
 
     `tls`
-    :   Try "AUTH TLS" first, and only if that fails try "AUTH SSL".
+    :   Tries `AUTH TLS` first, and tries `AUTH SSL` only if that fails.
 
--ftpsslccc
-:   Set it to make TclCurl use CCC (Clear Command Channel). It shuts down the
-    SSL/TLS layer after authenticating. The rest of the control channel
-    communication will be unencrypted. This allows NAT routers to follow the
-    FTP transaction. Accepted values are:
+**-ftpsslccc**
+:   Controls use of CCC (Clear Command Channel). CCC shuts down the SSL/TLS
+    layer after authentication, so the remainder of the control channel is
+    unencrypted. This can allow NAT routers to inspect the FTP control
+    channel.
+
+    Accepted values are:
 
     `none`
     :   Do not attempt to use CCC.
 
     `passive`
-    :   Do not initiate the shutdown, wait for the server to do it. Do
-    not send a reply.
+    :   Do not initiate the shutdown. Wait for the server to do so, and do
+        not send a reply.
 
     `active`
     :   Initiate the shutdown and wait for a reply.
 
--ftpaccount
-:   Pass string (or "" to disable). When an FTP server asks for "account data"
-    after user name and password has been provided, this data is sent off using
-    the ACCT command.
+**-ftpaccount**
+:   Pass a string containing account data, or `""` to disable it. If an FTP
+    server requests account data after the user name and password have been
+    provided, TclCurl sends this value with the `ACCT` command.
 
--ftpfilemethod
+**-ftpfilemethod**
 :   Selects how TclCurl navigates FTP paths. Accepted values are:
 
     `multicwd`
-    :   The default, TclCurl will do a single CWD operation for each
-    path part in the given URL. For deep hierarchies this means very many
-    commands. This is how RFC1738 says it should be done.
+    :   The default. TclCurl performs one `CWD` operation for each path
+        component in the URL. For deep hierarchies this may require many
+        commands. This is the method described by RFC 1738.
 
     `nocwd`
-    :   No CWD at all is done, TclCurl will do SIZE, RETR, STOR, etc and
-    give a full path to the server.
+    :   TclCurl does not perform `CWD` at all. Instead it sends commands such
+        as `SIZE`, `RETR`, and `STOR` with the full path.
 
     `singlecwd`
-    :   Make one CWD with the full target directory and then operate
-    on the file "normally". This is somewhat more standards compliant than
-    'nocwd' but without the full penalty of 'multicwd'.
+    :   TclCurl performs one `CWD` to the full target directory and then
+        operates on the file normally. This is somewhat more standards
+        compliant than `nocwd`, without the full overhead of `multicwd`.
 
-# Protocol options
+# Protocol Options
 
--transfertext
-:   A 1 tells the extension to use ASCII mode for ftp transfers, instead of the
-    default binary transfer. For win32 systems it does not set the stdout to
-    binary mode. This option can be usable when transferring text data between
-    systems with different views on certain characters, such as newlines or
-    similar.
+**-transfertext**
+:   Set this option to `1` to use ASCII mode for FTP transfers instead of the
+    default binary transfer mode. On Win32 systems, this does not set
+    `stdout` to binary mode. This option can be useful when transferring text
+    data between systems that treat characters such as newlines differently.
 
-    **NOTE:** TclCurl does not do a complete ASCII conversion when doing ASCII
-    transfers over FTP. This is a known limitation/flaw that nobody has
-    rectified. TclCurl simply sets the mode to ascii and performs a standard
+    **NOTE:** TclCurl does not perform full ASCII conversion during ASCII FTP
+    transfers. It simply sets the transfer mode to ASCII and performs a normal
     transfer.
 
--proxytransfermode
-:   If set to 1, TclCurl sets the transfer mode (binary or ASCII) for FTP
-    transfers done via an HTTP proxy, by appending ;type=a or ;type=i to the
-    URL. Without this setting, or it being set to 0, the default,
-    **-transfertext** has no effect when doing FTP via a proxy. Beware that not
-    all proxies support this feature.
+**-proxytransfermode**
+:   Set this option to `1` to make TclCurl set the transfer mode, binary or
+    ASCII, for FTP transfers performed through an HTTP proxy by appending
+    `;type=a` or `;type=i` to the URL. If this option is omitted or set to
+    `0`, **-transfertext** has no effect for FTP transfers performed through
+    an HTTP proxy. Not all proxies support this feature.
 
--crlf
-:   If set to '1', TclCurl converts Unix newlines to CRLF newlines on
-    transfers. Disable this option again by setting the value to '0'.
+**-crlf**
+:   Set this option to `1` to make TclCurl convert Unix newlines to CRLF
+    newlines during transfers. Set it to `0` to disable this behavior.
 
--range
-:   Pass a string as parameter, which should contain the specified range you
-    want. It should be in the format "X-Y" , where X or Y may be left out. HTTP
-    transfers also support several intervals, separated with commas as in
-    "X-Y,N-M" Using this kind of multiple intervals will cause the HTTP server
-    to send the response document in pieces (using standard MIME separation
-    techniques).
+**-range**
+:   Pass a string specifying the requested range. The format is `X-Y`, where
+    either `X` or `Y` may be omitted. HTTP transfers also support multiple
+    ranges separated by commas, as in `X-Y,N-M`. When multiple ranges are
+    requested over HTTP, the server returns the response document in pieces
+    using standard MIME separation rules.
 
-    Ranges only work on HTTP, FTP and FILE transfers.
+    Range requests are supported only for HTTP, FTP, and FILE transfers.
 
--resumefrom
-:   Pass the offset in number of bytes that you want the transfer to start
-    from. Set this option to 0 to make the transfer start from the beginning
-    (effectively disabling resume).
+**-resumefrom**
+:   Pass the offset, in bytes, at which the transfer should start. Set this
+    option to `0` to start the transfer from the beginning, which disables
+    resume behavior.
 
-    For FTP, set this option to -1 to make the transfer start from the end of
-    the target file (useful to continue an interrupted upload).
+    For FTP, set this option to `-1` to start from the end of the target
+    file, which is useful when continuing an interrupted upload.
 
-    When doing uploads with FTP, the resume position is where in the
-    local/source file TclCurl should try to resume the upload from and it will
-    then append the source file to the remote target file.
+    For FTP uploads, the resume position specifies where in the local source
+    file TclCurl should resume reading. The data read from that point is then
+    appended to the remote target file.
 
--customrequest
-:   Pass a string as parameter. It will be used instead of GET or HEAD when
-    doing the HTTP request. This is useful for doing DELETE or other more
-    obscure HTTP requests. Do not do this at will, make sure your server
-    supports the command first.
+**-customrequest**
+:   Pass a string containing the request method to use instead of the default
+    method, such as `GET` or `HEAD`, when making an HTTP request. This is
+    useful for methods such as `DELETE` and other less common HTTP requests.
+    Use this option only when the server is known to support the specified
+    method.
 
-    Note that TclCurl will still act and assume the keyword it would use if you
-    do not set your custom and it will act according to that. Thus, changing
-    this to a HEAD when TclCurl otherwise would do a GET might cause TclCurl to
-    act funny, and similar. To switch to a proper HEAD, use **-nobody**, to
-    switch to a proper POST, use **-post** or **-postfields** and so on.
+    TclCurl still behaves internally according to the type of request it would
+    otherwise have used. As a result, changing the request method with this
+    option can produce inconsistent behavior if the corresponding request type
+    is not selected through the usual dedicated option. For example, to make a
+    proper `HEAD` request, use **-nobody**. To make a proper `POST` request,
+    use **-post** or **-postfields**.
 
--filetime
-:   If you pass a 1, TclCurl will attempt to get the modification date of the
-    remote document in this operation. This requires that the remote server
-    sends the time or replies to a time querying command. The getinfo procedure
-    with the filetime argument can be used after a transfer to extract the
-    received time (if any).
+**-filetime**
+:   Set this option to `1` to make TclCurl attempt to obtain the modification
+    time of the remote document during the transfer. This requires the remote
+    server either to send the time directly or to support a command for
+    querying it. After the transfer, the `filetime` value can be retrieved
+    with the `getinfo` procedure.
 
--nobody
-:   A 1 tells the library not to include the body-part in the output. This is
-    only relevant for protocols that have a separate header and body part. On
-    HTTP(S) servers, this will make TclCurl do a HEAD request.
+    For FTP transfers, this typically means that the server must support a
+    command for querying the remote file modification time, such as `MDTM`.
+    If the server does not provide this information, the transfer can still
+    succeed, but the retrieved `filetime` value remains unknown.
 
-    To change request to GET, you should use **httpget**. Change request to
-    POST with **post** etc.
+**-nobody**
+:   Set this option to `1` to omit the body from the output. This is relevant
+    only for protocols that distinguish between a header part and a body part.
+    For HTTP and HTTPS, this causes TclCurl to issue a `HEAD` request.
 
--infilesize
-:   When uploading a file to a remote site, this option should be used to tell
-    TclCurl what the expected size of the infile is.
+    To change the request back to `GET`, use **-httpget**. To switch to
+    `POST`, use **-post** or a related option.
 
-    This option is mandatory for uploading using SCP.
+**-infilesize**
+:   Use this option when uploading a file to specify the expected size of the
+    input file.
 
--upload
-:   A 1 tells the library to prepare for an upload. The **-infile** and
-    **-infilesize** options are also interesting for uploads. If the protocol
+    This option is mandatory for uploads performed with SCP.
+
+**-upload**
+:   Set this option to `1` to prepare for an upload. The **-infile** and
+    **-infilesize** options are also relevant for uploads. If the protocol
     is HTTP, uploading means using the PUT request unless you tell TclCurl
     otherwise.
 
