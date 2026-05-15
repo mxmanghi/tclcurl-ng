@@ -1,22 +1,11 @@
 .\" -*- mode: troff; coding: utf-8 -*-
-.TH "TclCurl" "n" "12 April 2026" "TclCurl 8.0.1" "TclCurl Easy Interface"
+.TH "TclCurl" "n" "15 May 2026" "TclCurl 8.0.1" "TclCurl Easy Interface"
 .SH NAME
 .LP
 TclCurl - Transfer data to and from URLs using FTP, FTPS, HTTP, HTTPS, SCP,
 SFTP, TFTP, TELNET, DICT, FILE, LDAP, LDAPS, IMAP, IMAPS, POP, POP3, SMTP,
 SMTPS, and GOPHER.
 .SH SYNOPSIS
-.LP
-.EX
-curlHandle configure ?options?
-curlHandle perform
-curlHandle getinfo curlinfo_option
-curlHandle cleanup
-curlHandle reset
-curlHandle duphandle
-curlHandle pause
-curlHandle resume
-.EE
 .LP
 .EX
 curl::init
@@ -27,6 +16,17 @@ curl::unescape url
 curl::curlConfig option
 curl::versioninfo option
 curl::easystrerror errorCode
+.EE
+.LP
+.EX
+curlHandle configure ?options?
+curlHandle perform
+curlHandle getinfo curlinfo_option
+curlHandle cleanup
+curlHandle reset
+curlHandle duphandle
+curlHandle pause
+curlHandle resume
 .EE
 .SH DESCRIPTION
 .LP
@@ -2636,33 +2636,17 @@ manual page from \f(CRdoc/tclcurl.html\fR, which makes it a convenient target fo
 basic \f(CRGET\fR example.
 .SH BASIC HTTP GET
 .LP
-The following example performs a simple HTTP \f(CRGET\fR request, stores the
-response body in a Tcl variable, and prints both the HTTP response code and
-the size of the returned document:
-.LP
-.EX
-package require TclCurl
-
-set body {}
-set curlHandle [curl::init]
-
-$curlHandle configure \e
-    -url http://127.0.0.1:8990/tclcurl-man \e
-    -bodyvar body \e
-    -noprogress 1
-
-set rc [$curlHandle perform]
-set httpCode [$curlHandle getinfo responsecode]
-
-puts \(dqperform rc: $rc\(dq
-puts \(dqHTTP response code: $httpCode\(dq
-puts \(dqDownloaded bytes: [string length $body]\(dq
-
-$curlHandle cleanup
-.EE
+The file \f(CRexamples/http_get.tcl\fR contains a minimal HTTP \f(CRGET\fR example. It
+performs a simple request, stores the response body in a Tcl variable, and
+prints both the HTTP response code and the size of the returned document.
 .PP
 If the request succeeds, \f(CRrc\fR is \f(CR0\fR, \f(CRresponsecode\fR is \f(CR200\fR, and \f(CRbody\fR
 contains the HTML document returned by the server.
+.SH AUTHORS
+.LP
+Andres Garcia Garcia
+.PP
+Massimo Manghi
 .SH SEE ALSO
 .LP
 curl, The art of HTTP scripting (at \c

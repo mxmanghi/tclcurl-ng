@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="date" content="12 April 2026" />
+<meta name="date" content="15 May 2026" />
 <title>TclCurl</title>
 </head>
 <body>
@@ -12,15 +12,6 @@
 SFTP, TFTP, TELNET, DICT, FILE, LDAP, LDAPS, IMAP, IMAPS, POP, POP3, SMTP,
 SMTPS, and GOPHER.</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<pre><code class="language-tcl">curlHandle configure ?options?
-curlHandle perform
-curlHandle getinfo curlinfo_option
-curlHandle cleanup
-curlHandle reset
-curlHandle duphandle
-curlHandle pause
-curlHandle resume
-</code></pre>
 <pre><code class="language-tcl">curl::init
 curl::transfer ?options?
 curl::version
@@ -29,6 +20,15 @@ curl::unescape url
 curl::curlConfig option
 curl::versioninfo option
 curl::easystrerror errorCode
+</code></pre>
+<pre><code class="language-tcl">curlHandle configure ?options?
+curlHandle perform
+curlHandle getinfo curlinfo_option
+curlHandle cleanup
+curlHandle reset
+curlHandle duphandle
+curlHandle pause
+curlHandle resume
 </code></pre>
 <h1 id="description">DESCRIPTION</h1>
 <p>The TclCurl extension gives Tcl programmers access to the libcurl library
@@ -2768,37 +2768,21 @@ argument.</p>
 <p>The examples in this section assume you are running from the root of the
 TclCurl source tree.</p>
 <p>To start the local HTTP test server used in the examples, run:</p>
-<pre><code class="language-sh">tclsh tests&#47;testserver.tcl
+<pre><code class="language-sh">tclsh testservers&#47;testserver.tcl
 </code></pre>
 <p>By default, this starts an HTTP server on <code>http:&#47;&#47;127.0.0.1:8990&#47;</code>.</p>
 <p>The path <code>http:&#47;&#47;127.0.0.1:8990&#47;tclcurl-man</code> returns the HTML version of this
 manual page from <code>doc&#47;tclcurl.html</code>, which makes it a convenient target for a
 basic <code>GET</code> example.</p>
 <h1 id="basic-http-get">BASIC HTTP GET</h1>
-<p>The following example performs a simple HTTP <code>GET</code> request, stores the
-response body in a Tcl variable, and prints both the HTTP response code and
-the size of the returned document:</p>
-<pre><code class="language-tcl">package require TclCurl
-
-set body {}
-set curlHandle [curl::init]
-
-$curlHandle configure \
-    -url http:&#47;&#47;127.0.0.1:8990&#47;tclcurl-man \
-    -bodyvar body \
-    -noprogress 1
-
-set rc [$curlHandle perform]
-set httpCode [$curlHandle getinfo responsecode]
-
-puts "perform rc: $rc"
-puts "HTTP response code: $httpCode"
-puts "Downloaded bytes: [string length $body]"
-
-$curlHandle cleanup
-</code></pre>
+<p>The file <code>examples&#47;http_get.tcl</code> contains a minimal HTTP <code>GET</code> example. It
+performs a simple request, stores the response body in a Tcl variable, and
+prints both the HTTP response code and the size of the returned document.</p>
 <p>If the request succeeds, <code>rc</code> is <code>0</code>, <code>responsecode</code> is <code>200</code>, and <code>body</code>
 contains the HTML document returned by the server.</p>
+<h1 id="authors">AUTHORS</h1>
+<p>Andres Garcia Garcia</p>
+<p>Massimo Manghi</p>
 <h1 id="see-also">SEE ALSO</h1>
 <p>curl, The art of HTTP scripting (at <a href="http://curl.haxx.se)">http:&#47;&#47;curl.haxx.se)</a>, RFC 2396,</p>
 </body>

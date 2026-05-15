@@ -1,7 +1,7 @@
 ---
 title: TclCurl
 section: n
-date: 12 April 2026
+date: 15 May 2026
 source: TclCurl 8.0.1
 volume: TclCurl Easy Interface
 ---
@@ -15,17 +15,6 @@ SMTPS, and GOPHER.
 # SYNOPSIS
 
 ```tcl
-curlHandle configure ?options?
-curlHandle perform
-curlHandle getinfo curlinfo_option
-curlHandle cleanup
-curlHandle reset
-curlHandle duphandle
-curlHandle pause
-curlHandle resume
-```
-
-```tcl
 curl::init
 curl::transfer ?options?
 curl::version
@@ -34,6 +23,17 @@ curl::unescape url
 curl::curlConfig option
 curl::versioninfo option
 curl::easystrerror errorCode
+```
+
+```tcl
+curlHandle configure ?options?
+curlHandle perform
+curlHandle getinfo curlinfo_option
+curlHandle cleanup
+curlHandle reset
+curlHandle duphandle
+curlHandle pause
+curlHandle resume
 ```
 
 # DESCRIPTION
@@ -2616,33 +2616,18 @@ basic `GET` example.
 
 # BASIC HTTP GET
 
-The following example performs a simple HTTP `GET` request, stores the
-response body in a Tcl variable, and prints both the HTTP response code and
-the size of the returned document:
-
-```tcl
-package require TclCurl
-
-set body {}
-set curlHandle [curl::init]
-
-$curlHandle configure \
-    -url http://127.0.0.1:8990/tclcurl-man \
-    -bodyvar body \
-    -noprogress 1
-
-set rc [$curlHandle perform]
-set httpCode [$curlHandle getinfo responsecode]
-
-puts "perform rc: $rc"
-puts "HTTP response code: $httpCode"
-puts "Downloaded bytes: [string length $body]"
-
-$curlHandle cleanup
-```
+The file `examples/http_get.tcl` contains a minimal HTTP `GET` example. It
+performs a simple request, stores the response body in a Tcl variable, and
+prints both the HTTP response code and the size of the returned document.
 
 If the request succeeds, `rc` is `0`, `responsecode` is `200`, and `body`
 contains the HTML document returned by the server.
+
+# AUTHORS
+
+Andres Garcia Garcia
+
+Massimo Manghi
 
 # SEE ALSO
 
