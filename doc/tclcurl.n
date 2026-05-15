@@ -8,66 +8,24 @@ SMTPS, and GOPHER.
 .SH SYNOPSIS
 .LP
 .EX
-curl::init
-.EE
-.LP
-.EX
 curlHandle configure ?options?
-.EE
-.LP
-.EX
 curlHandle perform
-.EE
-.LP
-.EX
 curlHandle getinfo curlinfo_option
-.EE
-.LP
-.EX
 curlHandle cleanup
-.EE
-.LP
-.EX
 curlHandle reset
-.EE
-.LP
-.EX
 curlHandle duphandle
-.EE
-.LP
-.EX
 curlHandle pause
-.EE
-.LP
-.EX
 curlHandle resume
 .EE
 .LP
 .EX
+curl::init
 curl::transfer ?options?
-.EE
-.LP
-.EX
 curl::version
-.EE
-.LP
-.EX
 curl::escape url
-.EE
-.LP
-.EX
 curl::unescape url
-.EE
-.LP
-.EX
 curl::curlConfig option
-.EE
-.LP
-.EX
 curl::versioninfo option
-.EE
-.LP
-.EX
 curl::easystrerror errorCode
 .EE
 .SH DESCRIPTION
@@ -92,7 +50,7 @@ This allows TclCurl to reuse persistent connections when possible.
 \fBRETURN VALUE\fR
 .PP
 The \f(CRcurlHandle\fR to use.
-.SH curlHandle configure ?options?
+.SH curlHandle configure ?OPTIONS?
 .LP
 \fBconfigure\fR
 .PP
@@ -114,7 +72,7 @@ default with \fBcurlHandle reset\fR.
 \f(CRcurlHandle\fR is the value returned by the \f(CRcurl::init\fR call.
 .PP
 \fBOPTIONS\fR
-.SH Behaviour options
+.SH BEHAVIOUR OPTIONS
 .TP 3
 \fB-verbose\fR
 Set this option to 1 to make the library display detailed
@@ -203,7 +161,7 @@ characters have no special purpose.
 Using the rules above, a file name pattern can be constructed:
 .IP
 \f(CRftp://example.com/some/path/**[a-z[:upper:]\e\e\e\e].jpeg**\fR
-.SH Callback options
+.SH CALLBACK OPTIONS
 .TP 3
 \fB-writeproc\fR
 Sets a Tcl procedure that TclCurl invokes whenever received data is
@@ -311,7 +269,7 @@ matching function. The callback procedure must have two arguments:
 The \fIpattern\fR argument contains the pattern to be matched. The \fIstring\fR
 argument contains the candidate string. The procedure must return \f(CR0\fR if
 the string matches the pattern and \f(CR1\fR otherwise.
-.SH Error Options
+.SH ERROR OPTIONS
 .TP 3
 \fB-errorbuffer\fR
 Pass the name of a variable in which TclCurl may store human-readable
@@ -334,7 +292,7 @@ as with status codes 401 and 407.
 Some header data may be transferred before this condition is detected. For
 example, a \f(CR100-continue\fR response may be received for a POST or PUT
 request before a subsequent \f(CR401\fR or \f(CR407\fR response is returned.
-.SH Network options
+.SH NETWORK OPTIONS
 .TP 3
 \fB-url\fR
 The URL to use for the transfer.
@@ -509,7 +467,7 @@ contribute to congestion on the network if overdone.
 \fB-addressscope\fR
 Pass a number specifying the \f(CRscope_id\fR value to use when connecting to
 IPv6 link-local or site-local addresses.
-.SH Names and Passwords options
+.SH NAMES AND PASSWORDS OPTIONS
 .TP 3
 \fB-netrc\fR
 Set this option to make TclCurl scan your \fB\(ti/.netrc\fR file for the user
@@ -684,7 +642,7 @@ round trip. Set the actual user name and password with
 .IP
 The methods are those listed above for the \fBhttpauth\fR option. As of this
 writing, only Basic and NTLM work.
-.SH HTTP options
+.SH HTTP OPTIONS
 .TP 3
 \fB-autoreferer\fR
 Set this option to \f(CR1\fR to enable automatic updates of the \f(CRReferer:\fR
@@ -1055,304 +1013,323 @@ must also use \fB-encoding\fR.
 Set this option to \f(CR0\fR to disable transfer decoding, or to \f(CR1\fR to enable
 it. The default is \f(CR1\fR. TclCurl performs chunked transfer decoding by
 default unless this option is disabled.
-.SH SMTP options
+.SH SMTP OPTIONS
 .TP 3
--mailfrom
-Pass a string to specify the sender address in a mail when sending an SMTP
-mail with TclCurl.
-.TP 3
--mailrcpt
-Pass a list of recipients to pass to the server in your SMTP mail request.
+\fB-mailfrom\fR
+Pass a string specifying the sender address to use in the SMTP envelope.
 .IP
-Each recipient in SMTP lingo is specified with angle brackets (<>), but
-should you not use an angle bracket as first letter, TclCurl will assume
-you provide a single email address only and enclose that with angle
-brackets for you.
-.SH TFTP option
+This option controls the envelope sender used at the SMTP protocol level.
+It does not set or modify the \f(CRFrom:\fR header field in the message body.
 .TP 3
-tftpblksize
-Specify the block size to use for TFTP data transmission. Valid range as
-per RFC 2348 is 8-65464 bytes. The default of 512 bytes will be used if
-this option is not specified. The specified block size will only be used
-pending support by the remote server. If the server does not return an
-option acknowledgement or returns an option acknowledgement with no
-blksize, the default of 512 bytes will be used.
-.SH FTP options
+\fB-mailrcpt\fR
+Pass a list of recipient addresses to use in the SMTP envelope.
+.IP
+This option controls the envelope recipients used at the SMTP protocol
+level. It does not set or modify message header fields such as \f(CRTo:\fR,
+\f(CRCc:\fR, or \f(CRBcc:\fR.
+.IP
+In SMTP, recipients are specified with angle brackets (\f(CR<>\fR). If a
+recipient value does not begin with an angle bracket, TclCurl assumes that
+it is a plain email address and adds the angle brackets automatically.
+.SH TFTP OPTION
 .TP 3
--ftpport
-Pass a string as parameter. It will be used to get the IP address to use
-for the ftp PORT instruction. The PORT instruction tells the remote server
-to connect to our specified IP address. The string may be a plain IP
-address, a host name, a network interface name (under unix) or just a \(oq-\(cq
-to let the library use your systems default IP address. Default FTP
-operations are passive, and thus will not use PORT.
+\fB-tftpblksize\fR
+Specifies the block size to use for TFTP data transmission. According to
+RFC 2348, valid values range from \f(CR8\fR to \f(CR65464\fR bytes. If this option is
+not specified, the default block size is \f(CR512\fR bytes.
 .IP
-The address can be followed by a \(oq:\(cq to specify a port, optionally followed
-by a \(oq-\(cq o specify a port range. If the port specified is 0, the operating
-system will pick a free port. If a range is provided and all ports in the
-range are not available, libcurl will report CURLE\fIFTP\fRPORT_FAILED for the
-handle. Invalid port/range settings are ignored. IPv6 addresses followed by
-a port or portrange have to be in brackets. IPv6 addresses without
-port/range specifier can be in brackets.
-.IP
-Examples with specified ports:
-.IP
-eth0:0   192.168.1.2:32000-33000   curl.se:32123   [::1]:1234-4567
-.IP
-You disable PORT again and go back to using the passive version by setting
-this option to an empty string.
+The requested block size is used only if the remote server supports it. If
+the server does not return an option acknowledgment, or if it returns an
+acknowledgment without a block size value, the default of \f(CR512\fR bytes is
+used.
+.SH FTP OPTIONS
 .TP 3
--quote
-Pass a \fBlist\fR list with the FTP or SFTP commands to pass to the server
-prior to your ftp request. This will be done before any other FTP commands
-are issued (even before the CWD command).If you do not want to transfer any
-files, set \fBnobody\fR to \(oq1\(cq and \fBheader\fR to \(oq0\(cq.
+\fB-ftpport\fR
+Pass a string identifying the address to use for the FTP \f(CRPORT\fR
+instruction. The \f(CRPORT\fR instruction tells the remote server to connect to
+the specified client address. The string may be a plain IP address, a host
+name, a network interface name on Unix, or simply \f(CR-\fR to let the library
+use the system\(cqs default IP address. By default, FTP transfers are
+passive, so \f(CRPORT\fR is not used.
 .IP
-Prefix the command with an asterisk (*) to make TclCurl continue even if
-the command fails as by default TclCurl will stop.
+The address can be followed by \f(CR:\fR and a port number, optionally followed
+by \f(CR-\fR and a port range. If the port specified is \f(CR0\fR, the operating
+system chooses a free port. If a range is provided and no port in that
+range is available, libcurl reports \f(CRCURLE_FTP_PORT_FAILED\fR for the
+handle. Invalid port or port-range settings are ignored. IPv6 addresses
+followed by a port or port range must be enclosed in brackets. IPv6
+addresses without a port or port range may also be enclosed in brackets.
 .IP
-Disable this operation again by setting an empty string to this option.
+Examples:
 .IP
-Keep in mind the commands to send must be \(oqraw\(cq ftp commands, for example,
-to create a directory you need to send \fBmkd Test\fR, not \fBmkdir Test\fR.
+\f(CReth0:0\fR   \f(CR192.168.1.2:32000-33000\fR   \f(CRcurl.se:32123\fR
+\f(CR[::1]:1234-4567\fR
 .IP
-Valid SFTP commands are: chgrp, chmod, chown, ln, mkdir, pwd, rename, rm,
-rmdir and symlink.
+To disable \f(CRPORT\fR and return to passive mode, set this option to the empty
+string.
 .TP 3
--postquote
-Pass a \fBlist\fR with the FTP commands to pass to the server after your ftp
-transfer request. If you do not want to transfer any files, set \fBnobody\fR
-to \(oq1\(cq and \fBheader\fR to \(oq0\(cq.
-.TP 3
--prequote
-Pass a \fBlist\fR of FTP or SFTP commands to pass to the server after the
-transfer type is set.
-.TP 3
--dirlistonly
-A 1 tells the library to just list the names of files in a directory,
-instead of doing a full directory listing that would include file sizes,
-dates etc. It works with both FTP and SFTP urls.
+\fB-quote\fR
+Pass a list of FTP or SFTP commands to send to the server before the FTP
+transfer request. These commands are sent before any other FTP commands,
+including \f(CRCWD\fR. If you do not want to transfer any files, set
+\fB-nobody\fR to \f(CR1\fR and \fB-header\fR to \f(CR0\fR.
 .IP
-This causes an FTP NLST command to be sent. Beware that some FTP servers
-list only files in their response to NLST, they might not include
-subdirectories and symbolic links.
+Prefix a command with an asterisk (\f(CR*\fR) to make TclCurl continue even if
+that command fails. By default, a failure stops the transfer.
 .IP
-Setting this option to 1 also implies a directory listing even if the URL
-doesn\(cqt end with a slash, which otherwise is necessary.
+To disable this option, set it to the empty string.
 .IP
-Do NOT use this option if you also use \fB-wildcardmatch\fR as it will
-effectively break that feature.
-.TP 3
--append
-A 1 parameter tells the extension to append to the remote file instead of
-overwriting it. This is only useful when uploading to a ftp site.
-.TP 3
--ftpusepret
-Set to 1 to tell TclCurl to use the EPRT (and LPRT) command when doing
-active FTP downloads (which is enabled by \(oq\fBftpport\fR\(cq). Using EPRT means
-that it will first attempt to use EPRT and then LPRT before using PORT, if
-you pass zero to this option, it will not try using EPRT or LPRT, only
-plain PORT.
-.TP 3
--ftpuseepvs
-Set to one to tell TclCurl to use the EPSV command when doing passive FTP
-downloads (which it always does by default). Using EPSV means that it will
-first attempt to use EPSV before using PASV, but if you pass a zero to this
-option, it will not try using EPSV, only plain PASV.
-.TP 3
--ftpusepret
-Set to one to tell TclCurl to send a PRET command before PASV (and EPSV).
-Certain FTP servers, mainly drftpd, require this non-standard command for
-directory listings as well as up and downloads in PASV mode. Has no effect
-when using the active FTP transfers mode.
-.TP 3
--ftpcreatemissingdirs
-If set to 1, TclCurl will attempt to create any remote directory that it
-fails to CWD into. CWD is the command that changes working directory.
+The commands must be raw FTP commands. For example, to create a directory
+you must send \f(CRmkd Test\fR, not \f(CRmkdir Test\fR.
 .IP
-This setting also applies to SFTP-connections. TclCurl will attempt to
-create the remote directory if it can\(cqt obtain a handle to the
-target-location. The creation will fail if a file of the same name as the
-directory to create already exists or lack of permissions prevents
-creation.
+Valid SFTP commands are \f(CRchgrp\fR, \f(CRchmod\fR, \f(CRchown\fR, \f(CRln\fR, \f(CRmkdir\fR, \f(CRpwd\fR,
+\f(CRrename\fR, \f(CRrm\fR, \f(CRrmdir\fR, and \f(CRsymlink\fR.
+.TP 3
+\fB-postquote\fR
+Pass a list of FTP commands to send to the server after the FTP transfer
+request. If you do not want to transfer any files, set \fB-nobody\fR to \f(CR1\fR
+and \fB-header\fR to \f(CR0\fR.
+.TP 3
+\fB-prequote\fR
+Pass a list of FTP or SFTP commands to send to the server after the
+transfer type has been set.
+.TP 3
+\fB-dirlistonly\fR
+Set this option to \f(CR1\fR to list only file names in a directory instead of
+requesting a full directory listing with file sizes, dates, and similar
+information. This option works with both FTP and SFTP URLs.
 .IP
-If set to 2, TclCurl will retry the CWD command again if the subsequent MKD
-command fails. This is especially useful if you\(cqre doing many simultanoeus
-connections against the same server and they all have this option enabled,
-as then CWD may first fail but then another connection does MKD before this
-connection and thus MKD fails but trying CWD works
-.TP 3
--ftpresponsetimeout
-Causes TclCurl to set a timeout period (in seconds) on the amount of time
-that the server is allowed to take in order to generate a response message
-for a command before the session is considered hung. Note that while
-TclCurl is waiting for a response, this value overrides \fBtimeout\fR. It is
-recommended that if used in conjunction with \fBtimeout\fR, you set it to a
-value smaller than \fBtimeout\fR.
-.TP 3
--ftpalternativetouser
-Pass a string which will be used to authenticate if the usual FTP \(lqUSER
-user\(rq and \(lqPASS password\(rq negotiation fails. This is currently only known
-to be required when connecting to Tumbleweed\(cqs Secure Transport FTPS server
-using client certificates for authentication.
-.TP 3
--ftpskippasvip
-If set to 1, it instructs TclCurl not to use the IP address the server
-suggests in its 227-response to TclCurl\(cqs PASV command when TclCurl
-connects the data connection. Instead TclCurl will re-use the same IP
-address it already uses for the control connection. But it will use the
-port number from the 227-response.
+For FTP, this causes an \f(CRNLST\fR command to be sent. Some FTP servers return
+only files in response to \f(CRNLST\fR, and may omit subdirectories and symbolic
+links.
 .IP
-This option has no effect if PORT, EPRT or EPSV is used instead of PASV.
-.TP 3
--ftpsslauth
-Pass TclCurl one of the values from below, to alter how TclCurl issues
-\(lqAUTH TLS\(rq or \(lqAUTH SSL\(rq when FTP over SSL is activated (see \fB-ftpssl\fR).
+Setting this option to \f(CR1\fR also implies a directory listing even if the
+URL does not end with a slash, which would otherwise be required.
 .IP
-You may need this option because of servers like BSDFTPD-SSL from
-.UR http://bsdftpd-ssl.sc.ru/
-.UE
-\(lqwhich won\(cqt work properly  when \(lqAUTH SSL\(rq is
-issued (although the server responds fine and everything) but requires
-\(lqAUTH TLS\(rq instead.
+Do not use this option together with \fB-wildcardmatch\fR, as it effectively
+disables that feature.
+.TP 3
+\fB-append\fR
+Set this option to \f(CR1\fR to append to the remote file instead of
+overwriting it. This is useful only when uploading to an FTP site.
+.TP 3
+\fB-ftpuseeprt\fR
+Set this option to \f(CR1\fR to make TclCurl use the \f(CREPRT\fR and \f(CRLPRT\fR commands
+for active FTP transfers, which are enabled with \fB-ftpport\fR. When this
+option is enabled, TclCurl first attempts \f(CREPRT\fR, then \f(CRLPRT\fR, and only
+then falls back to \f(CRPORT\fR. If this option is set to \f(CR0\fR, only \f(CRPORT\fR is
+used.
+.TP 3
+\fB-ftpuseepsv\fR
+Set this option to \f(CR1\fR to make TclCurl use the \f(CREPSV\fR command for passive
+FTP transfers. This is the default behavior. When enabled, TclCurl first
+attempts \f(CREPSV\fR before using \f(CRPASV\fR. If this option is set to \f(CR0\fR, TclCurl
+uses only \f(CRPASV\fR.
+.TP 3
+\fB-ftpusepret\fR
+Set this option to \f(CR1\fR to make TclCurl send a \f(CRPRET\fR command before \f(CRPASV\fR
+or \f(CREPSV\fR. Some FTP servers, especially \f(CRdrftpd\fR, require this non-standard
+command for directory listings and uploads or downloads in passive mode.
+This option has no effect for active FTP transfers.
+.TP 3
+\fB-ftpcreatemissingdirs\fR
+Controls whether TclCurl should attempt to create a remote directory when
+the transfer requires that directory to exist, but a \f(CRCWD\fR command shows
+that it does not yet exist or cannot yet be entered.
+.IP
+This setting also applies to SFTP connections. TclCurl attempts to create
+the remote directory if it cannot obtain a handle to the target location.
+Creation fails if a file with the same name already exists, or if
+permissions do not allow directory creation.
+.IP
+Accepted values:
+.RS
+.TP 3
+\f(CR1\fR
+After a failed \f(CRCWD\fR, TclCurl attempts to create the missing remote
+directory and then continues with the transfer.
+.TP 3
+\f(CR2\fR
+After a failed \f(CRCWD\fR, TclCurl attempts to create the missing remote
+directory. If the subsequent \f(CRMKD\fR command fails, TclCurl retries the
+\f(CRCWD\fR command before giving up. This is useful when multiple
+simultaneous connections target the same server and another connection
+may have created the directory in the meantime.
+.RE
+.TP 3
+\fB-ftpresponsetimeout\fR
+Sets a timeout, in seconds, for how long the server may take to return a
+response to an FTP command before the session is considered hung. While
+TclCurl is waiting for such a response, this value overrides \fB-timeout\fR.
+If both options are used, \fB-ftpresponsetimeout\fR should normally be set
+to a value smaller than \fB-timeout\fR.
+.TP 3
+\fB-ftpalternativetouser\fR
+Pass a string to use for authentication if the usual FTP \f(CRUSER user\fR and
+\f(CRPASS password\fR negotiation fails. This is known to be required in some
+cases when connecting to Tumbleweed Secure Transport FTPS servers that use
+client-certificate authentication.
+.TP 3
+\fB-ftpskippasvip\fR
+Set this option to \f(CR1\fR to make TclCurl ignore the IP address suggested by
+the server in its \f(CR227\fR response to TclCurl\(cqs \f(CRPASV\fR command when opening
+the data connection. TclCurl instead reuses the same IP address already in
+use for the control connection, while still using the port number from the
+\f(CR227\fR response.
+.IP
+This option has no effect if \f(CRPORT\fR, \f(CREPRT\fR, or \f(CREPSV\fR is used instead of
+\f(CRPASV\fR.
+.TP 3
+\fB-ftpsslauth\fR
+Selects how TclCurl issues \f(CRAUTH TLS\fR or \f(CRAUTH SSL\fR when FTP over SSL is
+enabled with \fB-ftpssl\fR.
+.IP
+This option may be needed for servers such as BSDFTPD-SSL, which do not
+handle \f(CRAUTH SSL\fR correctly and require \f(CRAUTH TLS\fR instead.
 .IP
 Accepted values:
 .RS
 .TP 3
 \f(CRdefault\fR
-Allows TclCurl to decide.
+Lets TclCurl choose.
 .TP 3
 \f(CRssl\fR
-Try \(lqAUTH SSL\(rq first, and only if that fails try \(lqAUTH TLS\(rq.
+Tries \f(CRAUTH SSL\fR first, and tries \f(CRAUTH TLS\fR only if that fails.
 .TP 3
 \f(CRtls\fR
-Try \(lqAUTH TLS\(rq first, and only if that fails try \(lqAUTH SSL\(rq.
+Tries \f(CRAUTH TLS\fR first, and tries \f(CRAUTH SSL\fR only if that fails.
 .RE
 .TP 3
--ftpsslccc
-Set it to make TclCurl use CCC (Clear Command Channel). It shuts down the
-SSL/TLS layer after authenticating. The rest of the control channel
-communication will be unencrypted. This allows NAT routers to follow the
-FTP transaction. Accepted values are:
+\fB-ftpsslccc\fR
+Controls use of CCC (Clear Command Channel). CCC shuts down the SSL/TLS
+layer after authentication, so the remainder of the control channel is
+unencrypted. This can allow NAT routers to inspect the FTP control
+channel.
+.IP
+Accepted values are:
 .RS
 .TP 3
 \f(CRnone\fR
 Do not attempt to use CCC.
 .TP 3
 \f(CRpassive\fR
-Do not initiate the shutdown, wait for the server to do it. Do
+Do not initiate the shutdown. Wait for the server to do so, and do
 not send a reply.
 .TP 3
 \f(CRactive\fR
 Initiate the shutdown and wait for a reply.
 .RE
 .TP 3
--ftpaccount
-Pass string (or \(lq\(lq to disable). When an FTP server asks for \(lqaccount data\(rq
-after user name and password has been provided, this data is sent off using
-the ACCT command.
+\fB-ftpaccount\fR
+Pass a string containing account data, or \f(CR\(dq\(dq\fR to disable it. If an FTP
+server requests account data after the user name and password have been
+provided, TclCurl sends this value with the \f(CRACCT\fR command.
 .TP 3
--ftpfilemethod
+\fB-ftpfilemethod\fR
 Selects how TclCurl navigates FTP paths. Accepted values are:
 .RS
 .TP 3
 \f(CRmulticwd\fR
-The default, TclCurl will do a single CWD operation for each
-path part in the given URL. For deep hierarchies this means very many
-commands. This is how RFC1738 says it should be done.
+The default. TclCurl performs one \f(CRCWD\fR operation for each path
+component in the URL. For deep hierarchies this may require many
+commands. This is the method described by RFC 1738.
 .TP 3
 \f(CRnocwd\fR
-No CWD at all is done, TclCurl will do SIZE, RETR, STOR, etc and
-give a full path to the server.
+TclCurl does not perform \f(CRCWD\fR at all. Instead it sends commands such
+as \f(CRSIZE\fR, \f(CRRETR\fR, and \f(CRSTOR\fR with the full path.
 .TP 3
 \f(CRsinglecwd\fR
-Make one CWD with the full target directory and then operate
-on the file \(lqnormally\(rq. This is somewhat more standards compliant than
-\(oqnocwd\(cq but without the full penalty of \(oqmulticwd\(cq.
+TclCurl performs one \f(CRCWD\fR to the full target directory and then
+operates on the file normally. This is somewhat more standards
+compliant than \f(CRnocwd\fR, without the full overhead of \f(CRmulticwd\fR.
 .RE
-.SH Protocol options
+.SH PROTOCOL OPTIONS
 .TP 3
--transfertext
-A 1 tells the extension to use ASCII mode for ftp transfers, instead of the
-default binary transfer. For win32 systems it does not set the stdout to
-binary mode. This option can be usable when transferring text data between
-systems with different views on certain characters, such as newlines or
-similar.
+\fB-transfertext\fR
+Set this option to \f(CR1\fR to use ASCII mode for FTP transfers instead of the
+default binary transfer mode. On Win32 systems, this does not set
+\f(CRstdout\fR to binary mode. This option can be useful when transferring text
+data between systems that treat characters such as newlines differently.
 .IP
-\fBNOTE:\fR TclCurl does not do a complete ASCII conversion when doing ASCII
-transfers over FTP. This is a known limitation/flaw that nobody has
-rectified. TclCurl simply sets the mode to ascii and performs a standard
+\fBNOTE:\fR TclCurl does not perform full ASCII conversion during ASCII FTP
+transfers. It simply sets the transfer mode to ASCII and performs a normal
 transfer.
 .TP 3
--proxytransfermode
-If set to 1, TclCurl sets the transfer mode (binary or ASCII) for FTP
-transfers done via an HTTP proxy, by appending ;type=a or ;type=i to the
-URL. Without this setting, or it being set to 0, the default,
-\fB-transfertext\fR has no effect when doing FTP via a proxy. Beware that not
-all proxies support this feature.
+\fB-proxytransfermode\fR
+Set this option to \f(CR1\fR to make TclCurl set the transfer mode, binary or
+ASCII, for FTP transfers performed through an HTTP proxy by appending
+\f(CR;type=a\fR or \f(CR;type=i\fR to the URL. If this option is omitted or set to
+\f(CR0\fR, \fB-transfertext\fR has no effect for FTP transfers performed through
+an HTTP proxy. Not all proxies support this feature.
 .TP 3
--crlf
-If set to \(oq1\(cq, TclCurl converts Unix newlines to CRLF newlines on
-transfers. Disable this option again by setting the value to \(oq0\(cq.
+\fB-crlf\fR
+Set this option to \f(CR1\fR to make TclCurl convert Unix newlines to CRLF
+newlines during transfers. Set it to \f(CR0\fR to disable this behavior.
 .TP 3
--range
-Pass a string as parameter, which should contain the specified range you
-want. It should be in the format \(lqX-Y\(rq , where X or Y may be left out. HTTP
-transfers also support several intervals, separated with commas as in
-\(lqX-Y,N-M\(rq Using this kind of multiple intervals will cause the HTTP server
-to send the response document in pieces (using standard MIME separation
-techniques).
+\fB-range\fR
+Pass a string specifying the requested range. The format is \f(CRX-Y\fR, where
+either \f(CRX\fR or \f(CRY\fR may be omitted. HTTP transfers also support multiple
+ranges separated by commas, as in \f(CRX-Y,N-M\fR. When multiple ranges are
+requested over HTTP, the server returns the response document in pieces
+using standard MIME separation rules.
 .IP
-Ranges only work on HTTP, FTP and FILE transfers.
+Range requests are supported only for HTTP, FTP, and FILE transfers.
 .TP 3
--resumefrom
-Pass the offset in number of bytes that you want the transfer to start
-from. Set this option to 0 to make the transfer start from the beginning
-(effectively disabling resume).
+\fB-resumefrom\fR
+Pass the offset, in bytes, at which the transfer should start. Set this
+option to \f(CR0\fR to start the transfer from the beginning, which disables
+resume behavior.
 .IP
-For FTP, set this option to -1 to make the transfer start from the end of
-the target file (useful to continue an interrupted upload).
+For FTP, set this option to \f(CR-1\fR to start from the end of the target
+file, which is useful when continuing an interrupted upload.
 .IP
-When doing uploads with FTP, the resume position is where in the
-local/source file TclCurl should try to resume the upload from and it will
-then append the source file to the remote target file.
+For FTP uploads, the resume position specifies where in the local source
+file TclCurl should resume reading. The data read from that point is then
+appended to the remote target file.
 .TP 3
--customrequest
-Pass a string as parameter. It will be used instead of GET or HEAD when
-doing the HTTP request. This is useful for doing DELETE or other more
-obscure HTTP requests. Do not do this at will, make sure your server
-supports the command first.
+\fB-customrequest\fR
+Pass a string containing the request method to use instead of the default
+method, such as \f(CRGET\fR or \f(CRHEAD\fR, when making an HTTP request. This is
+useful for methods such as \f(CRDELETE\fR and other less common HTTP requests.
+Use this option only when the server is known to support the specified
+method.
 .IP
-Note that TclCurl will still act and assume the keyword it would use if you
-do not set your custom and it will act according to that. Thus, changing
-this to a HEAD when TclCurl otherwise would do a GET might cause TclCurl to
-act funny, and similar. To switch to a proper HEAD, use \fB-nobody\fR, to
-switch to a proper POST, use \fB-post\fR or \fB-postfields\fR and so on.
+TclCurl still behaves internally according to the type of request it would
+otherwise have used. As a result, changing the request method with this
+option can produce inconsistent behavior if the corresponding request type
+is not selected through the usual dedicated option. For example, to make a
+proper \f(CRHEAD\fR request, use \fB-nobody\fR. To make a proper \f(CRPOST\fR request,
+use \fB-post\fR or \fB-postfields\fR.
 .TP 3
--filetime
-If you pass a 1, TclCurl will attempt to get the modification date of the
-remote document in this operation. This requires that the remote server
-sends the time or replies to a time querying command. The getinfo procedure
-with the filetime argument can be used after a transfer to extract the
-received time (if any).
-.TP 3
--nobody
-A 1 tells the library not to include the body-part in the output. This is
-only relevant for protocols that have a separate header and body part. On
-HTTP(S) servers, this will make TclCurl do a HEAD request.
+\fB-filetime\fR
+Set this option to \f(CR1\fR to make TclCurl attempt to obtain the modification
+time of the remote document during the transfer. This requires the remote
+server either to send the time directly or to support a command for
+querying it. After the transfer, the \f(CRfiletime\fR value can be retrieved
+with the \f(CRgetinfo\fR procedure.
 .IP
-To change request to GET, you should use \fBhttpget\fR. Change request to
-POST with \fBpost\fR etc.
+For FTP transfers, this typically means that the server must support a
+command for querying the remote file modification time, such as \f(CRMDTM\fR.
+If the server does not provide this information, the transfer can still
+succeed, but the retrieved \f(CRfiletime\fR value remains unknown.
 .TP 3
--infilesize
-When uploading a file to a remote site, this option should be used to tell
-TclCurl what the expected size of the infile is.
+\fB-nobody\fR
+Set this option to \f(CR1\fR to omit the body from the output. This is relevant
+only for protocols that distinguish between a header part and a body part.
+For HTTP and HTTPS, this causes TclCurl to issue a \f(CRHEAD\fR request.
 .IP
-This option is mandatory for uploading using SCP.
+To change the request back to \f(CRGET\fR, use \fB-httpget\fR. To switch to
+\f(CRPOST\fR, use \fB-post\fR or a related option.
 .TP 3
--upload
-A 1 tells the library to prepare for an upload. The \fB-infile\fR and
-\fB-infilesize\fR options are also interesting for uploads. If the protocol
+\fB-infilesize\fR
+Use this option when uploading a file to specify the expected size of the
+input file.
+.IP
+This option is mandatory for uploads performed with SCP.
+.TP 3
+\fB-upload\fR
+Set this option to \f(CR1\fR to prepare for an upload. The \fB-infile\fR and
+\fB-infilesize\fR options are also relevant for uploads. If the protocol
 is HTTP, uploading means using the PUT request unless you tell TclCurl
 otherwise.
 .IP
@@ -1382,413 +1359,445 @@ FILE.
 -timevalue
 This should be the time in seconds since 1 jan 1970, and the time will be
 used in a condition as specified with \fBtimecondition\fR.
-.SH Connection options
+.SH CONNECTION OPTIONS
 .TP 3
--timeout
-Pass the maximum time in seconds that you allow the TclCurl transfer
-operation to take. Do note that normally, name lookups may take a
-considerable time and that limiting the operation to less than a few
-minutes risks aborting perfectly normal operations. This option will cause
-libcurl to use the SIGALRM to enable time-outing system calls.
+\fB-timeout\fR
+Pass the maximum time, in seconds, that a TclCurl transfer operation may
+take. Name resolution alone may take a noticeable amount of time, so
+setting this value too low can abort otherwise normal operations.
 .IP
-In unix-like systems, this might cause signals to be used unless
-\fB-nosignal\fR is used.
+This option may cause libcurl to use \f(CRSIGALRM\fR to interrupt blocking
+system calls. On Unix-like systems, signals may therefore be used unless
+\fB-nosignal\fR is enabled.
 .TP 3
--timeoutms
-Like \fBtimeout\fR but takes a number of milliseconds instead. If libcurl is
-built to use the standard system name resolver, that part will still use
-full-second resolution for timeouts.
+\fB-timeoutms\fR
+Like \fB-timeout\fR, but takes a value in milliseconds. If libcurl is built
+to use the standard system name resolver, name resolution still uses
+full-second timeout granularity.
 .TP 3
--lowspeedlimit
-Pass the speed in bytes per second that the transfer should be below during
-\fBlowspeedtime\fR seconds for the extension to consider it too slow and
-abort.
+\fB-lowspeedlimit\fR
+Pass the speed, in bytes per second, below which the transfer rate must
+remain during \fB-lowspeedtime\fR seconds before TclCurl considers the
+transfer too slow and aborts it.
 .TP 3
--lowspeedtime
-Pass the time in seconds that the transfer should be below the
-\fBlowspeedlimit\fR for the extension to consider it too slow and abort.
+\fB-lowspeedtime\fR
+Pass the number of seconds during which the transfer speed must stay below
+\fB-lowspeedlimit\fR before TclCurl considers the transfer too slow and
+aborts it.
 .TP 3
--maxsendspeed
-Pass a speed in bytes per seconds. If an upload exceeds this speed on
-cumulative average during the transfer, the transfer will pause to keep the
-average rate less than or equal to the parameter value.  Defaults to
+\fB-maxsendspeed\fR
+Pass a speed in bytes per second. If an upload exceeds this average speed
+during the transfer, TclCurl pauses the transfer as needed to keep the
+average rate less than or equal to the specified value. The default is
 unlimited speed.
 .TP 3
--maxrecvspeed
-Pass a speed in bytes per second. If a download exceeds this speed on
-cumulative average during the transfer, the transfer will pause to keep the
-average rate less than or equal to the parameter value. Defaults to
+\fB-maxrecvspeed\fR
+Pass a speed in bytes per second. If a download exceeds this average speed
+during the transfer, TclCurl pauses the transfer as needed to keep the
+average rate less than or equal to the specified value. The default is
 unlimited speed.
 .TP 3
--maxconnects
-Sets the persistent connection cache size in all the protocols that support
-persistent connections. The set amount will be the maximum amount of
-simultaneous connections that TclCurl may cache in this easy handle.
-Default is 5, and there isn\(cqt much point in changing this value unless you
-are perfectly aware of how this work and changes TclCurl\(cqs behaviour.
+\fB-maxconnects\fR
+Sets the size of the persistent connection cache for protocols that support
+persistent connections. This value is the maximum number of simultaneous
+connections TclCurl may cache in the easy handle. The default is \f(CR5\fR.
 .IP
-When reaching the maximum limit, TclCurl closes the oldest connection in
-the cache to prevent the number of open connections to increase.
+When the maximum is reached, TclCurl closes the oldest cached connection
+to prevent the number of open connections from increasing further.
 .IP
-\fBNote\fR: if you have already performed transfers with this curl handle,
-setting a smaller \fBmaxconnects\fR than before may cause open connections to
-unnecessarily get closed.
+\fBNOTE:\fR If transfers have already been performed with this easy handle,
+reducing \fB-maxconnects\fR may cause existing open connections to be closed
+earlier than expected.
 .IP
-If you add this easy handle to a multi handle, this setting is not being
-acknowledged, instead you must configure the multi handle its own
-\fBmaxconnects\fR option.
+If this easy handle is added to a multi handle, this setting is ignored.
+In that case, configure the corresponding \fBmaxconnects\fR option on the
+multi handle instead.
 .TP 3
--connecttimeout
-Maximum time in seconds that you allow the connection to the server to
-take.  This only limits the connection phase, once it has connected, this
-option is of no more use. Set to zero to disable connection timeout (it
-will then only timeout on the internal timeouts).
+\fB-connecttimeout\fR
+Pass the maximum time, in seconds, that the connection phase may take.
+This limits only the time required to establish the connection. Once the
+connection has been established, this option no longer applies. Set it to
+\f(CR0\fR to disable the connection timeout.
 .IP
-In unix-like systems, this might cause signals to be used unless
-\fB-nosignal\fR is set.
+On Unix-like systems, signals may be used unless \fB-nosignal\fR is enabled.
 .TP 3
--connecttimeoutms
-Like \fBconnecttimeout\fR but takes a number of milliseconds instead. If
-libcurl is built to use the standard system name resolver, that part will
-still use full-second resolution for timeouts.
+\fB-connecttimeoutms\fR
+Like \fB-connecttimeout\fR, but takes a value in milliseconds. If libcurl is
+built to use the standard system name resolver, name resolution still uses
+full-second timeout granularity.
 .TP 3
--ipresolve
-Allows an application to select what kind of IP addresses to use when
-resolving host names. This is only interesting when using host names that
-resolve addresses using more than one version of IP. Accepted values are:
+\fB-ipresolve\fR
+Selects which IP address families may be used when resolving host names.
+This option is relevant only when a host name resolves to more than one IP
+version.
+.IP
+Accepted values are:
+.RS
 .TP 3
 \f(CRwhatever\fR
-Default, resolves addresses to all IP versions that your system allows.
+The default. Resolves addresses using all IP versions supported by the
+system.
 .TP 3
 \f(CRv4\fR
-Resolve to ipv4 addresses.
+Resolves only IPv4 addresses.
 .TP 3
 \f(CRv6\fR
-Resolve to ipv6 addresses.
+Resolves only IPv6 addresses.
+.RE
 .TP 3
--resolve
-Pass a list of strings with host name resolve information to use for
-requests with this handle.
+\fB-resolve\fR
+Pass a list of host name resolution entries to use for requests made with
+this handle.
 .IP
-Each single name resolve string should be written using the format
-HOST:PORT:ADDRESS where HOST is the name TclCurl will try to resolve, PORT
-is the port number of the service where TclCurl wants to connect to the
-HOST and ADDRESS is the numerical IP address. If libcurl is built to
-support IPv6, ADDRESS can be either IPv4 or IPv6 style addressing.
+Each entry must use the format \f(CRHOST:PORT:ADDRESS\fR, where \f(CRHOST\fR is the
+name TclCurl tries to resolve, \f(CRPORT\fR is the destination service port, and
+\f(CRADDRESS\fR is the numeric IP address to use. If libcurl supports IPv6,
+\f(CRADDRESS\fR may be either an IPv4 or an IPv6 address.
 .IP
-This option effectively pre-populates the DNS cache with entries for the
-host+port pair so redirects and everything that operations against the
-HOST+PORT will instead use your provided ADDRESS.
+This option effectively pre-populates the DNS cache with entries for a
+given \f(CRHOST:PORT\fR pair, so redirects and other requests to the same
+\f(CRHOST:PORT\fR use the supplied \f(CRADDRESS\fR.
 .IP
-You can remove names from the DNS cache again, to stop providing these fake
-resolves, by including a string in the linked list that uses the format
-\(lq-HOST:PORT\(rq. The host name must be prefixed with a dash, and the host name
-and port number must exactly match what was already added previously.
+To remove an entry from the DNS cache, include a string in the form
+\f(CR-HOST:PORT\fR. The host name must be prefixed with a dash, and both the
+host name and port must exactly match an entry added earlier.
 .TP 3
--usessl
-Pass a one of the values from below to make TclCurl use your desired level
-of SSL for the transfer. This is for enabling SSL/TLS when you use FTP,
-SMTP, POP3, IMAP etc.
+\fB-usessl\fR
+Selects the desired level of SSL or TLS use for the transfer. This option
+is relevant for protocols such as FTP, SMTP, POP3, and IMAP.
 .IP
-You can use ftps:// URLs to explicitly switch on SSL/TSL for the control
-connection and the data connection.
+You can also use \f(CRftps://\fR URLs to enable SSL/TLS explicitly for both the
+control connection and the data connection.
 .IP
 Accepted values:
+.RS
 .TP 3
 \f(CRnope\fR
-Do not attempt to use SSL
+Do not attempt to use SSL.
 .TP 3
 \f(CRtry\fR
-Try using SSL, proceed anyway otherwise.
+Attempt to use SSL, but continue even if it cannot be negotiated.
 .TP 3
 \f(CRcontrol\fR
-Use SSL for the control connection or fail with \(lquse ssl failed\(rq (64).
+Use SSL for the control connection, or fail with \f(CRuse ssl failed\fR
+(\f(CR64\fR).
 .TP 3
 \f(CRall\fR
-Use SSL for all communication or fail with \(lquse ssl failed\(rq (64).
-.SH SSL and security options
+Use SSL for all communication, or fail with \f(CRuse ssl failed\fR (\f(CR64\fR).
+.RE
+.SH SSL AND SECURITY OPTIONS
 .TP 3
--sslcert
-Pass a string as parameter. The string should be the file name of your
-certificate. The default format is \(lqPEM\(rq and can be changed with
-\fB-sslcerttype\fR.
+\fB-sslcert\fR
+Pass a string containing the file name of the certificate to use. The
+default format is \f(CRPEM\fR, and it can be changed with \fB-sslcerttype\fR.
 .IP
-With NSS this is the nickname of the certificate you wish to authenticate
-with. If you want to use a file from the current directory, please precede
-it with the \(lq./\(rq prefix, in order to avoid confusion with a nickname.
+When libcurl is built against NSS, this value is the nickname of the
+certificate to use for authentication. To use a file in the current
+directory in that case, prefix it with \f(CR./\fR to avoid confusion with a
+nickname.
 .TP 3
--sslcerttype
-Pass a string as parameter. The string should be the format of your
-certificate. Supported formats are \(lqPEM\(rq and \(lqDER\(rq.
-.TP 3
--sslkey
-Pass a pointer to a zero terminated string as parameter. The string should
-be the file name of your private key. The default format is \(lqPEM\(rq and can
-be changed with \fB-sslkeytype\fR.
-.TP 3
--sslkeytype
-Pass a pointer to a zero terminated string as parameter. The string should
-be the format of your private key. Supported formats are \(lqPEM\(rq, \(lqDER\(rq and
-\(lqENG\(rq
+\fB-sslcerttype\fR
+Pass a string specifying the format of the certificate given with
+\fB-sslcert\fR.
 .IP
-\fBNOTE:\fRThe format \(lqENG\(rq enables you to load the private key from a crypto
-engine. in this case \fB-sslkey\fR is used as an identifier passed to the
-engine. You have to set the crypto engine with \fB-sslengine\fR. The \(lqDER\(rq
-format key file currently does not work because of a bug in OpenSSL.
-.TP 3
--keypasswd
-Pass a string as parameter. It will be used as the password required to use
-the \fB-sslkey\fR or \fB-sshprivatekeyfile\fR private key.
-.IP
-You never need a pass phrase to load a certificate but you need one to load
-you private key.
-.IP
-This option used to be known as \fB-sslkeypasswd\fR and \fB-sslcertpasswd\fR.
-.TP 3
--sslengine
-Pass a string as parameter. It will be used as the identifier for the
-crypto engine you want to use for your private key.
-.IP
-\fBNOTE:\fRIf the crypto device cannot be loaded, an error will be returned.
-.TP 3
--sslenginedefault
-Pass a 1 to set the actual crypto engine as the default for (asymmetric)
-crypto operations.
-.IP
-\fBNOTE:\fRIf the crypto device cannot be set, an error will be returned.
-.TP 3
--sslversion
-Use it to set what version of SSL/TLS to use. Accepted values are:
-.TP 3
-\f(CRdefault\fR
-The default action. This will attempt to figure out the remote SSL protocol
-version, i.e. either SSLv3 or TLSv1 (but not SSLv2, which became disabled
-by default with 7.18.1).
-.TP 3
-\f(CRtlsv1\fR
-Force TLSv1 or later
-.TP 3
-\f(CRsslv2\fR
-Force SSLv2
-.TP 3
-\f(CRsslv3\fR
-Force SSLv3
-.TP 3
-\f(CRtlsv1_0\fR
-Force TLSv1.0 or later
-.TP 3
-\f(CRtlsv1_1\fR
-Force TLSv1.1 or later
-.TP 3
-\f(CRtlsv1_2\fR
-Force TLSv1.2 or later
-.TP 3
-\f(CRtlsv1_3\fR
-Force TLSv1.3 or later
-.TP 3
-\f(CRmaxdefault\fR
-Use the maximum supported TLS version by libcurl or the default value from
-the SSL library.
-.TP 3
-\f(CRmaxtlsv1_0\fR
-Define maximum supported TLS version as TLSv1.0
-.TP 3
-\f(CRmaxtlsv1_1\fR
-Define maximum supported TLS version as TLSv1.1
-.TP 3
-\f(CRmaxtlsv1_2\fR
-Define maximum supported TLS version as TLSv1.2
-.TP 3
-\f(CRmaxtlsv1_3\fR
-Define maximum supported TLS version as TLSv1.3
-.TP 3
--sslverifypeer
-This option determines whether TclCurl verifies the authenticity of the
-peer\(cqs certificate. A 1 means it verifies; zero means it doesn\(cqt. The
-default is 1.
-.IP
-When negotiating an SSL connection, the server sends a certificate
-indicating its identity. TclCurl verifies whether the certificate is
-authentic, i.e. that you can trust that the server is who the certificate
-says it is. This trust is based on a chain of digital signatures, rooted in
-certification authority (CA) certificates you supply.
-.IP
-TclCurl uses a default bundle of CA certificates that comes with libcurl
-but you can specify alternate certificates with the \fB-cainfo\fR or the
-\fB-capath\fR options.
-.IP
-When \fB-sslverifypeer\fR is nonzero, and the verification fails to prove
-that the certificate is authentic, the connection fails. When the option is
-zero, the peer certificate verification succeeds regardless.
-.IP
-Authenticating the certificate is not by itself very useful. You typically
-want to ensure that the server, as authentically identified by its
-certificate, is the server you mean to be talking to, use
-\fB-sslverifyhost\fR to control that. The check that the host name in the
-certificate is valid for the host name you\(cqre connecting to is done
-independently of this option.
-.TP 3
--cainfo
-Pass a file naming holding the certificate to verify the peer with. This
-only makes sense when used in combination with the \fB-sslverifypeer\fR
-option, if it is set to zero \fB-cainfo\fR need not even indicate an
-accessible file.
-.IP
-This option is by default set to the system path where libcurl\(cqs cacert
-bundle is assumed to be stored, as established at build time.
-.IP
-When built against NSS this is the directory that the NSS certificate
-database resides in.
-.TP 3
--issuercert
-Pass a string naming a file holding a CA certificate in PEM format. If the
-option is set, an additional check against the peer certificate is
-performed to verify the issuer is indeed the one associated with the
-certificate provided by the option. This additional check is useful in
-multi-level PKI where one need to enforce the peer certificate is from a
-specific branch of the tree.
-.IP
-This option makes sense only when used in combination with the
-\fB-sslverifypeer\fR option. Otherwise, the result of the check is not
-considered as failure.
-.TP 3
--capath
-Pass the directory holding multiple CA certificates to verify the peer
-with. If libcurl is built against OpenSSL, the certificate directory must
-be prepared using the openssl c_rehash utility. This only makes sense when
-used in combination with the  \fB-sslverifypeer\fR option, if it is set to
-zero, \fB-capath\fR need not even indicate an accessible path.
-.IP
-This option apparently does not work in Windows due to some limitation in
-openssl.
-.IP
-This option is OpenSSL-specific and does nothing if libcurl is built to use
-GnuTLS. NSS-powered libcurl provides the option only for backward
-compatibility.
-.TP 3
--crlfile
-Pass a string naming a file with the concatenation of CRL (in PEM format)
-to use in the certificate validation that occurs during the SSL exchange.
-.IP
-When libcurl is built to use NSS or GnuTLS, there is no way to influence
-the use of CRL passed to help in the verification process. When built with
-OpenSSL support, X509\fIV\fRFLAG\fICRL\fRCHECK and X509\fIV\fRFLAG\fICRL\fRCHECK_ALL are
-both set, requiring CRL check against all the elements of the certificate
-chain if a CRL file is passed.
-.IP
-This option makes sense only when used in combination with the
-\fB-sslverifypeer\fR option.
-.IP
-A specific error code (CURLE\fISSL\fRCRL_BADFILE) is defined with the option.
-It is returned when the SSL exchange fails because the CRL file cannot be
-loaded. A failure in certificate verification due to a revocation
-information found in the CRL does not trigger this specific error.
-.TP 3
--sslverifyhost
-This option determines whether TclCurl verifies that the server claims to
-be who you want it to be.
-.IP
-When negotiating an SSL connection, the server sends a certificate
-indicating its identity.
-.IP
-When \fB-sslverifyhost\fR is set to 2, that certificate must indicate that
-the server is the server to which you meant to connect, or the connection
-fails.
-.IP
-TclCurl considers the server the intended one when the Common Name field or
-a Subject Alternate Name field in the certificate matches the host name in
-the URL to which you told Curl to connect.
-.IP
-When set to 1, the certificate must contain a Common Name field, but it
-does not matter what name it says. (This is not ordinarily a useful
-setting).
-.IP
-When the value is 0, the connection succeeds regardless of the names in the
-certificate.
-.IP
-The default value for this option is 2.
-.IP
-This option controls the identity that the server \fIclaims\fR. The server
-could be lying. To control lying, see \fB-sslverifypeer\fR. If libcurl is
-built against NSS and \fB-verifypeer\fR is zero, \fB-verifyhost\fR is ignored.
-.TP 3
--certinfo
-Set to \(oq1\(cq to enable TclCurl\(cqs certificate chain info gatherer. With this
-enabled, TclCurl (if built with OpenSSL) will extract lots of information
-and data about the certificates in the certificate chain used in the SSL
-connection. This data can then be to extracted after a transfer using the
-\fBgetinfo\fR command and its option \fBcertinfo\fR.
-.TP 3
--randomfile
-Pass a file name. The file will be used to read from to seed the random
-engine for SSL. The more random the specified file is, the more secure the
-SSL connection becomes. \fIThis option was deprecated in libcurl v7.84 and
-removed by default in tclcurl build. See README.md for instructions on
-how to re-enable this option\fR
-.TP 3
--egdsocket
-Pass a path name to the Entropy Gathering Daemon socket. It will be used to
-seed the random engine for SSL. \fIThis option was deprecated in libcurl v7.84
-and removed by default in tclcurl build. See README.md for instructions on
-how to re-enable this option\fR
-.TP 3
--sslcypherlist
-Pass a string holding the ciphers to use for the SSL connection. The list
-must consists of one or more cipher strings separated by colons. Commas or
-spaces are also acceptable separators but colons are normally used, , - and
+Accepted values are:
 .RS
-.IP "\(bu" 3
-can be used as operators.
+.TP 3
+\f(CRPEM\fR
+PEM format.
+.TP 3
+\f(CRDER\fR
+DER format.
+.RE
+.TP 3
+\fB-sslkey\fR
+Pass a string containing the file name of the private key to use. The
+default format is \f(CRPEM\fR, and it can be changed with \fB-sslkeytype\fR.
+.TP 3
+\fB-sslkeytype\fR
+Pass a string specifying the format of the private key given with
+\fB-sslkey\fR.
+.IP
+Accepted values are:
+.RS
+.TP 3
+\f(CRPEM\fR
+PEM format.
+.TP 3
+\f(CRDER\fR
+DER format.
+.TP 3
+\f(CRENG\fR
+Uses a crypto engine. In this case \fB-sslkey\fR is interpreted as an
+identifier passed to the engine, and \fB-sslengine\fR must also be set.
 .RE
 .IP
-For OpenSSL and GnuTLS valid examples of cipher lists include \(oqRC4-SHA\(cq,
-\(oqSHA1+DES\(cq, \(oqTLSv1\(cq and \(oqDEFAULT\(cq. The default list is normally set when
-you compile OpenSSL.
+\fBNOTE:\fR The \f(CRDER\fR private-key format may not work with some OpenSSL
+versions because of upstream limitations.
+.TP 3
+\fB-keypasswd\fR
+Pass a string containing the passphrase required to use the private key
+specified with \fB-sslkey\fR or \fB-sshprivatekeyfile\fR.
 .IP
-You will find more details about cipher lists on this URL:
+A passphrase is not needed to load a certificate itself, but it may be
+needed to load the corresponding private key.
+.IP
+This option was formerly known as \fB-sslkeypasswd\fR and
+\fB-sslcertpasswd\fR.
+.TP 3
+\fB-sslengine\fR
+Pass a string containing the identifier of the crypto engine to use for
+private-key operations.
+.IP
+\fBNOTE:\fR If the crypto engine cannot be loaded, TclCurl returns an error.
+.TP 3
+\fB-sslenginedefault\fR
+Set this option to \f(CR1\fR to make the selected crypto engine the default for
+asymmetric cryptographic operations.
+.IP
+\fBNOTE:\fR If the crypto engine cannot be made the default, TclCurl returns
+an error.
+.TP 3
+\fB-sslversion\fR
+Selects the SSL or TLS protocol version to use.
+.IP
+Accepted values are:
+.RS
+.TP 3
+\f(CRdefault\fR
+Uses the default behavior. TclCurl attempts to negotiate an
+appropriate protocol version with the remote server.
+.TP 3
+\f(CRtlsv1\fR
+Requires TLSv1 or later.
+.TP 3
+\f(CRsslv2\fR
+Requires SSLv2.
+.TP 3
+\f(CRsslv3\fR
+Requires SSLv3.
+.TP 3
+\f(CRtlsv1_0\fR
+Requires TLSv1.0 or later.
+.TP 3
+\f(CRtlsv1_1\fR
+Requires TLSv1.1 or later.
+.TP 3
+\f(CRtlsv1_2\fR
+Requires TLSv1.2 or later.
+.TP 3
+\f(CRtlsv1_3\fR
+Requires TLSv1.3 or later.
+.TP 3
+\f(CRmaxdefault\fR
+Uses the maximum TLS version supported by libcurl or by the SSL
+backend\(cqs default configuration.
+.TP 3
+\f(CRmaxtlsv1_0\fR
+Sets the maximum supported TLS version to TLSv1.0.
+.TP 3
+\f(CRmaxtlsv1_1\fR
+Sets the maximum supported TLS version to TLSv1.1.
+.TP 3
+\f(CRmaxtlsv1_2\fR
+Sets the maximum supported TLS version to TLSv1.2.
+.TP 3
+\f(CRmaxtlsv1_3\fR
+Sets the maximum supported TLS version to TLSv1.3.
+.RE
+.TP 3
+\fB-sslverifypeer\fR
+Controls whether TclCurl verifies the authenticity of the peer
+certificate. Set this option to \f(CR1\fR to enable verification or to \f(CR0\fR to
+disable it. The default is \f(CR1\fR.
+.IP
+During the SSL or TLS handshake, the server sends a certificate declaring
+its identity. TclCurl verifies that certificate against a chain of trust
+rooted in one or more certification authority (CA) certificates.
+.IP
+TclCurl uses the default CA bundle provided by libcurl, but you can
+specify alternate certificates with \fB-cainfo\fR or \fB-capath\fR.
+.IP
+If \fB-sslverifypeer\fR is nonzero and verification fails, the connection
+fails. If this option is \f(CR0\fR, peer-certificate verification is skipped.
+.IP
+Certificate verification alone does not confirm that the peer is the
+specific host you intended to contact. Use \fB-sslverifyhost\fR to control
+host-name verification.
+.TP 3
+\fB-cainfo\fR
+Pass the name of a file containing one or more CA certificates used to
+verify the peer certificate.
+.IP
+This option is meaningful primarily together with \fB-sslverifypeer\fR. If
+peer verification is disabled, \fB-cainfo\fR does not need to name an
+accessible file.
+.IP
+By default, this option is set to the system path of libcurl\(cqs CA bundle,
+as determined when libcurl was built.
+.IP
+When libcurl is built against NSS, this value refers to the directory
+containing the NSS certificate database.
+.TP 3
+\fB-issuercert\fR
+Pass the name of a file containing a CA certificate in PEM format. If this
+option is set, an additional check is performed to verify that the peer
+certificate was issued by the CA certificate provided here.
+.IP
+This is useful in multi-level PKI environments where the peer certificate
+must be constrained to a specific branch of the certificate hierarchy.
+.IP
+This option is meaningful only when used together with
+\fB-sslverifypeer\fR. Otherwise, failure of this additional check is not
+treated as a connection failure.
+.TP 3
+\fB-capath\fR
+Pass the name of a directory containing multiple CA certificates to use
+when verifying the peer certificate.
+.IP
+When libcurl is built against OpenSSL, this directory must be prepared
+with the \f(CRopenssl c_rehash\fR utility. This option is meaningful primarily
+together with \fB-sslverifypeer\fR. If peer verification is disabled,
+\fB-capath\fR does not need to name an accessible directory.
+.IP
+This option is OpenSSL-specific and has no effect when libcurl is built
+against GnuTLS. NSS-based libcurl provides it only for backward
+compatibility.
+.IP
+On Windows, this option may not work because of OpenSSL limitations.
+.TP 3
+\fB-crlfile\fR
+Pass the name of a file containing one or more certificate revocation
+lists in PEM format to use during certificate validation.
+.IP
+When libcurl is built against NSS or GnuTLS, there is no supported way to
+influence revocation checking with this option. When libcurl is built with
+OpenSSL support, both \f(CRX509_V_FLAG_CRL_CHECK\fR and
+\f(CRX509_V_FLAG_CRL_CHECK_ALL\fR are enabled if a CRL file is provided, so CRL
+checking is applied throughout the certificate chain.
+.IP
+This option is meaningful only when used together with
+\fB-sslverifypeer\fR.
+.IP
+If the CRL file cannot be loaded, the SSL exchange fails with the specific
+error code \f(CRCURLE_SSL_CRL_BADFILE\fR. A certificate-verification failure
+caused by revocation information in the CRL does not produce that specific
+error code.
+.TP 3
+\fB-sslverifyhost\fR
+Controls whether TclCurl verifies that the server certificate matches the
+host name you intended to contact.
+.IP
+During the SSL or TLS handshake, the server sends a certificate declaring
+its identity.
+.IP
+When \fB-sslverifyhost\fR is set to \f(CR2\fR, the certificate must identify the
+intended server or the connection fails. TclCurl considers the server to
+match when the Common Name field or a Subject Alternative Name field in
+the certificate matches the host name in the URL.
+.IP
+When this option is set to \f(CR1\fR, the certificate must contain a Common Name
+field, but the specific name is not checked. This setting is generally not
+useful.
+.IP
+When this option is set to \f(CR0\fR, the connection succeeds regardless of the
+names contained in the certificate.
+.IP
+The default value is \f(CR2\fR.
+.IP
+This option verifies the host identity claimed by the certificate. To
+verify that the certificate itself is trusted, use \fB-sslverifypeer\fR. If
+libcurl is built against NSS and \fB-sslverifypeer\fR is \f(CR0\fR,
+\fB-sslverifyhost\fR is ignored.
+.TP 3
+\fB-certinfo\fR
+Set this option to \f(CR1\fR to enable collection of certificate-chain
+information. When enabled, TclCurl, if built against OpenSSL, extracts
+certificate details from the chain used in the SSL connection.
+.IP
+That information can be retrieved after the transfer with the \fBgetinfo\fR
+command and its \f(CRcertinfo\fR option.
+.TP 3
+\fB-randomfile\fR
+Pass a file name. TclCurl uses this file as a source of randomness for the
+SSL random engine. \fIThis option was deprecated in libcurl v7.84 and is
+disabled by default in the TclCurl build. See \f(CIREADME.md\fI for instructions
+on how to re-enable it.\fR
+.TP 3
+\fB-egdsocket\fR
+Pass the path name of an Entropy Gathering Daemon socket. TclCurl uses it
+as a source of randomness for the SSL random engine. \fIThis option was
+deprecated in libcurl v7.84 and is disabled by default in the TclCurl
+build. See \f(CIREADME.md\fI for instructions on how to re-enable it.\fR
+.TP 3
+\fB-sslcipherlist\fR
+Pass a string containing the cipher list to use for the SSL or TLS
+connection. The list consists of one or more cipher strings separated
+normally by colons, although commas or spaces are also accepted. The
+characters \f(CR!\fR, \f(CR-\fR, and \f(CR+\fR may also be used as operators.
+.IP
+With OpenSSL and GnuTLS, valid examples include \f(CRRC4-SHA\fR, \f(CRSHA1+DES\fR,
+\f(CRTLSv1\fR, and \f(CRDEFAULT\fR. The default list is usually defined by the SSL
+backend at build time.
+.IP
+With NSS, valid examples include \f(CRrsa_rc4_128_md5\fR and
+\f(CRrsa_aes_128_sha\fR. NSS does not support incremental add or remove
+semantics for ciphers. If this option is used, all known ciphers are
+disabled and only the ciphers listed here are enabled.
+.IP
+For details about cipher-list syntax, see:
 .UR http://www.openssl.org/docs/apps/ciphers.html
 .UE
 .IP
-For NSS valid examples of cipher lists include \(oqrsa\fIrc4\fR128\fImd5\(cq,
-\(oqrsa\fRaes\fI128\fRsha\(cq, etc. With NSS you don\(cqt add/remove ciphers. If you use
-this option then all known ciphers are disabled and only those passed in
-are enabled.
-.IP
-You\(cqll find more details about the NSS cipher lists on this URL:
-<\c
+For NSS-specific cipher-list details, see:
 .UR http://directory.fedora.redhat.com/docs/mod_nss.html
-.UE \c
->
+.UE
 .TP 3
--sslsessionidcache
-Pass a 0 to disable TclCurl\(cqs use of SSL session-ID caching or a 1 to
-enable it. By default all transfers are done using the cache. While nothing
-ever should get hurt by attempting to reuse SSL session-IDs, there seem to
-be broken SSL implementations in the wild that may require you to disable
-this in order for you to succeed.
+\fB-sslsessionidcache\fR
+Set this option to \f(CR0\fR to disable TclCurl\(cqs use of SSL session-ID caching,
+or to \f(CR1\fR to enable it. The default is \f(CR1\fR.
+.IP
+In normal circumstances, reusing SSL session IDs is harmless and may
+improve performance. However, some broken SSL implementations may require
+this option to be disabled.
 .TP 3
--krblevel
-Set the kerberos security level for FTP, this also enables kerberos
-awareness. Accepted values are \f(CRclear\fR, \f(CRsafe\fR, \f(CRconfidential\fR, and
-\f(CRprivate\fR. If the string is set but does not match one of these, \f(CRprivate\fR will be
-used. Set the string to NULL to disable kerberos4. Set the string to \(lq\(lq to
-disable kerberos support for FTP.
+\fB-krblevel\fR
+Selects the Kerberos security level for FTP and thereby also enables
+Kerberos awareness.
+.IP
+Accepted values are \f(CRclear\fR, \f(CRsafe\fR, \f(CRconfidential\fR, and \f(CRprivate\fR. If
+the string does not match one of these values, \f(CRprivate\fR is used.
+.IP
+Set the string to \f(CRNULL\fR to disable Kerberos 4. Set it to \f(CR\(dq\(dq\fR to disable
+Kerberos support for FTP.
 .TP 3
--gssapidelegation
-Selects the GSSAPI credential delegation mode. Accepted values are \f(CRflag\fR
-and \f(CRpolicyflag\fR. Use \f(CRflag\fR to allow unconditional delegation. Use
-\f(CRpolicyflag\fR to delegate only if the \f(CROK-AS-DELEGATE\fR flag is set in the
-service ticket, provided that this feature is supported by the GSSAPI
+\fB-gssapidelegation\fR
+Selects the GSSAPI credential delegation mode.
+.IP
+Accepted values are:
+.RS
+.TP 3
+\f(CRflag\fR
+Allows unconditional delegation.
+.TP 3
+\f(CRpolicyflag\fR
+Delegates only if the \f(CROK-AS-DELEGATE\fR flag is set in the service
+ticket, provided that this feature is supported by the GSSAPI
 implementation and that \f(CRGSS_C_DELEG_POLICY_FLAG\fR was available at
-compile time. Delegation is disabled by default since 7.21.7.
-.SH SSH options
+compile time.
+.RE
+.IP
+Delegation is disabled by default since 7.21.7.
+.SH SSH OPTIONS
 .TP 3
--sshauthtypes
-Selects the allowed SSH authentication types. Accepted values are:
+\fB-sshauthtypes\fR
+Selects the allowed SSH authentication types.
+.IP
+Accepted values are:
 .RS
 .TP 3
 \f(CRpublickey\fR
-Use public key authentication.
+Use public-key authentication.
 .TP 3
 \f(CRpassword\fR
 Use password authentication.
@@ -1800,114 +1809,140 @@ Use host-based authentication.
 Use keyboard-interactive authentication.
 .TP 3
 \f(CRany\fR
-To let TclCurl pick one
+Let TclCurl select an authentication method automatically.
 .RE
 .TP 3
--sshhostpublickeymd5
-Pass a string containing 32 hexadecimal digits. The string should be the
-128 bit MD5 checksum of the remote host public key, and TclCurl will reject
-the connection to the host unless the md5sums match. This option is only
-for SCP and SFTP transfers.
-.TP 3
--publickeyfile
-Pass the file name for your public key. If not used, TclCurl defaults to
-using \fB$HOME/.ssh/id_dsa.pub\fR. HOME environment variable is set, and just
-\fBid_dsa\fR in the current directory if not.
-.TP 3
--privatekeyfile
-Pass the file name for your private key. If not used, TclCurl defaults to
-using \fB$HOME/.ssh/id_dsa.pub\fR. HOME environment variable is set, and just
-\fBid_dsa\fR in the current directory if not. If the file is
-password-protected, set the password with \fB-keypasswd\fR.
-.TP 3
--sshknownhosts
-Pass a string holding the file name of the known\fIhost file to use. The
-known\fRhosts file should use the OpenSSH file format as supported by
-libssh2. If this file is specified, TclCurl will only accept connections
-with hosts that are known and present in that file, with a matching public
-key. Use \fB-sshkeyproc\fR to alter the default behavior on host and key
-(mis)matching.
-.TP 3
--sshkeyproc
-Pass a the name of the procedure that will be called when the known_host
-matching has been done, to allow the application to act and decide for
-TclCurl how to proceed. The callback will only be called if \fB-knownhosts\fR
-is also set.
+\fB-sshhostpublickeymd5\fR
+Pass a string containing 32 hexadecimal digits. The string must be the
+128-bit MD5 checksum of the remote host public key. TclCurl rejects the
+connection unless the checksum matches.
 .IP
-It gets passed a list with three elements, the first one is a list with the
-type of the key from the known_hosts file and the key itself, the second is
-another list with the type of the key from the remote site and the key
-itself, the third tells you what TclCurl thinks about the matching status.
+This option applies only to SCP and SFTP transfers.
+.TP 3
+\fB-sshpublickeyfile\fR
+Pass the file name of the public key to use.
 .IP
-The known key types are: \(lqrsa\(rq, \(lqrsa1\(rq and \(lqdss\(rq, in any other case
-\(lqunknown\(rq is given.
+If this option is not used, TclCurl defaults to \f(CR$HOME/.ssh/id_dsa.pub\fR
+when the \f(CRHOME\fR environment variable is set, and to \f(CRid_dsa.pub\fR in the
+current directory otherwise.
+.TP 3
+\fB-sshprivatekeyfile\fR
+Pass the file name of the private key to use.
 .IP
-TclCurl opinion about how they match may be: \(lqmatch\(rq, \(lqmismatch\(rq, \(lqmissing\(rq
-or \(lqerror\(rq.
+If this option is not used, TclCurl defaults to \f(CR$HOME/.ssh/id_dsa\fR when
+the \f(CRHOME\fR environment variable is set, and to \f(CRid_dsa\fR in the current
+directory otherwise.
 .IP
-The procedure must return:
+If the private key is passphrase-protected, use \fB-keypasswd\fR to specify
+the passphrase.
+.TP 3
+\fB-sshknownhosts\fR
+Pass a string containing the file name of the \f(CRknown_hosts\fR file to use.
+The file must use the OpenSSH \f(CRknown_hosts\fR format supported by libssh2.
+.IP
+If this option is set, TclCurl accepts connections only to hosts that are
+present in that file with a matching public key. Use \fB-sshkeyproc\fR to
+override the default behavior for host and key matching.
+.TP 3
+\fB-sshkeyproc\fR
+Pass the name of a callback procedure that TclCurl invokes after
+\f(CRknown_hosts\fR matching has been performed, so that the application can
+decide how the connection should proceed.
+.IP
+The callback is invoked only if \fB-sshknownhosts\fR is also set.
+.IP
+The callback receives a list with three elements:
+.RS
+.IP "1." 3
+A list containing the key type from the \f(CRknown_hosts\fR file and the key
+itself.
+.if n \
+.sp -1
+.if t \
+.sp -0.25v
+.IP "2." 3
+A list containing the key type presented by the remote host and the key
+itself.
+.if n \
+.sp -1
+.if t \
+.sp -0.25v
+.IP "3." 3
+A value describing TclCurl\(cqs matching result.
+.RE
+.IP
+Possible key-type values are \f(CRrsa\fR, \f(CRrsa1\fR, \f(CRdss\fR, and \f(CRunknown\fR.
+.IP
+Possible match-result values are \f(CRmatch\fR, \f(CRmismatch\fR, \f(CRmissing\fR, and
+\f(CRerror\fR.
+.IP
+Return values:
 .RS
 .TP 3
-0
-The host+key is accepted and TclCurl will append it to the
-known\fIhosts file before continuing with the connection. This will also add
-the host+key combo to the known\fRhost pool kept in memory if it wasn\(cqt
-already present there. The adding of data to the file is done by completely
-replacing the file with a new copy, so the permissions of the file must
-allow this.
+\f(CR0\fR
+Accept the host and key. TclCurl appends the host and key to the
+\f(CRknown_hosts\fR file before continuing with the connection. If the host
+and key are not already present in the in-memory known-hosts pool,
+TclCurl also adds them there. Updating the file is done by replacing
+it with a new copy, so the file permissions must allow that.
 .TP 3
-1
-The host+key is accepted, TclCurl will continue with the connection.
-This will also add the host+key combo to the known_host pool kept in memory
-if it wasn\(cqt already present there.
+\f(CR1\fR
+Accept the host and key, and continue with the connection. If the host
+and key are not already present in the in-memory known-hosts pool,
+TclCurl also adds them there.
 .TP 3
-2
-The host+key is rejected. TclCurl will close the connection.
+\f(CR2\fR
+Reject the host and key. TclCurl closes the connection.
 .TP 3
-3
-The host+key is rejected, but the SSH connection is asked to be kept
-alive. This feature could be used when the app wants to somehow return back
-and act on the host+key situation and then retry without needing the
-overhead of setting it up from scratch again.
+\f(CR3\fR
+Reject the host and key, but keep the SSH connection alive. This can
+be useful if the application needs to inspect the host or key state and
+then retry without incurring the full setup cost again.
 .RE
 .IP
-Any other value will cause the connection to be closed.
-.SH Other options
+Any other return value causes TclCurl to close the connection.
+.SH OTHER OPTIONS
 .TP 3
--headervar
-Name of the Tcl array variable where TclCurl will store the headers
-returned by the server.
+\fB-headervar\fR
+Name of the Tcl array variable in which TclCurl stores the headers returned
+by the server.
 .TP 3
--bodyvar
-Name of the Tcl variable where TclCurl will store the file requested, the
-file may contain text or binary data.
+\fB-bodyvar\fR
+Name of the Tcl variable in which TclCurl stores the requested file
+contents. The stored data may be either text or binary data.
 .TP 3
--canceltransvar
-Name of a Tcl variable, in case you have defined a procedure to call with
-\fB-progressproc\fR setting this variable to \(oq1\(cq will cancel the transfer.
+\fB-canceltransvarname\fR
+Name of a Tcl variable used together with \fB-progressproc\fR. If the
+progress callback sets this variable to \f(CR1\fR, the transfer is canceled.
 .TP 3
--command
-Executes the given command after the transfer is done, since it only works
-with blocking transfers, it is pretty much useless.
+\fB-command\fR
+Executes the given command after the transfer has completed.
+.IP
+This option works only with blocking transfers and therefore has limited
+practical use.
 .TP 3
--share
-Pass a share handle as a parameter. The share handle must have been created
-by a previous call to \fBcurl::shareinit\fR. Setting this option, will make
-this handle use the data from the shared handle instead of keeping the data
-to itself. See \fItclcurl_share\fR for details.
+\fB-share\fR
+Pass a share handle. The share handle must have been created previously by
+calling \fBcurl::shareinit\fR.
+.IP
+Setting this option causes the easy handle to use data from the shared
+handle instead of keeping its own separate copy. See \fItclcurl_share\fR for
+details.
 .TP 3
--newfileperms
-Pass a number as a parameter, containing the value of the permissions that
-will be assigned to newly created files on the remote server. The default
-value is 0644, but any valid value can be used. The only protocols that can
-use this are sftp://, scp:// and file://.
+\fB-newfileperms\fR
+Pass a numeric value specifying the permissions assigned to newly created
+files on the remote server. The default value is \f(CR0644\fR, but any valid
+value may be used.
+.IP
+This option applies only to \f(CRsftp://\fR, \f(CRscp://\fR, and \f(CRfile://\fR transfers.
 .TP 3
--newdirectoryperms
-Pass a number as a parameter, containing the value of the permissions that
-will be assigned to newly created directories on the remote server. The
-default value is 0755, but any valid value can be used. The only protocols
-that can use this are sftp://, scp:// and file://.
-.SH Telnet options
+\fB-newdirectoryperms\fR
+Pass a numeric value specifying the permissions assigned to newly created
+directories on the remote server. The default value is \f(CR0755\fR, but any
+valid value may be used.
+.IP
+This option applies only to \f(CRsftp://\fR, \f(CRscp://\fR, and \f(CRfile://\fR transfers.
+.SH TELNET OPTIONS
 .TP 3
 -telnetoptions
 Pass a list with variables to pass to the telnet negotiations. The
@@ -1954,268 +1989,268 @@ errorbuffer was set with configure there will be a readable error message.
 The error codes are:
 .RS
 .TP 3
-1
+\fB1\fR
 Unsupported protocol. This build of TclCurl has no support for this
 protocol.
 .TP 3
-2
+\fB2\fR
 Very early initialization code failed. This is likely to be and
 internal error or a resource problem where something fundamental couldn\(cqt
 get done at init time.
 .TP 3
-3
+\fB3\fR
 URL malformat. The syntax was not correct.
 .TP 3
-4
+\fB4\fR
 A requested feature, protocol or option was not found built-in in
 this libcurl due to a build-time decision. This means that a feature or
 option was not enabled or explicitly disabled when libcurl was built and in
 order to get it to function you have to get a rebuilt libcurl.
 .TP 3
-5
+\fB5\fR
 Couldn\(cqt resolve proxy. The given proxy host could not be resolved.
 .TP 3
-6
+\fB6\fR
 Couldn\(cqt resolve host. The given remote host was not resolved.
 .TP 3
-7
+\fB7\fR
 Failed to connect to host or proxy.
 .TP 3
-8
+\fB8\fR
 FTP weird server reply. The server sent data TclCurl couldn\(cqt parse.
 The given remote server is probably not an OK FTP server.
 .TP 3
-9
+\fB9\fR
 We were denied access to the resource given in the URL. For FTP, this
 occurs while trying to change to the remote directory.
 .TP 3
-11
+\fB11\fR
 FTP weird PASS reply. TclCurl couldn\(cqt parse the reply sent to the
 PASS request.
 .TP 3
-13
+\fB13\fR
 FTP weird PASV reply, TclCurl couldn\(cqt parse the reply sent to the
 PASV or EPSV request.
 .TP 3
-14
+\fB14\fR
 FTP weird 227 format. TclCurl couldn\(cqt parse the 227-line the server
 sent.
 .TP 3
-15
+\fB15\fR
 FTP can\(cqt get host. Couldn\(cqt resolve the host IP we got in the
 227-line.
 .TP 3
-17
+\fB17\fR
 FTP couldn\(cqt set type. Couldn\(cqt change transfer method to either
 binary or ascii.
 .TP 3
-18
+\fB18\fR
 Partial file. Only a part of the file was transferred, this happens
 when the server first reports an expected transfer size and then delivers
 data that doesn\(cqt match the given size.
 .TP 3
-19
+\fB19\fR
 FTP couldn\(cqt RETR file, we either got a weird reply to a \(oqRETR\(cq
 command or a zero byte transfer.
 .TP 3
-21
+\fB21\fR
 Quote error. A custom \(oqQUOTE\(cq returned error code 400 or higher (for
 FTP) or otherwise indicated unsuccessful completion of the command.
 .TP 3
-22
+\fB22\fR
 HTTP returned error. This return code only appears if
 \fB-failonerror\fR is used and the HTTP server returns an error code that is
 400 or higher.
 .TP 3
-23
+\fB23\fR
 Write error. TclCurl couldn\(cqt write data to a local filesystem or an
 error was returned from a write callback.
 .TP 3
-25
+\fB25\fR
 Failed upload failed. For FTP, the server typcially denied the STOR
 command. The error buffer usually contains the server\(cqs explanation to
 this.
 .TP 3
-26
+\fB26\fR
 Read error. There was a problem reading from a local file or an
 error was returned from the read callback.
 .TP 3
-27
+\fB27\fR
 Out of memory. A memory allocation request failed. This should never
 happen unless something weird is going on in your computer.
 .TP 3
-28
+\fB28\fR
 Operation timeout. The specified time-out period was reached
 according to the conditions.
 .TP 3
-30
+\fB30\fR
 The FTP PORT command failed, not all FTP servers support the PORT
 command, try  doing a transfer using PASV instead!.
 .TP 3
-31
+\fB31\fR
 FTP couldn\(cqt use REST. This command is used for resumed FTP
 transfers.
 .TP 3
-33
+\fB33\fR
 Range error. The server doesn\(cqt support or accept range requests.
 .TP 3
-34
+\fB34\fR
 HTTP post error. Internal post-request generation error.
 .TP 3
-35
+\fB35\fR
 SSL connect error. The SSL handshaking failed, the error buffer may
 have a clue to the reason, could be certificates, passwords, \[u2026]
 .TP 3
-36
+\fB36\fR
 The download could not be resumed because the specified offset was
 out of the file boundary.
 .TP 3
-37
+\fB37\fR
 A file given with FILE:// couldn\(cqt be read. Did you checked the
 permissions?
 .TP 3
-38
+\fB38\fR
 LDAP cannot bind. LDAP bind operation failed.
 .TP 3
-39
+\fB39\fR
 LDAP search failed.
 .TP 3
-41
+\fB41\fR
 A required zlib function was not found.
 .TP 3
-42
+\fB42\fR
 Aborted by callback. An application told TclCurl to abort the
 operation.
 .TP 3
-43
+\fB43\fR
 Internal error. A function was called with a bad parameter.
 .TP 3
-45
+\fB45\fR
 Interface error. A specified outgoing interface could not be used.
 .TP 3
-47
+\fB47\fR
 Too many redirects. When following redirects, TclCurl hit the
 maximum amount, set your limit with \(enmaxredirs
 .TP 3
-48
+\fB48\fR
 An option passed to TclCurl is not recognized/known. Refer to the
 appropriate documentation. This is most likely a problem in the program
 that uses TclCurl. The error buffer might contain more specific information
 about which exact option it concerns.
 .TP 3
-49
+\fB49\fR
 A telnet option string was illegally formatted.
 .TP 3
-51
+\fB51\fR
 The remote peer\(cqs SSL certificate or SSH md5 fingerprint wasn\(cqt ok
 .TP 3
-52
+\fB52\fR
 The server didn\(cqt reply anything, which here is considered an error.
 .TP 3
-53
+\fB53\fR
 The specified crypto engine wasn\(cqt found.
 .TP 3
-54
+\fB54\fR
 Failed setting the selected SSL crypto engine as default!
 .TP 3
-55
+\fB55\fR
 Failed sending network data.
 .TP 3
-56
+\fB56\fR
 Failure with receiving network data.
 .TP 3
-58
+\fB58\fR
 Problem with the local client certificate.
 .TP 3
-59
+\fB59\fR
 Couldn\(cqt use specified SSL cipher.
 .TP 3
-60
+\fB60\fR
 Peer certificate cannot be authenticated with known CA certificates.
 .TP 3
-61
+\fB61\fR
 Unrecognized transfer encoding.
 .TP 3
-62
+\fB62\fR
 Invalid LDAP URL.
 .TP 3
-63
+\fB63\fR
 Maximum file size exceeded.
 .TP 3
-64
+\fB64\fR
 SSL use failed.
 .TP 3
-65
+\fB65\fR
 Sending the data requires a rewind that failed, since TclCurl should
 take care of it for you, it means you found a bug.
 .TP 3
-66
+\fB66\fR
 Failed to initialise ssl engine.
 .TP 3
-67
+\fB67\fR
 Failed to login, user password or similar was not accepted.
 .TP 3
-68
+\fB68\fR
 File not found on TFTP server.
 .TP 3
-69
+\fB69\fR
 There is a permission problem with the TFTP request.
 .TP 3
-70
+\fB70\fR
 The remote server has run out of space.
 .TP 3
-71
+\fB71\fR
 Illegal TFTP operation.
 .TP 3
-72
+\fB72\fR
 Unknown transfer ID.
 .TP 3
-73
+\fB73\fR
 TFTP file already exists and will not be overwritten.
 .TP 3
-74
+\fB74\fR
 No such user in the TFTP server and good behaving TFTP servers
 should never return this.
 .TP 3
-75
+\fB75\fR
 Character conversion failed.
 .TP 3
-77
+\fB77\fR
 Problem with reading the SSL CA cert (path? access rights?).
 .TP 3
-78
+\fB78\fR
 Remote file not found
 .TP 3
-79
+\fB79\fR
 Error from the SSH layer
 .TP 3
-80
+\fB80\fR
 Failed to shut down the SSL connection
 .TP 3
-82
+\fB82\fR
 Failed to load CRL file
 .TP 3
-83
+\fB83\fR
 Issuer check failed
 .TP 3
-84
+\fB84\fR
 The FTP server does not understand the PRET command at all or does
 not support the given argument. Be careful when using \fB-customrequest\fR, a
 custom LIST command will be sent with PRET CMD before PASV as well.
 .TP 3
-85
+\fB85\fR
 Mismatch of RTSP CSeq numbers.
 .TP 3
-86
+\fB86\fR
 Mismatch of RTSP Session Identifiers.
 .TP 3
-87
+\fB87\fR
 Unable to parse FTP file list (during FTP wildcard downloading).
 .TP 3
-88
+\fB88\fR
 Chunk callback reported error.
 .RE
-.SH curlHandle getinfo option
+.SH curlHandle getinfo OPTION
 .LP
 Request internal information from the curl session with this procedure. This
 procedure is intended to get used \fIAFTER\fR a performed transfer, and can be
@@ -2448,7 +2483,7 @@ important components (like OpenSSL version).
 .TP 3
 RETURN VALUE
 The string with the version info.
-.SH curl::escape url
+.SH curl::escape URL
 .LP
 This procedure will convert the given input string to an URL encoded string and
 return that. All input characters that are not a-z, A-Z or 0-9 will be
@@ -2457,7 +2492,7 @@ hexadecimal number)
 .TP 3
 RETURN VALUE
 The converted string.
-.SH curl::unescape url
+.SH curl::unescape URL
 .LP
 This procedure will convert the given URL encoded input string to a \(lqplain
 string\(rq and return that. All input characters that are URL encoded (%XX where
@@ -2466,7 +2501,7 @@ versions.
 .TP 3
 RETURN VALUE
 The string unencoded.
-.SH curl::curlConfig option
+.SH curl::curlConfig OPTION
 .LP
 Returns some information about how you have \fBcURL\fR installed.
 .TP 3
@@ -2483,7 +2518,7 @@ Outputs  version  information  about  the installed libcurl, in numerical
 mode.  This outputs the  version  number,  in hexadecimal, with 8 bits for
 each part; major, minor, patch. So  that  libcurl 7.7.4 would appear as
 070704 and libcurl 12.13.14 would appear as 0c0d0e\[u2026]
-.SH curl::versioninfo option
+.SH curl::versioninfo OPTION
 .LP
 Returns information about various run-time features in TclCurl.
 .PP
@@ -2583,6 +2618,51 @@ the list.
 .LP
 This procedure returns a string describing the error code passed in the
 argument.
+.SH EXAMPLES
+.LP
+The examples in this section assume you are running from the root of the
+TclCurl source tree.
+.PP
+To start the local HTTP test server used in the examples, run:
+.LP
+.EX
+tclsh tests/testserver.tcl
+.EE
+.PP
+By default, this starts an HTTP server on \f(CRhttp://127.0.0.1:8990/\fR.
+.PP
+The path \f(CRhttp://127.0.0.1:8990/tclcurl-man\fR returns the HTML version of this
+manual page from \f(CRdoc/tclcurl.html\fR, which makes it a convenient target for a
+basic \f(CRGET\fR example.
+.SH BASIC HTTP GET
+.LP
+The following example performs a simple HTTP \f(CRGET\fR request, stores the
+response body in a Tcl variable, and prints both the HTTP response code and
+the size of the returned document:
+.LP
+.EX
+package require TclCurl
+
+set body {}
+set curlHandle [curl::init]
+
+$curlHandle configure \e
+    -url http://127.0.0.1:8990/tclcurl-man \e
+    -bodyvar body \e
+    -noprogress 1
+
+set rc [$curlHandle perform]
+set httpCode [$curlHandle getinfo responsecode]
+
+puts \(dqperform rc: $rc\(dq
+puts \(dqHTTP response code: $httpCode\(dq
+puts \(dqDownloaded bytes: [string length $body]\(dq
+
+$curlHandle cleanup
+.EE
+.PP
+If the request succeeds, \f(CRrc\fR is \f(CR0\fR, \f(CRresponsecode\fR is \f(CR200\fR, and \f(CRbody\fR
+contains the HTML document returned by the server.
 .SH SEE ALSO
 .LP
 curl, The art of HTTP scripting (at \c

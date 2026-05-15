@@ -15,66 +15,24 @@ SMTPS, and GOPHER.
 # SYNOPSIS
 
 ```tcl
-curl::init
-```
-
-```tcl
 curlHandle configure ?options?
-```
-
-```tcl
 curlHandle perform
-```
-
-```tcl
 curlHandle getinfo curlinfo_option
-```
-
-```tcl
 curlHandle cleanup
-```
-
-```tcl
 curlHandle reset
-```
-
-```tcl
 curlHandle duphandle
-```
-
-```tcl
 curlHandle pause
-```
-
-```tcl
 curlHandle resume
 ```
 
 ```tcl
+curl::init
 curl::transfer ?options?
-```
-
-```tcl
 curl::version
-```
-
-```tcl
 curl::escape url
-```
-
-```tcl
 curl::unescape url
-```
-
-```tcl
 curl::curlConfig option
-```
-
-```tcl
 curl::versioninfo option
-```
-
-```tcl
 curl::easystrerror errorCode
 ```
 
@@ -99,7 +57,7 @@ This allows TclCurl to reuse persistent connections when possible.
 
 The `curlHandle` to use.
 
-# curlHandle configure ?options?
+# curlHandle configure ?OPTIONS?
 
 **configure**
 
@@ -122,7 +80,7 @@ default with **curlHandle reset**.
 
 **OPTIONS**
 
-# Behaviour options
+# BEHAVIOUR OPTIONS
 
 **-verbose**
 :   Set this option to 1 to make the library display detailed
@@ -209,7 +167,7 @@ default with **curlHandle reset**.
 
     `ftp://example.com/some/path/**[a-z[:upper:]\\\\].jpeg**`
 
-# Callback options
+# CALLBACK OPTIONS
 
 **-writeproc**
 :   Sets a Tcl procedure that TclCurl invokes whenever received data is
@@ -318,7 +276,7 @@ default with **curlHandle reset**.
     argument contains the candidate string. The procedure must return `0` if
     the string matches the pattern and `1` otherwise.
 
-# Error Options
+# ERROR OPTIONS
 
 **-errorbuffer**
 :   Pass the name of a variable in which TclCurl may store human-readable
@@ -342,7 +300,7 @@ default with **curlHandle reset**.
     example, a `100-continue` response may be received for a POST or PUT
     request before a subsequent `401` or `407` response is returned.
 
-# Network options
+# NETWORK OPTIONS
 
 **-url**
 :   The URL to use for the transfer.
@@ -518,7 +476,7 @@ default with **curlHandle reset**.
 :   Pass a number specifying the `scope_id` value to use when connecting to
     IPv6 link-local or site-local addresses.
 
-# Names and Passwords options
+# NAMES AND PASSWORDS OPTIONS
 
 **-netrc**
 :   Set this option to make TclCurl scan your **~/.netrc** file for the user
@@ -684,7 +642,7 @@ default with **curlHandle reset**.
     The methods are those listed above for the **httpauth** option. As of this
     writing, only Basic and NTLM work.
 
-# HTTP options
+# HTTP OPTIONS
 
 **-autoreferer**
 :   Set this option to `1` to enable automatic updates of the `Referer:`
@@ -1050,299 +1008,318 @@ default with **curlHandle reset**.
     it. The default is `1`. TclCurl performs chunked transfer decoding by
     default unless this option is disabled.
 
-# SMTP options
+# SMTP OPTIONS
 
--mailfrom
-:   Pass a string to specify the sender address in a mail when sending an SMTP
-    mail with TclCurl.
+**-mailfrom**
+:   Pass a string specifying the sender address to use in the SMTP envelope.
 
--mailrcpt
-:   Pass a list of recipients to pass to the server in your SMTP mail request.
+    This option controls the envelope sender used at the SMTP protocol level.
+    It does not set or modify the `From:` header field in the message body.
 
-    Each recipient in SMTP lingo is specified with angle brackets (<>), but
-    should you not use an angle bracket as first letter, TclCurl will assume
-    you provide a single email address only and enclose that with angle
-    brackets for you.
+**-mailrcpt**
+:   Pass a list of recipient addresses to use in the SMTP envelope.
 
-# TFTP option
+    This option controls the envelope recipients used at the SMTP protocol
+    level. It does not set or modify message header fields such as `To:`,
+    `Cc:`, or `Bcc:`.
 
-tftpblksize
-:   Specify the block size to use for TFTP data transmission. Valid range as
-    per RFC 2348 is 8-65464 bytes. The default of 512 bytes will be used if
-    this option is not specified. The specified block size will only be used
-    pending support by the remote server. If the server does not return an
-    option acknowledgement or returns an option acknowledgement with no
-    blksize, the default of 512 bytes will be used.
+    In SMTP, recipients are specified with angle brackets (`<>`). If a
+    recipient value does not begin with an angle bracket, TclCurl assumes that
+    it is a plain email address and adds the angle brackets automatically.
 
-# FTP options
+# TFTP OPTION
 
--ftpport
-:   Pass a string as parameter. It will be used to get the IP address to use
-    for the ftp PORT instruction. The PORT instruction tells the remote server
-    to connect to our specified IP address. The string may be a plain IP
-    address, a host name, a network interface name (under unix) or just a '-'
-    to let the library use your systems default IP address. Default FTP
-    operations are passive, and thus will not use PORT.
+**-tftpblksize**
+:   Specifies the block size to use for TFTP data transmission. According to
+    RFC 2348, valid values range from `8` to `65464` bytes. If this option is
+    not specified, the default block size is `512` bytes.
 
-    The address can be followed by a ':' to specify a port, optionally followed
-    by a '-' o specify a port range. If the port specified is 0, the operating
-    system will pick a free port. If a range is provided and all ports in the
-    range are not available, libcurl will report CURLE_FTP_PORT_FAILED for the
-    handle. Invalid port/range settings are ignored. IPv6 addresses followed by
-    a port or portrange have to be in brackets. IPv6 addresses without
-    port/range specifier can be in brackets.
+    The requested block size is used only if the remote server supports it. If
+    the server does not return an option acknowledgment, or if it returns an
+    acknowledgment without a block size value, the default of `512` bytes is
+    used.
 
-    Examples with specified ports:
+# FTP OPTIONS
 
-    eth0:0   192.168.1.2:32000-33000   curl.se:32123   [::1]:1234-4567
+**-ftpport**
+:   Pass a string identifying the address to use for the FTP `PORT`
+    instruction. The `PORT` instruction tells the remote server to connect to
+    the specified client address. The string may be a plain IP address, a host
+    name, a network interface name on Unix, or simply `-` to let the library
+    use the system's default IP address. By default, FTP transfers are
+    passive, so `PORT` is not used.
 
-    You disable PORT again and go back to using the passive version by setting
-    this option to an empty string.
+    The address can be followed by `:` and a port number, optionally followed
+    by `-` and a port range. If the port specified is `0`, the operating
+    system chooses a free port. If a range is provided and no port in that
+    range is available, libcurl reports `CURLE_FTP_PORT_FAILED` for the
+    handle. Invalid port or port-range settings are ignored. IPv6 addresses
+    followed by a port or port range must be enclosed in brackets. IPv6
+    addresses without a port or port range may also be enclosed in brackets.
 
--quote
-:   Pass a **list** list with the FTP or SFTP commands to pass to the server
-    prior to your ftp request. This will be done before any other FTP commands
-    are issued (even before the CWD command).If you do not want to transfer any
-    files, set **nobody** to '1' and **header** to '0'.
+    Examples:
 
-    Prefix the command with an asterisk (*) to make TclCurl continue even if
-    the command fails as by default TclCurl will stop.
+    `eth0:0`   `192.168.1.2:32000-33000`   `curl.se:32123`
+    `[::1]:1234-4567`
 
-    Disable this operation again by setting an empty string to this option.
+    To disable `PORT` and return to passive mode, set this option to the empty
+    string.
 
-    Keep in mind the commands to send must be 'raw' ftp commands, for example,
-    to create a directory you need to send **mkd Test**, not **mkdir Test**.
+**-quote**
+:   Pass a list of FTP or SFTP commands to send to the server before the FTP
+    transfer request. These commands are sent before any other FTP commands,
+    including `CWD`. If you do not want to transfer any files, set
+    **-nobody** to `1` and **-header** to `0`.
 
-    Valid SFTP commands are: chgrp, chmod, chown, ln, mkdir, pwd, rename, rm,
-    rmdir and symlink.
+    Prefix a command with an asterisk (`*`) to make TclCurl continue even if
+    that command fails. By default, a failure stops the transfer.
 
--postquote
-:   Pass a **list** with the FTP commands to pass to the server after your ftp
-    transfer request. If you do not want to transfer any files, set **nobody**
-    to '1' and **header** to '0'.
+    To disable this option, set it to the empty string.
 
--prequote
-:   Pass a **list** of FTP or SFTP commands to pass to the server after the
-    transfer type is set.
+    The commands must be raw FTP commands. For example, to create a directory
+    you must send `mkd Test`, not `mkdir Test`.
 
--dirlistonly
-:   A 1 tells the library to just list the names of files in a directory,
-    instead of doing a full directory listing that would include file sizes,
-    dates etc. It works with both FTP and SFTP urls.
+    Valid SFTP commands are `chgrp`, `chmod`, `chown`, `ln`, `mkdir`, `pwd`,
+    `rename`, `rm`, `rmdir`, and `symlink`.
 
-    This causes an FTP NLST command to be sent. Beware that some FTP servers
-    list only files in their response to NLST, they might not include
-    subdirectories and symbolic links.
+**-postquote**
+:   Pass a list of FTP commands to send to the server after the FTP transfer
+    request. If you do not want to transfer any files, set **-nobody** to `1`
+    and **-header** to `0`.
 
-    Setting this option to 1 also implies a directory listing even if the URL
-    doesn't end with a slash, which otherwise is necessary.
+**-prequote**
+:   Pass a list of FTP or SFTP commands to send to the server after the
+    transfer type has been set.
 
-    Do NOT use this option if you also use **-wildcardmatch** as it will
-    effectively break that feature.
+**-dirlistonly**
+:   Set this option to `1` to list only file names in a directory instead of
+    requesting a full directory listing with file sizes, dates, and similar
+    information. This option works with both FTP and SFTP URLs.
 
--append
-:   A 1 parameter tells the extension to append to the remote file instead of
-    overwriting it. This is only useful when uploading to a ftp site.
+    For FTP, this causes an `NLST` command to be sent. Some FTP servers return
+    only files in response to `NLST`, and may omit subdirectories and symbolic
+    links.
 
--ftpusepret
-:   Set to 1 to tell TclCurl to use the EPRT (and LPRT) command when doing
-    active FTP downloads (which is enabled by '**ftpport**'). Using EPRT means
-    that it will first attempt to use EPRT and then LPRT before using PORT, if
-    you pass zero to this option, it will not try using EPRT or LPRT, only
-    plain PORT.
+    Setting this option to `1` also implies a directory listing even if the
+    URL does not end with a slash, which would otherwise be required.
 
--ftpuseepvs
-:   Set to one to tell TclCurl to use the EPSV command when doing passive FTP
-    downloads (which it always does by default). Using EPSV means that it will
-    first attempt to use EPSV before using PASV, but if you pass a zero to this
-    option, it will not try using EPSV, only plain PASV.
+    Do not use this option together with **-wildcardmatch**, as it effectively
+    disables that feature.
 
--ftpusepret
-:   Set to one to tell TclCurl to send a PRET command before PASV (and EPSV).
-    Certain FTP servers, mainly drftpd, require this non-standard command for
-    directory listings as well as up and downloads in PASV mode. Has no effect
-    when using the active FTP transfers mode.
+**-append**
+:   Set this option to `1` to append to the remote file instead of
+    overwriting it. This is useful only when uploading to an FTP site.
 
--ftpcreatemissingdirs
-:   If set to 1, TclCurl will attempt to create any remote directory that it
-    fails to CWD into. CWD is the command that changes working directory.
+**-ftpuseeprt**
+:   Set this option to `1` to make TclCurl use the `EPRT` and `LPRT` commands
+    for active FTP transfers, which are enabled with **-ftpport**. When this
+    option is enabled, TclCurl first attempts `EPRT`, then `LPRT`, and only
+    then falls back to `PORT`. If this option is set to `0`, only `PORT` is
+    used.
 
-    This setting also applies to SFTP-connections. TclCurl will attempt to
-    create the remote directory if it can't obtain a handle to the
-    target-location. The creation will fail if a file of the same name as the
-    directory to create already exists or lack of permissions prevents
-    creation.
+**-ftpuseepsv**
+:   Set this option to `1` to make TclCurl use the `EPSV` command for passive
+    FTP transfers. This is the default behavior. When enabled, TclCurl first
+    attempts `EPSV` before using `PASV`. If this option is set to `0`, TclCurl
+    uses only `PASV`.
 
-    If set to 2, TclCurl will retry the CWD command again if the subsequent MKD
-    command fails. This is especially useful if you're doing many simultanoeus
-    connections against the same server and they all have this option enabled,
-    as then CWD may first fail but then another connection does MKD before this
-    connection and thus MKD fails but trying CWD works
+**-ftpusepret**
+:   Set this option to `1` to make TclCurl send a `PRET` command before `PASV`
+    or `EPSV`. Some FTP servers, especially `drftpd`, require this non-standard
+    command for directory listings and uploads or downloads in passive mode.
+    This option has no effect for active FTP transfers.
 
--ftpresponsetimeout
-:   Causes TclCurl to set a timeout period (in seconds) on the amount of time
-    that the server is allowed to take in order to generate a response message
-    for a command before the session is considered hung. Note that while
-    TclCurl is waiting for a response, this value overrides **timeout**. It is
-    recommended that if used in conjunction with **timeout**, you set it to a
-    value smaller than **timeout**.
+**-ftpcreatemissingdirs**
+:   Controls whether TclCurl should attempt to create a remote directory when
+    the transfer requires that directory to exist, but a `CWD` command shows
+    that it does not yet exist or cannot yet be entered.
 
--ftpalternativetouser
-:   Pass a string which will be used to authenticate if the usual FTP "USER
-    user" and "PASS password" negotiation fails. This is currently only known
-    to be required when connecting to Tumbleweed's Secure Transport FTPS server
-    using client certificates for authentication.
+    This setting also applies to SFTP connections. TclCurl attempts to create
+    the remote directory if it cannot obtain a handle to the target location.
+    Creation fails if a file with the same name already exists, or if
+    permissions do not allow directory creation.
 
--ftpskippasvip
-:   If set to 1, it instructs TclCurl not to use the IP address the server
-    suggests in its 227-response to TclCurl's PASV command when TclCurl
-    connects the data connection. Instead TclCurl will re-use the same IP
-    address it already uses for the control connection. But it will use the
-    port number from the 227-response.
+    Accepted values:
 
-    This option has no effect if PORT, EPRT or EPSV is used instead of PASV.
+    `1`
+    :   After a failed `CWD`, TclCurl attempts to create the missing remote
+        directory and then continues with the transfer.
 
--ftpsslauth
-:   Pass TclCurl one of the values from below, to alter how TclCurl issues
-    "AUTH TLS" or "AUTH SSL" when FTP over SSL is activated (see **-ftpssl**).
+    `2`
+    :   After a failed `CWD`, TclCurl attempts to create the missing remote
+        directory. If the subsequent `MKD` command fails, TclCurl retries the
+        `CWD` command before giving up. This is useful when multiple
+        simultaneous connections target the same server and another connection
+        may have created the directory in the meantime.
 
-    You may need this option because of servers like BSDFTPD-SSL from
-    <http://bsdftpd-ssl.sc.ru/> "which won't work properly  when "AUTH SSL" is
-    issued (although the server responds fine and everything) but requires
-    "AUTH TLS" instead.
+**-ftpresponsetimeout**
+:   Sets a timeout, in seconds, for how long the server may take to return a
+    response to an FTP command before the session is considered hung. While
+    TclCurl is waiting for such a response, this value overrides **-timeout**.
+    If both options are used, **-ftpresponsetimeout** should normally be set
+    to a value smaller than **-timeout**.
+
+**-ftpalternativetouser**
+:   Pass a string to use for authentication if the usual FTP `USER user` and
+    `PASS password` negotiation fails. This is known to be required in some
+    cases when connecting to Tumbleweed Secure Transport FTPS servers that use
+    client-certificate authentication.
+
+**-ftpskippasvip**
+:   Set this option to `1` to make TclCurl ignore the IP address suggested by
+    the server in its `227` response to TclCurl's `PASV` command when opening
+    the data connection. TclCurl instead reuses the same IP address already in
+    use for the control connection, while still using the port number from the
+    `227` response.
+
+    This option has no effect if `PORT`, `EPRT`, or `EPSV` is used instead of
+    `PASV`.
+
+**-ftpsslauth**
+:   Selects how TclCurl issues `AUTH TLS` or `AUTH SSL` when FTP over SSL is
+    enabled with **-ftpssl**.
+
+    This option may be needed for servers such as BSDFTPD-SSL, which do not
+    handle `AUTH SSL` correctly and require `AUTH TLS` instead.
 
     Accepted values:
 
     `default`
-    :   Allows TclCurl to decide.
+    :   Lets TclCurl choose.
 
     `ssl`
-    :   Try "AUTH SSL" first, and only if that fails try "AUTH TLS".
+    :   Tries `AUTH SSL` first, and tries `AUTH TLS` only if that fails.
 
     `tls`
-    :   Try "AUTH TLS" first, and only if that fails try "AUTH SSL".
+    :   Tries `AUTH TLS` first, and tries `AUTH SSL` only if that fails.
 
--ftpsslccc
-:   Set it to make TclCurl use CCC (Clear Command Channel). It shuts down the
-    SSL/TLS layer after authenticating. The rest of the control channel
-    communication will be unencrypted. This allows NAT routers to follow the
-    FTP transaction. Accepted values are:
+**-ftpsslccc**
+:   Controls use of CCC (Clear Command Channel). CCC shuts down the SSL/TLS
+    layer after authentication, so the remainder of the control channel is
+    unencrypted. This can allow NAT routers to inspect the FTP control
+    channel.
+
+    Accepted values are:
 
     `none`
     :   Do not attempt to use CCC.
 
     `passive`
-    :   Do not initiate the shutdown, wait for the server to do it. Do
-    not send a reply.
+    :   Do not initiate the shutdown. Wait for the server to do so, and do
+        not send a reply.
 
     `active`
     :   Initiate the shutdown and wait for a reply.
 
--ftpaccount
-:   Pass string (or "" to disable). When an FTP server asks for "account data"
-    after user name and password has been provided, this data is sent off using
-    the ACCT command.
+**-ftpaccount**
+:   Pass a string containing account data, or `""` to disable it. If an FTP
+    server requests account data after the user name and password have been
+    provided, TclCurl sends this value with the `ACCT` command.
 
--ftpfilemethod
+**-ftpfilemethod**
 :   Selects how TclCurl navigates FTP paths. Accepted values are:
 
     `multicwd`
-    :   The default, TclCurl will do a single CWD operation for each
-    path part in the given URL. For deep hierarchies this means very many
-    commands. This is how RFC1738 says it should be done.
+    :   The default. TclCurl performs one `CWD` operation for each path
+        component in the URL. For deep hierarchies this may require many
+        commands. This is the method described by RFC 1738.
 
     `nocwd`
-    :   No CWD at all is done, TclCurl will do SIZE, RETR, STOR, etc and
-    give a full path to the server.
+    :   TclCurl does not perform `CWD` at all. Instead it sends commands such
+        as `SIZE`, `RETR`, and `STOR` with the full path.
 
     `singlecwd`
-    :   Make one CWD with the full target directory and then operate
-    on the file "normally". This is somewhat more standards compliant than
-    'nocwd' but without the full penalty of 'multicwd'.
+    :   TclCurl performs one `CWD` to the full target directory and then
+        operates on the file normally. This is somewhat more standards
+        compliant than `nocwd`, without the full overhead of `multicwd`.
 
-# Protocol options
+# PROTOCOL OPTIONS
 
--transfertext
-:   A 1 tells the extension to use ASCII mode for ftp transfers, instead of the
-    default binary transfer. For win32 systems it does not set the stdout to
-    binary mode. This option can be usable when transferring text data between
-    systems with different views on certain characters, such as newlines or
-    similar.
+**-transfertext**
+:   Set this option to `1` to use ASCII mode for FTP transfers instead of the
+    default binary transfer mode. On Win32 systems, this does not set
+    `stdout` to binary mode. This option can be useful when transferring text
+    data between systems that treat characters such as newlines differently.
 
-    **NOTE:** TclCurl does not do a complete ASCII conversion when doing ASCII
-    transfers over FTP. This is a known limitation/flaw that nobody has
-    rectified. TclCurl simply sets the mode to ascii and performs a standard
+    **NOTE:** TclCurl does not perform full ASCII conversion during ASCII FTP
+    transfers. It simply sets the transfer mode to ASCII and performs a normal
     transfer.
 
--proxytransfermode
-:   If set to 1, TclCurl sets the transfer mode (binary or ASCII) for FTP
-    transfers done via an HTTP proxy, by appending ;type=a or ;type=i to the
-    URL. Without this setting, or it being set to 0, the default,
-    **-transfertext** has no effect when doing FTP via a proxy. Beware that not
-    all proxies support this feature.
+**-proxytransfermode**
+:   Set this option to `1` to make TclCurl set the transfer mode, binary or
+    ASCII, for FTP transfers performed through an HTTP proxy by appending
+    `;type=a` or `;type=i` to the URL. If this option is omitted or set to
+    `0`, **-transfertext** has no effect for FTP transfers performed through
+    an HTTP proxy. Not all proxies support this feature.
 
--crlf
-:   If set to '1', TclCurl converts Unix newlines to CRLF newlines on
-    transfers. Disable this option again by setting the value to '0'.
+**-crlf**
+:   Set this option to `1` to make TclCurl convert Unix newlines to CRLF
+    newlines during transfers. Set it to `0` to disable this behavior.
 
--range
-:   Pass a string as parameter, which should contain the specified range you
-    want. It should be in the format "X-Y" , where X or Y may be left out. HTTP
-    transfers also support several intervals, separated with commas as in
-    "X-Y,N-M" Using this kind of multiple intervals will cause the HTTP server
-    to send the response document in pieces (using standard MIME separation
-    techniques).
+**-range**
+:   Pass a string specifying the requested range. The format is `X-Y`, where
+    either `X` or `Y` may be omitted. HTTP transfers also support multiple
+    ranges separated by commas, as in `X-Y,N-M`. When multiple ranges are
+    requested over HTTP, the server returns the response document in pieces
+    using standard MIME separation rules.
 
-    Ranges only work on HTTP, FTP and FILE transfers.
+    Range requests are supported only for HTTP, FTP, and FILE transfers.
 
--resumefrom
-:   Pass the offset in number of bytes that you want the transfer to start
-    from. Set this option to 0 to make the transfer start from the beginning
-    (effectively disabling resume).
+**-resumefrom**
+:   Pass the offset, in bytes, at which the transfer should start. Set this
+    option to `0` to start the transfer from the beginning, which disables
+    resume behavior.
 
-    For FTP, set this option to -1 to make the transfer start from the end of
-    the target file (useful to continue an interrupted upload).
+    For FTP, set this option to `-1` to start from the end of the target
+    file, which is useful when continuing an interrupted upload.
 
-    When doing uploads with FTP, the resume position is where in the
-    local/source file TclCurl should try to resume the upload from and it will
-    then append the source file to the remote target file.
+    For FTP uploads, the resume position specifies where in the local source
+    file TclCurl should resume reading. The data read from that point is then
+    appended to the remote target file.
 
--customrequest
-:   Pass a string as parameter. It will be used instead of GET or HEAD when
-    doing the HTTP request. This is useful for doing DELETE or other more
-    obscure HTTP requests. Do not do this at will, make sure your server
-    supports the command first.
+**-customrequest**
+:   Pass a string containing the request method to use instead of the default
+    method, such as `GET` or `HEAD`, when making an HTTP request. This is
+    useful for methods such as `DELETE` and other less common HTTP requests.
+    Use this option only when the server is known to support the specified
+    method.
 
-    Note that TclCurl will still act and assume the keyword it would use if you
-    do not set your custom and it will act according to that. Thus, changing
-    this to a HEAD when TclCurl otherwise would do a GET might cause TclCurl to
-    act funny, and similar. To switch to a proper HEAD, use **-nobody**, to
-    switch to a proper POST, use **-post** or **-postfields** and so on.
+    TclCurl still behaves internally according to the type of request it would
+    otherwise have used. As a result, changing the request method with this
+    option can produce inconsistent behavior if the corresponding request type
+    is not selected through the usual dedicated option. For example, to make a
+    proper `HEAD` request, use **-nobody**. To make a proper `POST` request,
+    use **-post** or **-postfields**.
 
--filetime
-:   If you pass a 1, TclCurl will attempt to get the modification date of the
-    remote document in this operation. This requires that the remote server
-    sends the time or replies to a time querying command. The getinfo procedure
-    with the filetime argument can be used after a transfer to extract the
-    received time (if any).
+**-filetime**
+:   Set this option to `1` to make TclCurl attempt to obtain the modification
+    time of the remote document during the transfer. This requires the remote
+    server either to send the time directly or to support a command for
+    querying it. After the transfer, the `filetime` value can be retrieved
+    with the `getinfo` procedure.
 
--nobody
-:   A 1 tells the library not to include the body-part in the output. This is
-    only relevant for protocols that have a separate header and body part. On
-    HTTP(S) servers, this will make TclCurl do a HEAD request.
+    For FTP transfers, this typically means that the server must support a
+    command for querying the remote file modification time, such as `MDTM`.
+    If the server does not provide this information, the transfer can still
+    succeed, but the retrieved `filetime` value remains unknown.
 
-    To change request to GET, you should use **httpget**. Change request to
-    POST with **post** etc.
+**-nobody**
+:   Set this option to `1` to omit the body from the output. This is relevant
+    only for protocols that distinguish between a header part and a body part.
+    For HTTP and HTTPS, this causes TclCurl to issue a `HEAD` request.
 
--infilesize
-:   When uploading a file to a remote site, this option should be used to tell
-    TclCurl what the expected size of the infile is.
+    To change the request back to `GET`, use **-httpget**. To switch to
+    `POST`, use **-post** or a related option.
 
-    This option is mandatory for uploading using SCP.
+**-infilesize**
+:   Use this option when uploading a file to specify the expected size of the
+    input file.
 
--upload
-:   A 1 tells the library to prepare for an upload. The **-infile** and
-    **-infilesize** options are also interesting for uploads. If the protocol
+    This option is mandatory for uploads performed with SCP.
+
+**-upload**
+:   Set this option to `1` to prepare for an upload. The **-infile** and
+    **-infilesize** options are also relevant for uploads. If the protocol
     is HTTP, uploading means using the PUT request unless you tell TclCurl
     otherwise.
 
@@ -1373,407 +1350,432 @@ tftpblksize
 :   This should be the time in seconds since 1 jan 1970, and the time will be
     used in a condition as specified with **timecondition**.
 
-# Connection options
+# CONNECTION OPTIONS
 
--timeout
-:   Pass the maximum time in seconds that you allow the TclCurl transfer
-    operation to take. Do note that normally, name lookups may take a
-    considerable time and that limiting the operation to less than a few
-    minutes risks aborting perfectly normal operations. This option will cause
-    libcurl to use the SIGALRM to enable time-outing system calls.
+**-timeout**
+:   Pass the maximum time, in seconds, that a TclCurl transfer operation may
+    take. Name resolution alone may take a noticeable amount of time, so
+    setting this value too low can abort otherwise normal operations.
 
-    In unix-like systems, this might cause signals to be used unless
-    **-nosignal** is used.
+    This option may cause libcurl to use `SIGALRM` to interrupt blocking
+    system calls. On Unix-like systems, signals may therefore be used unless
+    **-nosignal** is enabled.
 
--timeoutms
-:   Like **timeout** but takes a number of milliseconds instead. If libcurl is
-    built to use the standard system name resolver, that part will still use
-    full-second resolution for timeouts.
+**-timeoutms**
+:   Like **-timeout**, but takes a value in milliseconds. If libcurl is built
+    to use the standard system name resolver, name resolution still uses
+    full-second timeout granularity.
 
--lowspeedlimit
-:   Pass the speed in bytes per second that the transfer should be below during
-    **lowspeedtime** seconds for the extension to consider it too slow and
-    abort.
+**-lowspeedlimit**
+:   Pass the speed, in bytes per second, below which the transfer rate must
+    remain during **-lowspeedtime** seconds before TclCurl considers the
+    transfer too slow and aborts it.
 
--lowspeedtime
-:   Pass the time in seconds that the transfer should be below the
-    **lowspeedlimit** for the extension to consider it too slow and abort.
+**-lowspeedtime**
+:   Pass the number of seconds during which the transfer speed must stay below
+    **-lowspeedlimit** before TclCurl considers the transfer too slow and
+    aborts it.
 
--maxsendspeed
-:   Pass a speed in bytes per seconds. If an upload exceeds this speed on
-    cumulative average during the transfer, the transfer will pause to keep the
-    average rate less than or equal to the parameter value.  Defaults to
+**-maxsendspeed**
+:   Pass a speed in bytes per second. If an upload exceeds this average speed
+    during the transfer, TclCurl pauses the transfer as needed to keep the
+    average rate less than or equal to the specified value. The default is
     unlimited speed.
 
--maxrecvspeed
-:   Pass a speed in bytes per second. If a download exceeds this speed on
-    cumulative average during the transfer, the transfer will pause to keep the
-    average rate less than or equal to the parameter value. Defaults to
+**-maxrecvspeed**
+:   Pass a speed in bytes per second. If a download exceeds this average speed
+    during the transfer, TclCurl pauses the transfer as needed to keep the
+    average rate less than or equal to the specified value. The default is
     unlimited speed.
 
--maxconnects
-:   Sets the persistent connection cache size in all the protocols that support
-    persistent connections. The set amount will be the maximum amount of
-    simultaneous connections that TclCurl may cache in this easy handle.
-    Default is 5, and there isn't much point in changing this value unless you
-    are perfectly aware of how this work and changes TclCurl's behaviour.
+**-maxconnects**
+:   Sets the size of the persistent connection cache for protocols that support
+    persistent connections. This value is the maximum number of simultaneous
+    connections TclCurl may cache in the easy handle. The default is `5`.
 
-    When reaching the maximum limit, TclCurl closes the oldest connection in
-    the cache to prevent the number of open connections to increase.
+    When the maximum is reached, TclCurl closes the oldest cached connection
+    to prevent the number of open connections from increasing further.
 
-    **Note**: if you have already performed transfers with this curl handle,
-    setting a smaller **maxconnects** than before may cause open connections to
-    unnecessarily get closed.
+    **NOTE:** If transfers have already been performed with this easy handle,
+    reducing **-maxconnects** may cause existing open connections to be closed
+    earlier than expected.
 
-    If you add this easy handle to a multi handle, this setting is not being
-    acknowledged, instead you must configure the multi handle its own
-    **maxconnects** option.
+    If this easy handle is added to a multi handle, this setting is ignored.
+    In that case, configure the corresponding **maxconnects** option on the
+    multi handle instead.
 
--connecttimeout
-:   Maximum time in seconds that you allow the connection to the server to
-    take.  This only limits the connection phase, once it has connected, this
-    option is of no more use. Set to zero to disable connection timeout (it
-    will then only timeout on the internal timeouts).
+**-connecttimeout**
+:   Pass the maximum time, in seconds, that the connection phase may take.
+    This limits only the time required to establish the connection. Once the
+    connection has been established, this option no longer applies. Set it to
+    `0` to disable the connection timeout.
 
-    In unix-like systems, this might cause signals to be used unless
-    **-nosignal** is set.
+    On Unix-like systems, signals may be used unless **-nosignal** is enabled.
 
--connecttimeoutms
-:   Like **connecttimeout** but takes a number of milliseconds instead. If
-    libcurl is built to use the standard system name resolver, that part will
-    still use full-second resolution for timeouts.
+**-connecttimeoutms**
+:   Like **-connecttimeout**, but takes a value in milliseconds. If libcurl is
+    built to use the standard system name resolver, name resolution still uses
+    full-second timeout granularity.
 
--ipresolve
-:   Allows an application to select what kind of IP addresses to use when
-    resolving host names. This is only interesting when using host names that
-    resolve addresses using more than one version of IP. Accepted values are:
+**-ipresolve**
+:   Selects which IP address families may be used when resolving host names.
+    This option is relevant only when a host name resolves to more than one IP
+    version.
 
-`whatever`
-:   Default, resolves addresses to all IP versions that your system allows.
+    Accepted values are:
 
-`v4`
-:   Resolve to ipv4 addresses.
+    `whatever`
+    :   The default. Resolves addresses using all IP versions supported by the
+        system.
 
-`v6`
-:   Resolve to ipv6 addresses.
+    `v4`
+    :   Resolves only IPv4 addresses.
 
--resolve
-:   Pass a list of strings with host name resolve information to use for
-    requests with this handle.
+    `v6`
+    :   Resolves only IPv6 addresses.
 
-    Each single name resolve string should be written using the format
-    HOST:PORT:ADDRESS where HOST is the name TclCurl will try to resolve, PORT
-    is the port number of the service where TclCurl wants to connect to the
-    HOST and ADDRESS is the numerical IP address. If libcurl is built to
-    support IPv6, ADDRESS can be either IPv4 or IPv6 style addressing.
+**-resolve**
+:   Pass a list of host name resolution entries to use for requests made with
+    this handle.
 
-    This option effectively pre-populates the DNS cache with entries for the
-    host+port pair so redirects and everything that operations against the
-    HOST+PORT will instead use your provided ADDRESS.
+    Each entry must use the format `HOST:PORT:ADDRESS`, where `HOST` is the
+    name TclCurl tries to resolve, `PORT` is the destination service port, and
+    `ADDRESS` is the numeric IP address to use. If libcurl supports IPv6,
+    `ADDRESS` may be either an IPv4 or an IPv6 address.
 
-    You can remove names from the DNS cache again, to stop providing these fake
-    resolves, by including a string in the linked list that uses the format
-    "-HOST:PORT". The host name must be prefixed with a dash, and the host name
-    and port number must exactly match what was already added previously.
+    This option effectively pre-populates the DNS cache with entries for a
+    given `HOST:PORT` pair, so redirects and other requests to the same
+    `HOST:PORT` use the supplied `ADDRESS`.
 
--usessl
-:   Pass a one of the values from below to make TclCurl use your desired level
-    of SSL for the transfer. This is for enabling SSL/TLS when you use FTP,
-    SMTP, POP3, IMAP etc.
+    To remove an entry from the DNS cache, include a string in the form
+    `-HOST:PORT`. The host name must be prefixed with a dash, and both the
+    host name and port must exactly match an entry added earlier.
 
-    You can use ftps:// URLs to explicitly switch on SSL/TSL for the control
-    connection and the data connection.
+**-usessl**
+:   Selects the desired level of SSL or TLS use for the transfer. This option
+    is relevant for protocols such as FTP, SMTP, POP3, and IMAP.
+
+    You can also use `ftps://` URLs to enable SSL/TLS explicitly for both the
+    control connection and the data connection.
 
     Accepted values:
 
-`nope`
-:   Do not attempt to use SSL
+    `nope`
+    :   Do not attempt to use SSL.
 
-`try`
-:   Try using SSL, proceed anyway otherwise.
+    `try`
+    :   Attempt to use SSL, but continue even if it cannot be negotiated.
 
-`control`
-:   Use SSL for the control connection or fail with "use ssl failed" (64).
+    `control`
+    :   Use SSL for the control connection, or fail with `use ssl failed`
+        (`64`).
 
-`all`
-:   Use SSL for all communication or fail with "use ssl failed" (64).
+    `all`
+    :   Use SSL for all communication, or fail with `use ssl failed` (`64`).
 
-# SSL and security options
+# SSL AND SECURITY OPTIONS
 
--sslcert
-:   Pass a string as parameter. The string should be the file name of your
-    certificate. The default format is "PEM" and can be changed with
-    **-sslcerttype**.
+**-sslcert**
+:   Pass a string containing the file name of the certificate to use. The
+    default format is `PEM`, and it can be changed with **-sslcerttype**.
 
-    With NSS this is the nickname of the certificate you wish to authenticate
-    with. If you want to use a file from the current directory, please precede
-    it with the "./" prefix, in order to avoid confusion with a nickname.
+    When libcurl is built against NSS, this value is the nickname of the
+    certificate to use for authentication. To use a file in the current
+    directory in that case, prefix it with `./` to avoid confusion with a
+    nickname.
 
--sslcerttype
-:   Pass a string as parameter. The string should be the format of your
-    certificate. Supported formats are "PEM" and "DER".
+**-sslcerttype**
+:   Pass a string specifying the format of the certificate given with
+    **-sslcert**.
 
--sslkey
-:   Pass a pointer to a zero terminated string as parameter. The string should
-    be the file name of your private key. The default format is "PEM" and can
-    be changed with **-sslkeytype**.
+    Accepted values are:
 
--sslkeytype
-:   Pass a pointer to a zero terminated string as parameter. The string should
-    be the format of your private key. Supported formats are "PEM", "DER" and
-    "ENG"
+    `PEM`
+    :   PEM format.
 
-    **NOTE:**The format "ENG" enables you to load the private key from a crypto
-    engine. in this case **-sslkey** is used as an identifier passed to the
-    engine. You have to set the crypto engine with **-sslengine**. The "DER"
-    format key file currently does not work because of a bug in OpenSSL.
+    `DER`
+    :   DER format.
 
--keypasswd
-:   Pass a string as parameter. It will be used as the password required to use
-    the **-sslkey** or **-sshprivatekeyfile** private key.
+**-sslkey**
+:   Pass a string containing the file name of the private key to use. The
+    default format is `PEM`, and it can be changed with **-sslkeytype**.
 
-    You never need a pass phrase to load a certificate but you need one to load
-    you private key.
+**-sslkeytype**
+:   Pass a string specifying the format of the private key given with
+    **-sslkey**.
 
-    This option used to be known as **-sslkeypasswd** and **-sslcertpasswd**.
+    Accepted values are:
 
--sslengine
-:   Pass a string as parameter. It will be used as the identifier for the
-    crypto engine you want to use for your private key.
+    `PEM`
+    :   PEM format.
 
-    **NOTE:**If the crypto device cannot be loaded, an error will be returned.
+    `DER`
+    :   DER format.
 
--sslenginedefault
-:   Pass a 1 to set the actual crypto engine as the default for (asymmetric)
-    crypto operations.
+    `ENG`
+    :   Uses a crypto engine. In this case **-sslkey** is interpreted as an
+        identifier passed to the engine, and **-sslengine** must also be set.
 
-    **NOTE:**If the crypto device cannot be set, an error will be returned.
+    **NOTE:** The `DER` private-key format may not work with some OpenSSL
+    versions because of upstream limitations.
 
--sslversion
-:   Use it to set what version of SSL/TLS to use. Accepted values are:
+**-keypasswd**
+:   Pass a string containing the passphrase required to use the private key
+    specified with **-sslkey** or **-sshprivatekeyfile**.
 
-`default`
-:   The default action. This will attempt to figure out the remote SSL protocol
-    version, i.e. either SSLv3 or TLSv1 (but not SSLv2, which became disabled
-    by default with 7.18.1).
+    A passphrase is not needed to load a certificate itself, but it may be
+    needed to load the corresponding private key.
 
-`tlsv1`
-:   Force TLSv1 or later
+    This option was formerly known as **-sslkeypasswd** and
+    **-sslcertpasswd**.
 
-`sslv2`
-:   Force SSLv2
+**-sslengine**
+:   Pass a string containing the identifier of the crypto engine to use for
+    private-key operations.
 
-`sslv3`
-:   Force SSLv3
+    **NOTE:** If the crypto engine cannot be loaded, TclCurl returns an error.
 
-`tlsv1_0`
-:   Force TLSv1.0 or later
+**-sslenginedefault**
+:   Set this option to `1` to make the selected crypto engine the default for
+    asymmetric cryptographic operations.
 
-`tlsv1_1`
-:   Force TLSv1.1 or later
+    **NOTE:** If the crypto engine cannot be made the default, TclCurl returns
+    an error.
 
-`tlsv1_2`
-:   Force TLSv1.2 or later
+**-sslversion**
+:   Selects the SSL or TLS protocol version to use.
 
-`tlsv1_3`
-:   Force TLSv1.3 or later
+    Accepted values are:
 
-`maxdefault`
-:   Use the maximum supported TLS version by libcurl or the default value from
-    the SSL library.
+    `default`
+    :   Uses the default behavior. TclCurl attempts to negotiate an
+        appropriate protocol version with the remote server.
 
-`maxtlsv1_0`
-:   Define maximum supported TLS version as TLSv1.0
+    `tlsv1`
+    :   Requires TLSv1 or later.
 
-`maxtlsv1_1`
-:   Define maximum supported TLS version as TLSv1.1
+    `sslv2`
+    :   Requires SSLv2.
 
-`maxtlsv1_2`
-:   Define maximum supported TLS version as TLSv1.2
+    `sslv3`
+    :   Requires SSLv3.
 
-`maxtlsv1_3`
-:   Define maximum supported TLS version as TLSv1.3
+    `tlsv1_0`
+    :   Requires TLSv1.0 or later.
 
--sslverifypeer
-:   This option determines whether TclCurl verifies the authenticity of the
-    peer's certificate. A 1 means it verifies; zero means it doesn't. The
-    default is 1.
+    `tlsv1_1`
+    :   Requires TLSv1.1 or later.
 
-    When negotiating an SSL connection, the server sends a certificate
-    indicating its identity. TclCurl verifies whether the certificate is
-    authentic, i.e. that you can trust that the server is who the certificate
-    says it is. This trust is based on a chain of digital signatures, rooted in
-    certification authority (CA) certificates you supply.
+    `tlsv1_2`
+    :   Requires TLSv1.2 or later.
 
-    TclCurl uses a default bundle of CA certificates that comes with libcurl
-    but you can specify alternate certificates with the **-cainfo** or the
-    **-capath** options.
+    `tlsv1_3`
+    :   Requires TLSv1.3 or later.
 
-    When **-sslverifypeer** is nonzero, and the verification fails to prove
-    that the certificate is authentic, the connection fails. When the option is
-    zero, the peer certificate verification succeeds regardless.
+    `maxdefault`
+    :   Uses the maximum TLS version supported by libcurl or by the SSL
+        backend's default configuration.
 
-    Authenticating the certificate is not by itself very useful. You typically
-    want to ensure that the server, as authentically identified by its
-    certificate, is the server you mean to be talking to, use
-    **-sslverifyhost** to control that. The check that the host name in the
-    certificate is valid for the host name you're connecting to is done
-    independently of this option.
+    `maxtlsv1_0`
+    :   Sets the maximum supported TLS version to TLSv1.0.
 
--cainfo
-:   Pass a file naming holding the certificate to verify the peer with. This
-    only makes sense when used in combination with the **-sslverifypeer**
-    option, if it is set to zero **-cainfo** need not even indicate an
+    `maxtlsv1_1`
+    :   Sets the maximum supported TLS version to TLSv1.1.
+
+    `maxtlsv1_2`
+    :   Sets the maximum supported TLS version to TLSv1.2.
+
+    `maxtlsv1_3`
+    :   Sets the maximum supported TLS version to TLSv1.3.
+
+**-sslverifypeer**
+:   Controls whether TclCurl verifies the authenticity of the peer
+    certificate. Set this option to `1` to enable verification or to `0` to
+    disable it. The default is `1`.
+
+    During the SSL or TLS handshake, the server sends a certificate declaring
+    its identity. TclCurl verifies that certificate against a chain of trust
+    rooted in one or more certification authority (CA) certificates.
+
+    TclCurl uses the default CA bundle provided by libcurl, but you can
+    specify alternate certificates with **-cainfo** or **-capath**.
+
+    If **-sslverifypeer** is nonzero and verification fails, the connection
+    fails. If this option is `0`, peer-certificate verification is skipped.
+
+    Certificate verification alone does not confirm that the peer is the
+    specific host you intended to contact. Use **-sslverifyhost** to control
+    host-name verification.
+
+**-cainfo**
+:   Pass the name of a file containing one or more CA certificates used to
+    verify the peer certificate.
+
+    This option is meaningful primarily together with **-sslverifypeer**. If
+    peer verification is disabled, **-cainfo** does not need to name an
     accessible file.
 
-    This option is by default set to the system path where libcurl's cacert
-    bundle is assumed to be stored, as established at build time.
+    By default, this option is set to the system path of libcurl's CA bundle,
+    as determined when libcurl was built.
 
-    When built against NSS this is the directory that the NSS certificate
-    database resides in.
+    When libcurl is built against NSS, this value refers to the directory
+    containing the NSS certificate database.
 
--issuercert
-:   Pass a string naming a file holding a CA certificate in PEM format. If the
-    option is set, an additional check against the peer certificate is
-    performed to verify the issuer is indeed the one associated with the
-    certificate provided by the option. This additional check is useful in
-    multi-level PKI where one need to enforce the peer certificate is from a
-    specific branch of the tree.
+**-issuercert**
+:   Pass the name of a file containing a CA certificate in PEM format. If this
+    option is set, an additional check is performed to verify that the peer
+    certificate was issued by the CA certificate provided here.
 
-    This option makes sense only when used in combination with the
-    **-sslverifypeer** option. Otherwise, the result of the check is not
-    considered as failure.
+    This is useful in multi-level PKI environments where the peer certificate
+    must be constrained to a specific branch of the certificate hierarchy.
 
--capath
-:   Pass the directory holding multiple CA certificates to verify the peer
-    with. If libcurl is built against OpenSSL, the certificate directory must
-    be prepared using the openssl c_rehash utility. This only makes sense when
-    used in combination with the  **-sslverifypeer** option, if it is set to
-    zero, **-capath** need not even indicate an accessible path.
+    This option is meaningful only when used together with
+    **-sslverifypeer**. Otherwise, failure of this additional check is not
+    treated as a connection failure.
 
-    This option apparently does not work in Windows due to some limitation in
-    openssl.
+**-capath**
+:   Pass the name of a directory containing multiple CA certificates to use
+    when verifying the peer certificate.
 
-    This option is OpenSSL-specific and does nothing if libcurl is built to use
-    GnuTLS. NSS-powered libcurl provides the option only for backward
+    When libcurl is built against OpenSSL, this directory must be prepared
+    with the `openssl c_rehash` utility. This option is meaningful primarily
+    together with **-sslverifypeer**. If peer verification is disabled,
+    **-capath** does not need to name an accessible directory.
+
+    This option is OpenSSL-specific and has no effect when libcurl is built
+    against GnuTLS. NSS-based libcurl provides it only for backward
     compatibility.
 
--crlfile
-:   Pass a string naming a file with the concatenation of CRL (in PEM format)
-    to use in the certificate validation that occurs during the SSL exchange.
+    On Windows, this option may not work because of OpenSSL limitations.
 
-    When libcurl is built to use NSS or GnuTLS, there is no way to influence
-    the use of CRL passed to help in the verification process. When built with
-    OpenSSL support, X509_V_FLAG_CRL_CHECK and X509_V_FLAG_CRL_CHECK_ALL are
-    both set, requiring CRL check against all the elements of the certificate
-    chain if a CRL file is passed.
+**-crlfile**
+:   Pass the name of a file containing one or more certificate revocation
+    lists in PEM format to use during certificate validation.
 
-    This option makes sense only when used in combination with the
-    **-sslverifypeer** option.
+    When libcurl is built against NSS or GnuTLS, there is no supported way to
+    influence revocation checking with this option. When libcurl is built with
+    OpenSSL support, both `X509_V_FLAG_CRL_CHECK` and
+    `X509_V_FLAG_CRL_CHECK_ALL` are enabled if a CRL file is provided, so CRL
+    checking is applied throughout the certificate chain.
 
-    A specific error code (CURLE_SSL_CRL_BADFILE) is defined with the option.
-    It is returned when the SSL exchange fails because the CRL file cannot be
-    loaded. A failure in certificate verification due to a revocation
-    information found in the CRL does not trigger this specific error.
+    This option is meaningful only when used together with
+    **-sslverifypeer**.
 
--sslverifyhost
-:   This option determines whether TclCurl verifies that the server claims to
-    be who you want it to be.
+    If the CRL file cannot be loaded, the SSL exchange fails with the specific
+    error code `CURLE_SSL_CRL_BADFILE`. A certificate-verification failure
+    caused by revocation information in the CRL does not produce that specific
+    error code.
 
-    When negotiating an SSL connection, the server sends a certificate
-    indicating its identity.
+**-sslverifyhost**
+:   Controls whether TclCurl verifies that the server certificate matches the
+    host name you intended to contact.
 
-    When **-sslverifyhost** is set to 2, that certificate must indicate that
-    the server is the server to which you meant to connect, or the connection
-    fails.
+    During the SSL or TLS handshake, the server sends a certificate declaring
+    its identity.
 
-    TclCurl considers the server the intended one when the Common Name field or
-    a Subject Alternate Name field in the certificate matches the host name in
-    the URL to which you told Curl to connect.
+    When **-sslverifyhost** is set to `2`, the certificate must identify the
+    intended server or the connection fails. TclCurl considers the server to
+    match when the Common Name field or a Subject Alternative Name field in
+    the certificate matches the host name in the URL.
 
-    When set to 1, the certificate must contain a Common Name field, but it
-    does not matter what name it says. (This is not ordinarily a useful
-    setting).
+    When this option is set to `1`, the certificate must contain a Common Name
+    field, but the specific name is not checked. This setting is generally not
+    useful.
 
-    When the value is 0, the connection succeeds regardless of the names in the
-    certificate.
+    When this option is set to `0`, the connection succeeds regardless of the
+    names contained in the certificate.
 
-    The default value for this option is 2.
+    The default value is `2`.
 
-    This option controls the identity that the server *claims*. The server
-    could be lying. To control lying, see **-sslverifypeer**. If libcurl is
-    built against NSS and **-verifypeer** is zero, **-verifyhost** is ignored.
+    This option verifies the host identity claimed by the certificate. To
+    verify that the certificate itself is trusted, use **-sslverifypeer**. If
+    libcurl is built against NSS and **-sslverifypeer** is `0`,
+    **-sslverifyhost** is ignored.
 
--certinfo
-:   Set to '1' to enable TclCurl's certificate chain info gatherer. With this
-    enabled, TclCurl (if built with OpenSSL) will extract lots of information
-    and data about the certificates in the certificate chain used in the SSL
-    connection. This data can then be to extracted after a transfer using the
-    **getinfo** command and its option **certinfo**.
+**-certinfo**
+:   Set this option to `1` to enable collection of certificate-chain
+    information. When enabled, TclCurl, if built against OpenSSL, extracts
+    certificate details from the chain used in the SSL connection.
 
--randomfile
-:   Pass a file name. The file will be used to read from to seed the random
-    engine for SSL. The more random the specified file is, the more secure the
-    SSL connection becomes. *This option was deprecated in libcurl v7.84 and
-    removed by default in tclcurl build. See README.md for instructions on
-    how to re-enable this option*
+    That information can be retrieved after the transfer with the **getinfo**
+    command and its `certinfo` option.
 
--egdsocket
-:   Pass a path name to the Entropy Gathering Daemon socket. It will be used to
-    seed the random engine for SSL. *This option was deprecated in libcurl v7.84
-    and removed by default in tclcurl build. See README.md for instructions on
-    how to re-enable this option*
+**-randomfile**
+:   Pass a file name. TclCurl uses this file as a source of randomness for the
+    SSL random engine. *This option was deprecated in libcurl v7.84 and is
+    disabled by default in the TclCurl build. See `README.md` for instructions
+    on how to re-enable it.*
 
--sslcypherlist
-:   Pass a string holding the ciphers to use for the SSL connection. The list
-    must consists of one or more cipher strings separated by colons. Commas or
-    spaces are also acceptable separators but colons are normally used, , - and
-    + can be used as operators.
+**-egdsocket**
+:   Pass the path name of an Entropy Gathering Daemon socket. TclCurl uses it
+    as a source of randomness for the SSL random engine. *This option was
+    deprecated in libcurl v7.84 and is disabled by default in the TclCurl
+    build. See `README.md` for instructions on how to re-enable it.*
 
-    For OpenSSL and GnuTLS valid examples of cipher lists include 'RC4-SHA',
-    'SHA1+DES', 'TLSv1' and 'DEFAULT'. The default list is normally set when
-    you compile OpenSSL.
+**-sslcipherlist**
+:   Pass a string containing the cipher list to use for the SSL or TLS
+    connection. The list consists of one or more cipher strings separated
+    normally by colons, although commas or spaces are also accepted. The
+    characters `!`, `-`, and `+` may also be used as operators.
 
-    You will find more details about cipher lists on this URL:
+    With OpenSSL and GnuTLS, valid examples include `RC4-SHA`, `SHA1+DES`,
+    `TLSv1`, and `DEFAULT`. The default list is usually defined by the SSL
+    backend at build time.
+
+    With NSS, valid examples include `rsa_rc4_128_md5` and
+    `rsa_aes_128_sha`. NSS does not support incremental add or remove
+    semantics for ciphers. If this option is used, all known ciphers are
+    disabled and only the ciphers listed here are enabled.
+
+    For details about cipher-list syntax, see:
     <http://www.openssl.org/docs/apps/ciphers.html>
 
-    For NSS valid examples of cipher lists include 'rsa_rc4_128_md5',
-    'rsa_aes_128_sha', etc. With NSS you don't add/remove ciphers. If you use
-    this option then all known ciphers are disabled and only those passed in
-    are enabled.
+    For NSS-specific cipher-list details, see:
+    <http://directory.fedora.redhat.com/docs/mod_nss.html>
 
-    You'll find more details about the NSS cipher lists on this URL:
-    <<http://directory.fedora.redhat.com/docs/mod_nss.html>>
+**-sslsessionidcache**
+:   Set this option to `0` to disable TclCurl's use of SSL session-ID caching,
+    or to `1` to enable it. The default is `1`.
 
--sslsessionidcache
-:   Pass a 0 to disable TclCurl's use of SSL session-ID caching or a 1 to
-    enable it. By default all transfers are done using the cache. While nothing
-    ever should get hurt by attempting to reuse SSL session-IDs, there seem to
-    be broken SSL implementations in the wild that may require you to disable
-    this in order for you to succeed.
+    In normal circumstances, reusing SSL session IDs is harmless and may
+    improve performance. However, some broken SSL implementations may require
+    this option to be disabled.
 
--krblevel
-:   Set the kerberos security level for FTP, this also enables kerberos
-    awareness. Accepted values are `clear`, `safe`, `confidential`, and
-    `private`. If the string is set but does not match one of these, `private` will be
-    used. Set the string to NULL to disable kerberos4. Set the string to "" to
-    disable kerberos support for FTP.
+**-krblevel**
+:   Selects the Kerberos security level for FTP and thereby also enables
+    Kerberos awareness.
 
--gssapidelegation
-:   Selects the GSSAPI credential delegation mode. Accepted values are `flag`
-    and `policyflag`. Use `flag` to allow unconditional delegation. Use
-    `policyflag` to delegate only if the `OK-AS-DELEGATE` flag is set in the
-    service ticket, provided that this feature is supported by the GSSAPI
-    implementation and that `GSS_C_DELEG_POLICY_FLAG` was available at
-    compile time. Delegation is disabled by default since 7.21.7.
+    Accepted values are `clear`, `safe`, `confidential`, and `private`. If
+    the string does not match one of these values, `private` is used.
 
-# SSH options
+    Set the string to `NULL` to disable Kerberos 4. Set it to `""` to disable
+    Kerberos support for FTP.
 
--sshauthtypes
-:   Selects the allowed SSH authentication types. Accepted values are:
+**-gssapidelegation**
+:   Selects the GSSAPI credential delegation mode.
+
+    Accepted values are:
+
+    `flag`
+    :   Allows unconditional delegation.
+
+    `policyflag`
+    :   Delegates only if the `OK-AS-DELEGATE` flag is set in the service
+        ticket, provided that this feature is supported by the GSSAPI
+        implementation and that `GSS_C_DELEG_POLICY_FLAG` was available at
+        compile time.
+
+    Delegation is disabled by default since 7.21.7.
+
+# SSH OPTIONS
+
+**-sshauthtypes**
+:   Selects the allowed SSH authentication types.
+
+    Accepted values are:
 
     `publickey`
-    :   Use public key authentication.
+    :   Use public-key authentication.
 
     `password`
     :   Use password authentication.
@@ -1785,113 +1787,127 @@ tftpblksize
     :   Use keyboard-interactive authentication.
 
     `any`
-    :   To let TclCurl pick one
+    :   Let TclCurl select an authentication method automatically.
 
--sshhostpublickeymd5
-:   Pass a string containing 32 hexadecimal digits. The string should be the
-    128 bit MD5 checksum of the remote host public key, and TclCurl will reject
-    the connection to the host unless the md5sums match. This option is only
-    for SCP and SFTP transfers.
+**-sshhostpublickeymd5**
+:   Pass a string containing 32 hexadecimal digits. The string must be the
+    128-bit MD5 checksum of the remote host public key. TclCurl rejects the
+    connection unless the checksum matches.
 
--publickeyfile
-:   Pass the file name for your public key. If not used, TclCurl defaults to
-    using **$HOME/.ssh/id_dsa.pub**. HOME environment variable is set, and just
-    **id_dsa** in the current directory if not.
+    This option applies only to SCP and SFTP transfers.
 
--privatekeyfile
-:   Pass the file name for your private key. If not used, TclCurl defaults to
-    using **$HOME/.ssh/id_dsa.pub**. HOME environment variable is set, and just
-    **id_dsa** in the current directory if not. If the file is
-    password-protected, set the password with **-keypasswd**.
+**-sshpublickeyfile**
+:   Pass the file name of the public key to use.
 
--sshknownhosts
-:   Pass a string holding the file name of the known_host file to use. The
-    known_hosts file should use the OpenSSH file format as supported by
-    libssh2. If this file is specified, TclCurl will only accept connections
-    with hosts that are known and present in that file, with a matching public
-    key. Use **-sshkeyproc** to alter the default behavior on host and key
-    (mis)matching.
+    If this option is not used, TclCurl defaults to `$HOME/.ssh/id_dsa.pub`
+    when the `HOME` environment variable is set, and to `id_dsa.pub` in the
+    current directory otherwise.
 
--sshkeyproc
-:   Pass a the name of the procedure that will be called when the known_host
-    matching has been done, to allow the application to act and decide for
-    TclCurl how to proceed. The callback will only be called if **-knownhosts**
-    is also set.
+**-sshprivatekeyfile**
+:   Pass the file name of the private key to use.
 
-    It gets passed a list with three elements, the first one is a list with the
-    type of the key from the known_hosts file and the key itself, the second is
-    another list with the type of the key from the remote site and the key
-    itself, the third tells you what TclCurl thinks about the matching status.
+    If this option is not used, TclCurl defaults to `$HOME/.ssh/id_dsa` when
+    the `HOME` environment variable is set, and to `id_dsa` in the current
+    directory otherwise.
 
-    The known key types are: "rsa", "rsa1" and "dss", in any other case
-    "unknown" is given.
+    If the private key is passphrase-protected, use **-keypasswd** to specify
+    the passphrase.
 
-    TclCurl opinion about how they match may be: "match", "mismatch", "missing"
-    or "error".
+**-sshknownhosts**
+:   Pass a string containing the file name of the `known_hosts` file to use.
+    The file must use the OpenSSH `known_hosts` format supported by libssh2.
 
-    The procedure must return:
+    If this option is set, TclCurl accepts connections only to hosts that are
+    present in that file with a matching public key. Use **-sshkeyproc** to
+    override the default behavior for host and key matching.
 
-    0
-    :   The host+key is accepted and TclCurl will append it to the
-    known_hosts file before continuing with the connection. This will also add
-    the host+key combo to the known_host pool kept in memory if it wasn't
-    already present there. The adding of data to the file is done by completely
-    replacing the file with a new copy, so the permissions of the file must
-    allow this.
+**-sshkeyproc**
+:   Pass the name of a callback procedure that TclCurl invokes after
+    `known_hosts` matching has been performed, so that the application can
+    decide how the connection should proceed.
 
-    1
-    :   The host+key is accepted, TclCurl will continue with the connection.
-    This will also add the host+key combo to the known_host pool kept in memory
-    if it wasn't already present there.
+    The callback is invoked only if **-sshknownhosts** is also set.
 
-    2
-    :   The host+key is rejected. TclCurl will close the connection.
+    The callback receives a list with three elements:
 
-    3
-    :   The host+key is rejected, but the SSH connection is asked to be kept
-    alive. This feature could be used when the app wants to somehow return back
-    and act on the host+key situation and then retry without needing the
-    overhead of setting it up from scratch again.
+    1. A list containing the key type from the `known_hosts` file and the key
+       itself.
+    2. A list containing the key type presented by the remote host and the key
+       itself.
+    3. A value describing TclCurl's matching result.
 
-    Any other value will cause the connection to be closed.
+    Possible key-type values are `rsa`, `rsa1`, `dss`, and `unknown`.
 
-# Other options
+    Possible match-result values are `match`, `mismatch`, `missing`, and
+    `error`.
 
--headervar
-:   Name of the Tcl array variable where TclCurl will store the headers
-    returned by the server.
+    Return values:
 
--bodyvar
-:   Name of the Tcl variable where TclCurl will store the file requested, the
-    file may contain text or binary data.
+    `0`
+    :   Accept the host and key. TclCurl appends the host and key to the
+        `known_hosts` file before continuing with the connection. If the host
+        and key are not already present in the in-memory known-hosts pool,
+        TclCurl also adds them there. Updating the file is done by replacing
+        it with a new copy, so the file permissions must allow that.
 
--canceltransvar
-:   Name of a Tcl variable, in case you have defined a procedure to call with
-    **-progressproc** setting this variable to '1' will cancel the transfer.
+    `1`
+    :   Accept the host and key, and continue with the connection. If the host
+        and key are not already present in the in-memory known-hosts pool,
+        TclCurl also adds them there.
 
--command
-:   Executes the given command after the transfer is done, since it only works
-    with blocking transfers, it is pretty much useless.
+    `2`
+    :   Reject the host and key. TclCurl closes the connection.
 
--share
-:   Pass a share handle as a parameter. The share handle must have been created
-    by a previous call to **curl::shareinit**. Setting this option, will make
-    this handle use the data from the shared handle instead of keeping the data
-    to itself. See *tclcurl_share* for details.
+    `3`
+    :   Reject the host and key, but keep the SSH connection alive. This can
+        be useful if the application needs to inspect the host or key state and
+        then retry without incurring the full setup cost again.
 
--newfileperms
-:   Pass a number as a parameter, containing the value of the permissions that
-    will be assigned to newly created files on the remote server. The default
-    value is 0644, but any valid value can be used. The only protocols that can
-    use this are sftp://, scp:// and file://.
+    Any other return value causes TclCurl to close the connection.
 
--newdirectoryperms
-:   Pass a number as a parameter, containing the value of the permissions that
-    will be assigned to newly created directories on the remote server. The
-    default value is 0755, but any valid value can be used. The only protocols
-    that can use this are sftp://, scp:// and file://.
+# OTHER OPTIONS
 
-# Telnet options
+**-headervar**
+:   Name of the Tcl array variable in which TclCurl stores the headers returned
+    by the server.
+
+**-bodyvar**
+:   Name of the Tcl variable in which TclCurl stores the requested file
+    contents. The stored data may be either text or binary data.
+
+**-canceltransvarname**
+:   Name of a Tcl variable used together with **-progressproc**. If the
+    progress callback sets this variable to `1`, the transfer is canceled.
+
+**-command**
+:   Executes the given command after the transfer has completed.
+
+    This option works only with blocking transfers and therefore has limited
+    practical use.
+
+**-share**
+:   Pass a share handle. The share handle must have been created previously by
+    calling **curl::shareinit**.
+
+    Setting this option causes the easy handle to use data from the shared
+    handle instead of keeping its own separate copy. See *tclcurl_share* for
+    details.
+
+**-newfileperms**
+:   Pass a numeric value specifying the permissions assigned to newly created
+    files on the remote server. The default value is `0644`, but any valid
+    value may be used.
+
+    This option applies only to `sftp://`, `scp://`, and `file://` transfers.
+
+**-newdirectoryperms**
+:   Pass a numeric value specifying the permissions assigned to newly created
+    directories on the remote server. The default value is `0755`, but any
+    valid value may be used.
+
+    This option applies only to `sftp://`, `scp://`, and `file://` transfers.
+
+# TELNET OPTIONS
 
 -telnetoptions
 :   Pass a list with variables to pass to the telnet negotiations. The
@@ -1939,268 +1955,268 @@ RETURN VALUE
     errorbuffer was set with configure there will be a readable error message.
     The error codes are:
 
-    1
+    **1**
     :   Unsupported protocol. This build of TclCurl has no support for this
     protocol.
 
-    2
+    **2**
     :   Very early initialization code failed. This is likely to be and
     internal error or a resource problem where something fundamental couldn't
     get done at init time.
 
-    3
+    **3**
     :   URL malformat. The syntax was not correct.
 
-    4
+    **4**
     :   A requested feature, protocol or option was not found built-in in
     this libcurl due to a build-time decision. This means that a feature or
     option was not enabled or explicitly disabled when libcurl was built and in
     order to get it to function you have to get a rebuilt libcurl.
 
-    5
+    **5**
     :   Couldn't resolve proxy. The given proxy host could not be resolved.
 
-    6
+    **6**
     :   Couldn't resolve host. The given remote host was not resolved.
 
-    7
+    **7**
     :   Failed to connect to host or proxy.
 
-    8
+    **8**
     :   FTP weird server reply. The server sent data TclCurl couldn't parse.
     The given remote server is probably not an OK FTP server.
 
-    9
+    **9**
     :   We were denied access to the resource given in the URL. For FTP, this
     occurs while trying to change to the remote directory.
 
-    11
+    **11**
     :   FTP weird PASS reply. TclCurl couldn't parse the reply sent to the
     PASS request.
 
-    13
+    **13**
     :   FTP weird PASV reply, TclCurl couldn't parse the reply sent to the
     PASV or EPSV request.
 
-    14
+    **14**
     :   FTP weird 227 format. TclCurl couldn't parse the 227-line the server
     sent.
 
-    15
+    **15**
     :   FTP can't get host. Couldn't resolve the host IP we got in the
     227-line.
 
-    17
+    **17**
     :   FTP couldn't set type. Couldn't change transfer method to either
     binary or ascii.
 
-    18
+    **18**
     :   Partial file. Only a part of the file was transferred, this happens
     when the server first reports an expected transfer size and then delivers
     data that doesn't match the given size.
 
-    19
+    **19**
     :   FTP couldn't RETR file, we either got a weird reply to a 'RETR'
     command or a zero byte transfer.
 
-    21
+    **21**
     :   Quote error. A custom 'QUOTE' returned error code 400 or higher (for
     FTP) or otherwise indicated unsuccessful completion of the command.
 
-    22
+    **22**
     :   HTTP returned error. This return code only appears if
     **-failonerror** is used and the HTTP server returns an error code that is
     400 or higher.
 
-    23
+    **23**
     :   Write error. TclCurl couldn't write data to a local filesystem or an
     error was returned from a write callback.
 
-    25
+    **25**
     :   Failed upload failed. For FTP, the server typcially denied the STOR
     command. The error buffer usually contains the server's explanation to
     this.
 
-    26
+    **26**
     :   Read error. There was a problem reading from a local file or an
     error was returned from the read callback.
 
-    27
+    **27**
     :   Out of memory. A memory allocation request failed. This should never
     happen unless something weird is going on in your computer.
 
-    28
+    **28**
     :   Operation timeout. The specified time-out period was reached
     according to the conditions.
 
-    30
+    **30**
     :   The FTP PORT command failed, not all FTP servers support the PORT
     command, try  doing a transfer using PASV instead!.
 
-    31
+    **31**
     :   FTP couldn't use REST. This command is used for resumed FTP
     transfers.
 
-    33
+    **33**
     :   Range error. The server doesn't support or accept range requests.
 
-    34
+    **34**
     :   HTTP post error. Internal post-request generation error.
 
-    35
+    **35**
     :   SSL connect error. The SSL handshaking failed, the error buffer may
     have a clue to the reason, could be certificates, passwords, ...
 
-    36
+    **36**
     :   The download could not be resumed because the specified offset was
     out of the file boundary.
 
-    37
+    **37**
     :   A file given with FILE:// couldn't be read. Did you checked the
     permissions?
 
-    38
+    **38**
     :   LDAP cannot bind. LDAP bind operation failed.
 
-    39
+    **39**
     :   LDAP search failed.
 
-    41
+    **41**
     :   A required zlib function was not found.
 
-    42
+    **42**
     :   Aborted by callback. An application told TclCurl to abort the
     operation.
 
-    43
+    **43**
     :   Internal error. A function was called with a bad parameter.
 
-    45
+    **45**
     :   Interface error. A specified outgoing interface could not be used.
 
-    47
+    **47**
     :   Too many redirects. When following redirects, TclCurl hit the
     maximum amount, set your limit with --maxredirs
 
-    48
+    **48**
     :   An option passed to TclCurl is not recognized/known. Refer to the
     appropriate documentation. This is most likely a problem in the program
     that uses TclCurl. The error buffer might contain more specific information
     about which exact option it concerns.
 
-    49
+    **49**
     :   A telnet option string was illegally formatted.
 
-    51
+    **51**
     :   The remote peer's SSL certificate or SSH md5 fingerprint wasn't ok
 
-    52
+    **52**
     :   The server didn't reply anything, which here is considered an error.
 
-    53
+    **53**
     :   The specified crypto engine wasn't found.
 
-    54
+    **54**
     :   Failed setting the selected SSL crypto engine as default!
 
-    55
+    **55**
     :   Failed sending network data.
 
-    56
+    **56**
     :   Failure with receiving network data.
 
-    58
+    **58**
     :   Problem with the local client certificate.
 
-    59
+    **59**
     :   Couldn't use specified SSL cipher.
 
-    60
+    **60**
     :   Peer certificate cannot be authenticated with known CA certificates.
 
-    61
+    **61**
     :   Unrecognized transfer encoding.
 
-    62
+    **62**
     :   Invalid LDAP URL.
 
-    63
+    **63**
     :   Maximum file size exceeded.
 
-    64
+    **64**
     :   SSL use failed.
 
-    65
+    **65**
     :   Sending the data requires a rewind that failed, since TclCurl should
     take care of it for you, it means you found a bug.
 
-    66
+    **66**
     :   Failed to initialise ssl engine.
 
-    67
+    **67**
     :   Failed to login, user password or similar was not accepted.
 
-    68
+    **68**
     :   File not found on TFTP server.
 
-    69
+    **69**
     :   There is a permission problem with the TFTP request.
 
-    70
+    **70**
     :   The remote server has run out of space.
 
-    71
+    **71**
     :   Illegal TFTP operation.
 
-    72
+    **72**
     :   Unknown transfer ID.
 
-    73
+    **73**
     :   TFTP file already exists and will not be overwritten.
 
-    74
+    **74**
     :   No such user in the TFTP server and good behaving TFTP servers
     should never return this.
 
-    75
+    **75**
     :   Character conversion failed.
 
-    77
+    **77**
     :   Problem with reading the SSL CA cert (path? access rights?).
 
-    78
+    **78**
     :   Remote file not found
 
-    79
+    **79**
     :   Error from the SSH layer
 
-    80
+    **80**
     :   Failed to shut down the SSL connection
 
-    82
+    **82**
     :   Failed to load CRL file
 
-    83
+    **83**
     :   Issuer check failed
 
-    84
+    **84**
     :   The FTP server does not understand the PRET command at all or does
     not support the given argument. Be careful when using **-customrequest**, a
     custom LIST command will be sent with PRET CMD before PASV as well.
 
-    85
+    **85**
     :   Mismatch of RTSP CSeq numbers.
 
-    86
+    **86**
     :   Mismatch of RTSP Session Identifiers.
 
-    87
+    **87**
     :   Unable to parse FTP file list (during FTP wildcard downloading).
 
-    88
+    **88**
     :   Chunk callback reported error.
 
-# curlHandle getinfo option
+# curlHandle getinfo OPTION
 
 Request internal information from the curl session with this procedure. This
 procedure is intended to get used *AFTER* a performed transfer, and can be
@@ -2441,7 +2457,7 @@ important components (like OpenSSL version).
 RETURN VALUE
 :   The string with the version info.
 
-# curl::escape url
+# curl::escape URL
 
 This procedure will convert the given input string to an URL encoded string and
 return that. All input characters that are not a-z, A-Z or 0-9 will be
@@ -2451,7 +2467,7 @@ hexadecimal number)
 RETURN VALUE
 :   The converted string.
 
-# curl::unescape url
+# curl::unescape URL
 
 This procedure will convert the given URL encoded input string to a "plain
 string" and return that. All input characters that are URL encoded (%XX where
@@ -2461,7 +2477,7 @@ versions.
 RETURN VALUE
 :   The string unencoded.
 
-# curl::curlConfig option
+# curl::curlConfig OPTION
 
 Returns some information about how you have **cURL** installed.
 
@@ -2479,7 +2495,7 @@ Returns some information about how you have **cURL** installed.
     each part; major, minor, patch. So  that  libcurl 7.7.4 would appear as
     070704 and libcurl 12.13.14 would appear as 0c0d0e...
 
-# curl::versioninfo option
+# curl::versioninfo OPTION
 
 Returns information about various run-time features in TclCurl.
 
@@ -2580,6 +2596,53 @@ TLSAUTH_SRP
 
 This procedure returns a string describing the error code passed in the
 argument.
+
+# EXAMPLES
+
+The examples in this section assume you are running from the root of the
+TclCurl source tree.
+
+To start the local HTTP test server used in the examples, run:
+
+```sh
+tclsh tests/testserver.tcl
+```
+
+By default, this starts an HTTP server on `http://127.0.0.1:8990/`.
+
+The path `http://127.0.0.1:8990/tclcurl-man` returns the HTML version of this
+manual page from `doc/tclcurl.html`, which makes it a convenient target for a
+basic `GET` example.
+
+# BASIC HTTP GET
+
+The following example performs a simple HTTP `GET` request, stores the
+response body in a Tcl variable, and prints both the HTTP response code and
+the size of the returned document:
+
+```tcl
+package require TclCurl
+
+set body {}
+set curlHandle [curl::init]
+
+$curlHandle configure \
+    -url http://127.0.0.1:8990/tclcurl-man \
+    -bodyvar body \
+    -noprogress 1
+
+set rc [$curlHandle perform]
+set httpCode [$curlHandle getinfo responsecode]
+
+puts "perform rc: $rc"
+puts "HTTP response code: $httpCode"
+puts "Downloaded bytes: [string length $body]"
+
+$curlHandle cleanup
+```
+
+If the request succeeds, `rc` is `0`, `responsecode` is `200`, and `body`
+contains the HTML document returned by the server.
 
 # SEE ALSO
 

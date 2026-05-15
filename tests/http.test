@@ -125,6 +125,24 @@ test http-1.10 {share handle cleanup is rejected while an easy handle still uses
     list $code $result
 } -result {1 {Share handle is still attached to one or more easy handles.}}
 
+test http-1.11 {/tclcurl-man serves the HTML manual through the HTTP test server} -constraints http_server -body {
+    set body {}
+    set headers {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url tclcurl-man] \
+                          -bodyvar body \
+                          -headervar headers \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {[string first "<title>TclCurl</title>" $body] >= 0}] \
+             [expr {[info exists headers(content-type)] && $headers(content-type) eq "text/html; charset=utf-8"}]
+    }
+} -cleanup {
+    catch {unset headers}
+} -result {0 200 1 1}
+
 test http-2.1.0 {-post with -postfields sends application/x-www-form-urlencoded data} -constraints http_server -body {
     set payload "firstName=Massimo&lastName=Manghi&city=Parma+Italy"
     ::tclcurl::test::transport_postfields ::tclcurl::test::server::base_url {} $payload

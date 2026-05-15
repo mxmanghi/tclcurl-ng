@@ -527,6 +527,20 @@ oo::class create ::tclcurl::testserver::http_service {
                 set body "tclcurl test server\n"
                 return [dict create status 200 reason OK body $body headers {}]
             }
+            /tclcurl-man {
+                set manual_path [file join [::tclcurl::test::repo_root] doc tclcurl.n.html]
+                set fh [open $manual_path rb]
+                try {
+                    set body [read $fh]
+                } finally {
+                    close $fh
+                }
+                return [dict create \
+                    status 200 \
+                    reason OK \
+                    body $body \
+                    headers [list "Content-Type: text/html; charset=utf-8"]]
+            }
             /tclcurl-http200alias {
                 set body "http200aliases=matched\n"
                 return [dict create \
@@ -625,6 +639,7 @@ oo::class create ::tclcurl::testserver::http_service {
                 set body [join [list \
                             "method=[::tclcurl::testserver::escape_response_value $method]" \
                             "path=[::tclcurl::testserver::escape_response_value $path]" \
+                            "target=[::tclcurl::testserver::escape_response_value $target]" \
                             "request-version=[::tclcurl::testserver::escape_response_value $version]" \
                             "content-type=[::tclcurl::testserver::escape_response_value [my header_value $headers content-type]]" \
                             "content-length=[::tclcurl::testserver::escape_response_value [my header_value $headers content-length]]" \
@@ -728,8 +743,10 @@ oo::class create ::tclcurl::testserver::http_service {
 
         set response_headers [list \
             $status_line \
-            "Content-Type: text/plain" \
             "Connection: close"]
+        if {![regexp -nocase {^Content-Type:} [join $headers "\n"]]} {
+            lappend response_headers "Content-Type: text/plain"
+        }
         if {[llength $stream_chunks] > 0} {
             lappend response_headers "Content-Length: [my streaming_payload_length $stream_chunks]"
         } elseif {$transfer_encoding eq "chunked"} {
