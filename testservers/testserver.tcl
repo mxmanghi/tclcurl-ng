@@ -245,8 +245,9 @@ proc ::tclcurl::testserver::manual_html_source {} {
 
 proc ::tclcurl::testserver::seed_doc_root {docroot} {
     set index_source [file join [::tclcurl::test::repo_root] testservers index.html]
-    if {[file exists $index_source]} {
-        file copy -force $index_source [file join $docroot index.html]
+    set index_target [file join $docroot index.html]
+    if {[file exists $index_source] && ![file exists $index_target]} {
+        file copy $index_source $index_target
     }
 
     set manual_source [manual_html_source]
@@ -254,7 +255,10 @@ proc ::tclcurl::testserver::seed_doc_root {docroot} {
         return
     }
 
-    file copy -force $manual_source [file join $docroot tclcurl-man.html]
+    set manual_target [file join $docroot tclcurl-man.html]
+    if {![file exists $manual_target]} {
+        file copy $manual_source $manual_target
+    }
 }
 
 proc ::tclcurl::testserver::cleanup_doc_root {config} {
