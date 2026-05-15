@@ -9,8 +9,18 @@ Some examples use the HTTP server implemented for the test suite. To start it,
 run the following command from the root of the TclCurl source tree:
 
 ```sh
-tclsh tests/testserver.tcl
+tclsh testservers/testserver.tcl
 ```
+
+To exercise the static-file fallback, you can point the server at a custom
+document root:
+
+```sh
+tclsh testservers/testserver.tcl --docroot /tmp/tclcurl
+```
+
+By default, the server removes that document root when it shuts down. Pass
+`--keepdocroot` if you want to inspect or reuse its contents after shutdown.
 
 By default, this starts several local services, including an HTTP server on:
 
@@ -24,7 +34,7 @@ The HTTP example in this directory uses the path:
 http://127.0.0.1:8990/tclcurl-man
 ```
 
-That path is provided by `tests/http_server.tcl` and returns the HTML version
+That path is provided by `testservers/http_server.tcl` and returns the HTML version
 of the TclCurl manual from `doc/tclcurl.html`.
 
 # Running the Basic HTTP GET Example
@@ -74,3 +84,6 @@ as intended.
 - The examples assume that TclCurl is available to `package require TclCurl`.
 - The commands above should be run from the repository root so that the test
   server can find the expected project files.
+- If you start the server with a custom `--docroot`, keep `TCLCURL_TEST_DOC_ROOT`
+  aligned with it when running server-backed tests that create or fetch static
+  fixtures.

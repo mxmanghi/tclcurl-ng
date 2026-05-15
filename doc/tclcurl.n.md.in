@@ -2605,7 +2605,7 @@ TclCurl source tree.
 To start the local HTTP test server used in the examples, run:
 
 ```sh
-tclsh tests/testserver.tcl
+tclsh testservers/testserver.tcl
 ```
 
 By default, this starts an HTTP server on `http://127.0.0.1:8990/`.

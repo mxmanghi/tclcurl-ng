@@ -20,6 +20,11 @@ namespace eval ::tclcurl::test::server {
     variable configured_http_server_script
 }
 
+namespace eval ::tclcurl::test::paths {
+    variable configured_doc_root
+    variable configured_ftp_root
+}
+
 proc ::tclcurl::test::repo_root {} {
     return [file dirname [file dirname [file normalize [info script]]]]
 }
@@ -126,7 +131,7 @@ proc ::tclcurl::test::server::http_server_script {} {
         return $configured_http_server_script
     }
 
-    set defaultScript [file join [::tclcurl::test::repo_root] tests testserver.tcl]
+    set defaultScript [file join [::tclcurl::test::repo_root] testservers testserver.tcl]
     set scriptPath [::tclcurl::test::env_or_default TCLCURL_TEST_HTTP_SERVER_SCRIPT $defaultScript]
     return [file normalize $scriptPath]
 }
@@ -171,12 +176,43 @@ proc ::tclcurl::test::https_credentials_available {} {
     return [expr {[file exists [https_cert_file]] && [file exists [https_key_file]]}]
 }
 
+proc ::tclcurl::test::set_doc_root {path} {
+    variable ::tclcurl::test::paths::configured_doc_root
+    set configured_doc_root [file normalize $path]
+    return $configured_doc_root
+}
+
+proc ::tclcurl::test::doc_root {} {
+    variable ::tclcurl::test::paths::configured_doc_root
+
+    if {[info exists configured_doc_root] && ($configured_doc_root ne {})} {
+        return $configured_doc_root
+    }
+
+    return [file normalize [env_or_default TCLCURL_TEST_DOC_ROOT "/tmp/tclcurl"]]
+}
+
+proc ::tclcurl::test::set_ftp_root {path} {
+    variable ::tclcurl::test::paths::configured_ftp_root
+    set configured_ftp_root [file normalize $path]
+    return $configured_ftp_root
+}
+
 proc ::tclcurl::test::tls_package_available {} {
     return [expr {![catch {package require tls}]}]
 }
 
 proc ::tclcurl::test::ftp_root {} {
-    return [env_or_default TCLCURL_TEST_FTP_ROOT "/tmp/ftp"]
+    variable ::tclcurl::test::paths::configured_ftp_root
+
+    if {[info exists configured_ftp_root] && ($configured_ftp_root ne {})} {
+        return $configured_ftp_root
+    }
+    if {[info exists ::env(TCLCURL_TEST_FTP_ROOT)] && $::env(TCLCURL_TEST_FTP_ROOT) ne {}} {
+        return [file normalize $::env(TCLCURL_TEST_FTP_ROOT)]
+    }
+
+    return [doc_root]
 }
 
 proc ::tclcurl::test::ftp_reset_root {} {

@@ -25,29 +25,41 @@ The Tcl test support layer uses protocol-specific base URLs. You can override th
 - `TCLCURL_TEST_HTTP_BASE_URL`: base URL for the running curl HTTP server, default `http://127.0.0.1:8990/`
 - `TCLCURL_TEST_HTTPS_BASE_URL`: base URL for the running Tcl HTTPS test server, default `https://127.0.0.1:9443/`
 - `TCLCURL_TEST_FTP_BASE_URL`: base URL for the running Tcl FTP test server, default `ftp://127.0.0.1:8991/`
-- `TCLCURL_TEST_FTP_ROOT`: root directory used by the Tcl FTP test server, default `/tmp/ftp`
+- `TCLCURL_TEST_DOC_ROOT`: shared document root used by the Tcl test servers, default `/tmp/tclcurl`
+- `TCLCURL_TEST_FTP_ROOT`: root directory used by the Tcl FTP test server, default `TCLCURL_TEST_DOC_ROOT`
 - `TCLCURL_TEST_HTTP_SERVER_SCRIPT`: path to the Tcl test server framework script, 
-                                     used when no `-httpserver` CLI override is given; default `tests/testserver.tcl`
+                                     used when no `-httpserver` CLI override is given; default `testservers/testserver.tcl`
 
 You can run the default Tcl test server framework directly with:
 
-- `tclsh tests/testserver.tcl`
-- `tclsh tests/testserver.tcl -host 127.0.0.1 -service http:8990`
-- `tclsh tests/testserver.tcl -host 127.0.0.1 -service https:9443 -service ftp:8991`
+- `tclsh testservers/testserver.tcl`
+- `tclsh testservers/testserver.tcl -host 127.0.0.1 -service http:8990`
+- `tclsh testservers/testserver.tcl -host 127.0.0.1 -service https:9443 -service ftp:8991`
+- `tclsh testservers/testserver.tcl --docroot /tmp/tclcurl --ftproot /tmp/tclcurl`
+- `tclsh testservers/testserver.tcl --docroot /tmp/tclcurl --keepdocroot`
 
-By default, `tests/testserver.tcl` starts three services:
+By default, `testservers/testserver.tcl` starts four services:
 
 - HTTP on `127.0.0.1:8990`
 - HTTPS on `127.0.0.1:9443`
 - FTP on `127.0.0.1:8991`
+- HTTP proxy on `127.0.0.1:8992`
 
 When the Tcl HTTP test server is wired in, the server script path precedence is:
 
 - `-httpserver /path/to/server.tcl`
 - `TCLCURL_TEST_HTTP_SERVER_SCRIPT`
-- `tests/testserver.tcl`
+- `testservers/testserver.tcl`
 
 If the configured server for a protocol is not reachable, the corresponding server-backed cases are skipped.
+
+The HTTP test server keeps its explicit dynamic routes for protocol behaviors
+such as redirects, request inspection, and authentication. For `GET` and
+`HEAD` requests that do not match one of those routes, it falls back to static
+file serving rooted at `TCLCURL_TEST_DOC_ROOT` or `--docroot`.
+
+Unless `--keepdocroot` is given, the server removes the configured document
+root when it shuts down.
 
 ## Running secure protocol tests
 

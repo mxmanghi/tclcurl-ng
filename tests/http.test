@@ -143,6 +143,53 @@ test http-1.11 {/tclcurl-man serves the HTML manual through the HTTP test server
     catch {unset headers}
 } -result {0 200 1 1}
 
+test http-1.12 {the default path serves the seeded doc root index page} -constraints http_server -body {
+    set body {}
+    set headers {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url] \
+                          -bodyvar body \
+                          -headervar headers \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {[string first "<title>Tclcurl tiny web server</title>" $body] >= 0}] \
+             [expr {[info exists headers(content-type)] && $headers(content-type) eq "text/html; charset=utf-8"}]
+    }
+} -cleanup {
+    catch {unset headers}
+} -result {0 200 1 1}
+
+test http-1.13 {unknown GET paths fall back to files under the configured doc root} -constraints http_server -body {
+    set fixtureRoot [::tclcurl::test::doc_root]
+    set fixturePath [file join $fixtureRoot http-static-fixture.txt]
+    file mkdir [file dirname $fixturePath]
+    set fh [open $fixturePath wb]
+    try {
+        puts -nonewline $fh "static-docroot-fixture\n"
+    } finally {
+        close $fh
+    }
+
+    set body {}
+    set headers {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url http-static-fixture.txt] \
+                          -bodyvar body \
+                          -headervar headers \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {$body eq "static-docroot-fixture\n"}] \
+             [expr {[info exists headers(content-type)] && $headers(content-type) eq "text/plain; charset=utf-8"}]
+    }
+} -cleanup {
+    catch {file delete -force [file join [::tclcurl::test::doc_root] http-static-fixture.txt]}
+    catch {unset headers}
+} -result {0 200 1 1}
+
 test http-2.1.0 {-post with -postfields sends application/x-www-form-urlencoded data} -constraints http_server -body {
     set payload "firstName=Massimo&lastName=Manghi&city=Parma+Italy"
     ::tclcurl::test::transport_postfields ::tclcurl::test::server::base_url {} $payload

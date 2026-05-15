@@ -437,16 +437,20 @@ oo::class create ::tclcurl::testserver::http_service {
     }
 
     method static_file_response {path} {
-        if {$path eq "/" || $path eq {}} {
+        if {$path eq {}} {
             return {}
         }
 
-        set relative_segments {}
+        if {$path eq "/"} {
+            set relative_segments [list index.html]
+        } else {
+            set relative_segments {}
         foreach segment [split [string trimleft $path /] /] {
             if {$segment eq {} || $segment eq "." || $segment eq ".."} {
                 return {}
             }
             lappend relative_segments $segment
+        }
         }
 
         set doc_root [::tclcurl::test::doc_root]
@@ -582,6 +586,10 @@ oo::class create ::tclcurl::testserver::http_service {
 
         switch -- $path {
             / {
+                set static_response [my static_file_response /]
+                if {$static_response ne {}} {
+                    return $static_response
+                }
                 set body "tclcurl test server\n"
                 return [dict create status 200 reason OK body $body headers {}]
             }

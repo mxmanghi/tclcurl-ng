@@ -244,6 +244,11 @@ proc ::tclcurl::testserver::manual_html_source {} {
 }
 
 proc ::tclcurl::testserver::seed_doc_root {docroot} {
+    set index_source [file join [::tclcurl::test::repo_root] testservers index.html]
+    if {[file exists $index_source]} {
+        file copy -force $index_source [file join $docroot index.html]
+    }
+
     set manual_source [manual_html_source]
     if {$manual_source eq {}} {
         return
