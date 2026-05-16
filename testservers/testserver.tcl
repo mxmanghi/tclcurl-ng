@@ -108,7 +108,7 @@ oo::class create ::tclcurl::testserver::service {
 }
 
 proc ::tclcurl::testserver::usage {} {
-    puts stderr "usage: tclsh testservers/testserver.tcl ?-host 127.0.0.1? ?-service protocol:port? ... ?--docroot path? ?--ftproot path? ?--keepdocroot? ?-quiet? ?-debug?"
+    puts stderr "usage: tclsh testservers/testserver.tcl ?-host 127.0.0.1? ?-httpport 8990? ?-httpsport 9443? ?-ftpport 8991? ?-proxyport 8992? ?-certfile path? ?-keyfile path? ?-service protocol:port? ... ?--docroot path? ?--ftproot path? ?--keepdocroot? ?-quiet? ?-debug?"
 }
 
 proc ::tclcurl::testserver::register_service_class {protocol class_name} {
@@ -139,18 +139,30 @@ proc ::tclcurl::testserver::parse_service_spec {spec} {
     return [dict create protocol $protocol port $port]
 }
 
+proc ::tclcurl::testserver::parse_port_value {name value} {
+    if {![string is integer -strict $value] || $value < 1 || $value > 65535} {
+        error "invalid value for $name: $value"
+    }
+    return $value
+}
+
 proc ::tclcurl::testserver::parse_args {argv} {
     set host 127.0.0.1
     set quiet 0
     set debug 0
     set docroot [::tclcurl::test::doc_root]
     set ftproot [::tclcurl::test::ftp_root]
+    set certfile {}
+    set keyfile {}
     set ftproot_follows_docroot [expr {$ftproot eq $docroot}]
     set keepdocroot 0
-    set services [list [dict create protocol http port 8990] \
-                       [dict create protocol https port 9443] \
-                       [dict create protocol ftp port 8991] \
-                       [dict create protocol proxy port 8992]]
+    array set default_ports {
+        http 8990
+        https 9443
+        ftp 8991
+        proxy 8992
+    }
+    set services {}
     set custom_services 0
 
     for {set i 0} {$i < [llength $argv]} {incr i} {
@@ -162,6 +174,48 @@ proc ::tclcurl::testserver::parse_args {argv} {
                     error "missing value after -host"
                 }
                 set host [lindex $argv $i]
+            }
+            -httpport {
+                incr i
+                if {$i >= [llength $argv]} {
+                    error "missing value after -httpport"
+                }
+                set default_ports(http) [parse_port_value -httpport [lindex $argv $i]]
+            }
+            -httpsport {
+                incr i
+                if {$i >= [llength $argv]} {
+                    error "missing value after -httpsport"
+                }
+                set default_ports(https) [parse_port_value -httpsport [lindex $argv $i]]
+            }
+            -ftpport {
+                incr i
+                if {$i >= [llength $argv]} {
+                    error "missing value after -ftpport"
+                }
+                set default_ports(ftp) [parse_port_value -ftpport [lindex $argv $i]]
+            }
+            -proxyport {
+                incr i
+                if {$i >= [llength $argv]} {
+                    error "missing value after -proxyport"
+                }
+                set default_ports(proxy) [parse_port_value -proxyport [lindex $argv $i]]
+            }
+            -certfile {
+                incr i
+                if {$i >= [llength $argv]} {
+                    error "missing value after -certfile"
+                }
+                set certfile [file normalize [lindex $argv $i]]
+            }
+            -keyfile {
+                incr i
+                if {$i >= [llength $argv]} {
+                    error "missing value after -keyfile"
+                }
+                set keyfile [file normalize [lindex $argv $i]]
             }
             -docroot -
             --docroot {
@@ -215,8 +269,16 @@ proc ::tclcurl::testserver::parse_args {argv} {
         }
     }
 
+    if {!$custom_services} {
+        set services [list [dict create protocol http port $default_ports(http)] \
+                           [dict create protocol https port $default_ports(https)] \
+                           [dict create protocol ftp port $default_ports(ftp)] \
+                           [dict create protocol proxy port $default_ports(proxy)]]
+    }
+
     return [dict create host $host quiet $quiet debug $debug \
-        docroot $docroot ftproot $ftproot keepdocroot $keepdocroot services $services]
+        docroot $docroot ftproot $ftproot certfile $certfile keyfile $keyfile \
+        keepdocroot $keepdocroot services $services]
 }
 
 proc ::tclcurl::testserver::configure_roots {config} {
@@ -228,6 +290,18 @@ proc ::tclcurl::testserver::configure_roots {config} {
     ::tclcurl::test::set_doc_root $docroot
     ::tclcurl::test::set_ftp_root $ftproot
     seed_doc_root $docroot
+}
+
+proc ::tclcurl::testserver::configure_https_credentials {config} {
+    set certfile [dict get $config certfile]
+    set keyfile [dict get $config keyfile]
+
+    if {$certfile ne {}} {
+        ::tclcurl::test::set_https_cert_file $certfile
+    }
+    if {$keyfile ne {}} {
+        ::tclcurl::test::set_https_key_file $keyfile
+    }
 }
 
 proc ::tclcurl::testserver::manual_html_source {} {
@@ -313,6 +387,7 @@ proc ::tclcurl::testserver::run {argv} {
     set config [parse_args $argv]
     ::tclcurl::test::configure_debug_output [dict get $config debug]
     configure_roots $config
+    configure_https_credentials $config
     set services [start_services $config]
     try {
         vwait ::tclcurl::testserver::forever
@@ -325,6 +400,7 @@ proc ::tclcurl::testserver::run {argv} {
 proc ::tclcurl::testserver::command_map {} {
     return [dict create \
         cleanup_doc_root ::tclcurl::testserver::cleanup_doc_root \
+        configure_https_credentials ::tclcurl::testserver::configure_https_credentials \
         configure_roots ::tclcurl::testserver::configure_roots \
         create_service ::tclcurl::testserver::create_service \
         manual_html_source ::tclcurl::testserver::manual_html_source \

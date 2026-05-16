@@ -23,6 +23,8 @@ namespace eval ::tclcurl::test::server {
 namespace eval ::tclcurl::test::paths {
     variable configured_doc_root
     variable configured_ftp_root
+    variable configured_https_cert_file
+    variable configured_https_key_file
 }
 
 proc ::tclcurl::test::repo_root {} {
@@ -165,15 +167,45 @@ proc ::tclcurl::test::server::proxy_base_url {{path {}}} {
 }
 
 proc ::tclcurl::test::https_cert_file {} {
+    variable ::tclcurl::test::paths::configured_https_cert_file
+
+    if {[info exists configured_https_cert_file] && ($configured_https_cert_file ne {})} {
+        return $configured_https_cert_file
+    }
+    if {[info exists ::env(TCLCURL_TEST_HTTPS_CERT_FILE)] && $::env(TCLCURL_TEST_HTTPS_CERT_FILE) ne {}} {
+        return [file normalize $::env(TCLCURL_TEST_HTTPS_CERT_FILE)]
+    }
+
     return [file join [::tclcurl::test::repo_root] tests certs server.crt]
 }
 
 proc ::tclcurl::test::https_key_file {} {
+    variable ::tclcurl::test::paths::configured_https_key_file
+
+    if {[info exists configured_https_key_file] && ($configured_https_key_file ne {})} {
+        return $configured_https_key_file
+    }
+    if {[info exists ::env(TCLCURL_TEST_HTTPS_KEY_FILE)] && $::env(TCLCURL_TEST_HTTPS_KEY_FILE) ne {}} {
+        return [file normalize $::env(TCLCURL_TEST_HTTPS_KEY_FILE)]
+    }
+
     return [file join [::tclcurl::test::repo_root] tests certs server.key]
 }
 
 proc ::tclcurl::test::https_credentials_available {} {
     return [expr {[file exists [https_cert_file]] && [file exists [https_key_file]]}]
+}
+
+proc ::tclcurl::test::set_https_cert_file {path} {
+    variable ::tclcurl::test::paths::configured_https_cert_file
+    set configured_https_cert_file [file normalize $path]
+    return $configured_https_cert_file
+}
+
+proc ::tclcurl::test::set_https_key_file {path} {
+    variable ::tclcurl::test::paths::configured_https_key_file
+    set configured_https_key_file [file normalize $path]
+    return $configured_https_key_file
 }
 
 proc ::tclcurl::test::set_doc_root {path} {
