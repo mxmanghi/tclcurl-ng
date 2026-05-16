@@ -590,6 +590,20 @@ oo::class create ::tclcurl::testserver::http_service {
                 if {$static_response ne {}} {
                     return $static_response
                 }
+                set index_path [file join [::tclcurl::test::repo_root] testservers index.html]
+                if {[file exists $index_path]} {
+                    set fh [open $index_path rb]
+                    try {
+                        set body [read $fh]
+                    } finally {
+                        close $fh
+                    }
+                    return [dict create \
+                        status 200 \
+                        reason OK \
+                        body $body \
+                        headers [list "Content-Type: text/html; charset=utf-8"]]
+                }
                 set body "tclcurl test server\n"
                 return [dict create status 200 reason OK body $body headers {}]
             }
@@ -598,8 +612,26 @@ oo::class create ::tclcurl::testserver::http_service {
                 if {$static_response ne {}} {
                     return $static_response
                 }
+                set manual_path [::tclcurl::testserver::manual_html_source]
+                if {$manual_path ne {} && [file exists $manual_path]} {
+                    set fh [open $manual_path rb]
+                    try {
+                        set body [read $fh]
+                    } finally {
+                        close $fh
+                    }
+                    return [dict create \
+                        status 200 \
+                        reason OK \
+                        body $body \
+                        headers [list "Content-Type: text/html; charset=utf-8"]]
+                }
                 set body "path=$path\n"
                 return [dict create status 404 reason "Not Found" body $body headers {}]
+            }
+            /tclcurl-http-root {
+                set body "tclcurl test server\n"
+                return [dict create status 200 reason OK body $body headers {}]
             }
             /tclcurl-http200alias {
                 set body "http200aliases=matched\n"

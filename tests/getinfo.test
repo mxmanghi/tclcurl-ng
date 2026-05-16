@@ -24,7 +24,7 @@ source [file join [file dirname [file normalize [info script]]] http_common.tcl]
 test getinfo-1.1 {basic HTTP transfer exposes core connection and sizing metadata} -constraints http_server -body {
     set body {}
     ::tclcurl::test::with_easy_handle handle {
-        set url [::tclcurl::test::server::base_url]
+        set url [::tclcurl::test::server::base_url tclcurl-http-root]
         $handle configure -url $url \
                           -bodyvar body \
                           -noprogress 1

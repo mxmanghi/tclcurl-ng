@@ -45,7 +45,7 @@ test https-2.4 {HTTPS POST shares the common request body scenario} -constraints
 test https-1.1 {HTTPS GET succeeds when certificate verification is disabled} -constraints https_server -body {
     set body {}
     ::tclcurl::test::with_easy_handle handle {
-        $handle configure -url [::tclcurl::test::server::https_base_url] \
+        $handle configure -url [::tclcurl::test::server::https_base_url tclcurl-http-root] \
                           -sslverifypeer 0 \
                           -sslverifyhost 0 \
                           -bodyvar body \
@@ -60,7 +60,7 @@ test https-1.1 {HTTPS GET succeeds when certificate verification is disabled} -c
 test https-1.2 {HTTPS GET succeeds with -cainfo for the local self-signed certificate} -constraints https_server -body {
     set body {}
     ::tclcurl::test::with_easy_handle handle {
-        $handle configure -url [::tclcurl::test::server::https_base_url] \
+        $handle configure -url [::tclcurl::test::server::https_base_url tclcurl-http-root] \
                           -cainfo [::tclcurl::test::https_cert_file] \
                           -bodyvar body \
                           -noprogress 1

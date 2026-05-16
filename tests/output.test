@@ -89,7 +89,7 @@ test output-1.1 {-file writes the HTTP response body to disk} -constraints http_
     set bodyPath [file join [::tcltest::temporaryDirectory] output-body.txt]
     catch {file delete -force $bodyPath}
     ::tclcurl::test::with_easy_handle handle {
-        $handle configure -url [::tclcurl::test::server::base_url] \
+        $handle configure -url [::tclcurl::test::server::base_url tclcurl-http-root] \
                           -file $bodyPath \
                           -noprogress 1
         set rc [$handle perform]
@@ -149,13 +149,13 @@ test output-1.4 {-file can be reset to the default destination} -constraints htt
 set bodyPath _TCL_BODY_PATH_
 catch {file delete -force $bodyPath}
 ::tclcurl::test::with_easy_handle handle {
-    $handle configure -url [::tclcurl::test::server::base_url] \
+    $handle configure -url [::tclcurl::test::server::base_url tclcurl-http-root] \
                       -file $bodyPath \
                       -noprogress 1
     set firstRc [$handle perform]
     file delete -force $bodyPath
 
-    $handle configure -url [::tclcurl::test::server::base_url] \
+    $handle configure -url [::tclcurl::test::server::base_url tclcurl-http-root] \
                       -file "" \
                       -noprogress 1
     set secondRc [$handle perform]
