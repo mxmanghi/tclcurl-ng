@@ -108,7 +108,41 @@ oo::class create ::tclcurl::testserver::service {
 }
 
 proc ::tclcurl::testserver::usage {} {
-    puts stderr "usage: tclsh testservers/testserver.tcl ?-host 127.0.0.1? ?-httpport 8990? ?-httpsport 9443? ?-ftpport 8991? ?-proxyport 8992? ?-certfile path? ?-keyfile path? ?-service protocol:port? ... ?--docroot path? ?--ftproot path? ?--keepdocroot? ?-quiet? ?-debug?"
+    set implemented_servers [join [implemented_protocols] ", "]
+    puts stderr "Usage: tclsh testservers/testserver.tcl ?options?"
+    puts stderr ""
+    puts stderr "Options:"
+    puts stderr "  --help"
+    puts stderr "      Show this help message."
+    puts stderr "  --host <address>"
+    puts stderr "      Bind all selected servers to <address>. Default: 127.0.0.1"
+    puts stderr "  --startservers <list>"
+    puts stderr "      Comma-separated list of servers to start. Use 'all' to start every"
+    puts stderr "      implemented server. Implemented servers: $implemented_servers"
+    puts stderr "  --httpport <port>"
+    puts stderr "      Port for the default HTTP server. Default: 8990"
+    puts stderr "  --httpsport <port>"
+    puts stderr "      Port for the default HTTPS server. Default: 9443"
+    puts stderr "  --ftpport <port>"
+    puts stderr "      Port for the default FTP server. Default: 8991"
+    puts stderr "  --proxyport <port>"
+    puts stderr "      Port for the default HTTP proxy server. Default: 8992"
+    puts stderr "  --certfile <path>"
+    puts stderr "      TLS certificate file for HTTPS."
+    puts stderr "  --keyfile <path>"
+    puts stderr "      TLS key file for HTTPS."
+    puts stderr "  --service <protocol:port>"
+    puts stderr "      Add an explicit service entry. May be repeated."
+    puts stderr "  --docroot <path>"
+    puts stderr "      Document root for HTTP/HTTPS test content."
+    puts stderr "  --ftproot <path>"
+    puts stderr "      Root directory exposed by the FTP server."
+    puts stderr "  --keepdocroot"
+    puts stderr "      Leave the generated document root on disk after exit."
+    puts stderr "  --quiet"
+    puts stderr "      Suppress listener startup messages."
+    puts stderr "  --debug"
+    puts stderr "      Enable verbose test debug output."
 }
 
 proc ::tclcurl::testserver::register_service_class {protocol class_name} {
@@ -126,6 +160,12 @@ proc ::tclcurl::testserver::service_class {protocol} {
         error "unsupported protocol: $protocol"
     }
     return $service_classes($protocol)
+}
+
+proc ::tclcurl::testserver::implemented_protocols {} {
+    variable service_classes
+
+    return [lsort [array names service_classes]]
 }
 
 proc ::tclcurl::testserver::parse_service_spec {spec} {
@@ -146,6 +186,33 @@ proc ::tclcurl::testserver::parse_port_value {name value} {
     return $value
 }
 
+proc ::tclcurl::testserver::parse_startservers_value {value} {
+    set normalized [string trim $value]
+    if {$normalized eq {}} {
+        error "invalid value for --startservers: empty list"
+    }
+
+    if {$normalized eq "all"} {
+        return [implemented_protocols]
+    }
+
+    set selected {}
+    foreach protocol [split $normalized ,] {
+        set protocol [string trim $protocol]
+        if {$protocol eq {}} {
+            error "invalid value for --startservers: empty server name"
+        }
+        if {$protocol ni [implemented_protocols]} {
+            error "unsupported server in --startservers: $protocol"
+        }
+        if {$protocol ni $selected} {
+            lappend selected $protocol
+        }
+    }
+
+    return $selected
+}
+
 proc ::tclcurl::testserver::parse_args {argv} {
     set host 127.0.0.1
     set quiet 0
@@ -162,62 +229,69 @@ proc ::tclcurl::testserver::parse_args {argv} {
         ftp 8991
         proxy 8992
     }
+    set startservers [implemented_protocols]
     set services {}
     set custom_services 0
 
     for {set i 0} {$i < [llength $argv]} {incr i} {
         set arg [lindex $argv $i]
         switch -- $arg {
-            -host {
+            --host {
                 incr i
                 if {$i >= [llength $argv]} {
-                    error "missing value after -host"
+                    error "missing value after --host"
                 }
                 set host [lindex $argv $i]
             }
-            -httpport {
+            --httpport {
                 incr i
                 if {$i >= [llength $argv]} {
-                    error "missing value after -httpport"
+                    error "missing value after --httpport"
                 }
-                set default_ports(http) [parse_port_value -httpport [lindex $argv $i]]
+                set default_ports(http) [parse_port_value --httpport [lindex $argv $i]]
             }
-            -httpsport {
+            --httpsport {
                 incr i
                 if {$i >= [llength $argv]} {
-                    error "missing value after -httpsport"
+                    error "missing value after --httpsport"
                 }
-                set default_ports(https) [parse_port_value -httpsport [lindex $argv $i]]
+                set default_ports(https) [parse_port_value --httpsport [lindex $argv $i]]
             }
-            -ftpport {
+            --ftpport {
                 incr i
                 if {$i >= [llength $argv]} {
-                    error "missing value after -ftpport"
+                    error "missing value after --ftpport"
                 }
-                set default_ports(ftp) [parse_port_value -ftpport [lindex $argv $i]]
+                set default_ports(ftp) [parse_port_value --ftpport [lindex $argv $i]]
             }
-            -proxyport {
+            --proxyport {
                 incr i
                 if {$i >= [llength $argv]} {
-                    error "missing value after -proxyport"
+                    error "missing value after --proxyport"
                 }
-                set default_ports(proxy) [parse_port_value -proxyport [lindex $argv $i]]
+                set default_ports(proxy) [parse_port_value --proxyport [lindex $argv $i]]
             }
-            -certfile {
+            --startservers {
                 incr i
                 if {$i >= [llength $argv]} {
-                    error "missing value after -certfile"
+                    error "missing value after --startservers"
+                }
+                set startservers [parse_startservers_value [lindex $argv $i]]
+            }
+            --certfile {
+                incr i
+                if {$i >= [llength $argv]} {
+                    error "missing value after --certfile"
                 }
                 set certfile [file normalize [lindex $argv $i]]
             }
-            -keyfile {
+            --keyfile {
                 incr i
                 if {$i >= [llength $argv]} {
-                    error "missing value after -keyfile"
+                    error "missing value after --keyfile"
                 }
                 set keyfile [file normalize [lindex $argv $i]]
             }
-            -docroot -
             --docroot {
                 incr i
                 if {$i >= [llength $argv]} {
@@ -228,7 +302,6 @@ proc ::tclcurl::testserver::parse_args {argv} {
                     set ftproot $docroot
                 }
             }
-            -ftproot -
             --ftproot {
                 incr i
                 if {$i >= [llength $argv]} {
@@ -240,10 +313,10 @@ proc ::tclcurl::testserver::parse_args {argv} {
             --keepdocroot {
                 set keepdocroot 1
             }
-            -service {
+            --service {
                 incr i
                 if {$i >= [llength $argv]} {
-                    error "missing value after -service"
+                    error "missing value after --service"
                 }
                 if {!$custom_services} {
                     set services {}
@@ -251,14 +324,12 @@ proc ::tclcurl::testserver::parse_args {argv} {
                 }
                 lappend services [parse_service_spec [lindex $argv $i]]
             }
-            -quiet {
+            --quiet {
                 set quiet 1
             }
-            -debug {
+            --debug {
                 set debug 1
             }
-            -h -
-            -help -
             --help {
                 usage
                 exit 0
@@ -270,15 +341,23 @@ proc ::tclcurl::testserver::parse_args {argv} {
     }
 
     if {!$custom_services} {
-        set services [list [dict create protocol http port $default_ports(http)] \
-                           [dict create protocol https port $default_ports(https)] \
-                           [dict create protocol ftp port $default_ports(ftp)] \
-                           [dict create protocol proxy port $default_ports(proxy)]]
+        set services {}
+        foreach protocol $startservers {
+            lappend services [dict create protocol $protocol port $default_ports($protocol)]
+        }
+    } else {
+        set filtered_services {}
+        foreach service_spec $services {
+            if {[dict get $service_spec protocol] in $startservers} {
+                lappend filtered_services $service_spec
+            }
+        }
+        set services $filtered_services
     }
 
     return [dict create host $host quiet $quiet debug $debug \
         docroot $docroot ftproot $ftproot certfile $certfile keyfile $keyfile \
-        keepdocroot $keepdocroot services $services]
+        keepdocroot $keepdocroot services $services startservers $startservers]
 }
 
 proc ::tclcurl::testserver::configure_roots {config} {

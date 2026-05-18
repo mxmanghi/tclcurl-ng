@@ -46,12 +46,13 @@ id="testserverstestserver.tcl"><code>testservers/testserver.tcl</code></h2>
 <p>The local server framework accepts the following general command
 form:</p>
 <pre class="text"><code>tclsh testservers/testserver.tcl \
-  ?-host host? \
-  ?-httpport port? ?-httpsport port? ?-ftpport port? ?-proxyport port? \
-  ?-certfile path? ?-keyfile path? \
-  ?-service protocol:port? ... \
+  ?--host host? \
+  ?--httpport port? ?--httpsport port? ?--ftpport port? ?--proxyport port? \
+  ?--certfile path? ?--keyfile path? \
+  ?--service protocol:port? ... \
   ?--docroot path? ?--ftproot path? ?--keepdocroot? \
-  ?-quiet? ?-debug?</code></pre>
+  ?--startservers protocol[,protocol,...]|all? \
+  ?--quiet? ?--debug?</code></pre>
 <p>By default, <code>testservers/testserver.tcl</code> starts four
 services:</p>
 <ul>
@@ -72,23 +73,28 @@ configured document root when it shuts down.</p>
 options together with the usual <code>tcltest</code> command-line
 filters and output controls. The general form is:</p>
 <pre class="text"><code>tclsh tests/all.tcl \
-  ?-httpserver path/to/server.tcl? \
-  ?-httpport port? ?-httpsport port? ?-ftpport port? ?-proxyport port? \
-  ?-exitserver? ?-debug? \
-  ?-file pattern? ?-notfile pattern? ?-match pattern? ?-skip pattern? \
-  ?-verbose level...?</code></pre>
+  ?--httpserver path/to/server.tcl? \
+  ?--httpport port? ?--httpsport port? ?--ftpport port? ?--proxyport port? \
+  ?--exitserver? ?--debug? \
+  ?--file pattern? ?--notfile pattern? ?--match pattern? ?--skip pattern? \
+  ?--verbose level...?</code></pre>
 <p>When the Tcl HTTP test server is wired in, the server script path
 precedence is:</p>
 <ul>
-<li><code>-httpserver /path/to/server.tcl</code></li>
+<li><code>--httpserver /path/to/server.tcl</code></li>
 <li><code>TCLCURL_TEST_HTTP_SERVER_SCRIPT</code></li>
 <li><code>testservers/testserver.tcl</code></li>
 </ul>
-<p>Both <code>testservers/testserver.tcl</code> and
-<code>tests/all.tcl</code> accept the options <code>-httpport</code>,
-<code>-httpsport</code>, <code>-ftpport</code>, and
-<code>-proxyport</code> to override the default ports <code>8990</code>,
-<code>9443</code>, <code>8991</code>, and <code>8992</code>.</p>
+<p><code>testservers/testserver.tcl</code> accepts
+<code>--httpport</code>, <code>--httpsport</code>,
+<code>--ftpport</code>, and <code>--proxyport</code> to override the
+default ports <code>8990</code>, <code>9443</code>, <code>8991</code>,
+and <code>8992</code>.</p>
+<p><code>tests/all.tcl</code> accepts the same double-dash options
+<code>--httpport</code>, <code>--httpsport</code>,
+<code>--ftpport</code>, and <code>--proxyport</code>. When you need both
+entry points to target the same services, pass matching port values to
+each script.</p>
 <p>The Tcl test support layer uses protocol-specific base URLs. You can
 override them before running <code>make test</code> or
 <code>tclsh tests/all.tcl</code>:</p>
@@ -123,7 +129,7 @@ self-signed pair of key/certificate to be stored in tests/certs</p>
 <p>If you want to keep the credentials elsewhere, either:</p>
 <ul>
 <li>start <code>testservers/testserver.tcl</code> with
-<code>-certfile /path/to/server.crt -keyfile /path/to/server.key</code></li>
+<code>--certfile /path/to/server.crt --keyfile /path/to/server.key</code></li>
 <li>or export <code>TCLCURL_TEST_HTTPS_CERT_FILE</code> and
 <code>TCLCURL_TEST_HTTPS_KEY_FILE</code></li>
 </ul>
@@ -249,7 +255,7 @@ submission through <code>-httppost</code>:</p>
 <p>You can override those paths:</p>
 <ul>
 <li>for direct server runs, with
-<code>-certfile /path/to/server.crt -keyfile /path/to/server.key</code></li>
+<code>--certfile /path/to/server.crt --keyfile /path/to/server.key</code></li>
 <li>for the test suite, with <code>TCLCURL_TEST_HTTPS_CERT_FILE</code>
 and <code>TCLCURL_TEST_HTTPS_KEY_FILE</code></li>
 </ul>

@@ -49,12 +49,13 @@ The local server framework accepts the following general command form:
 
 ```text
 tclsh testservers/testserver.tcl \
-  ?-host host? \
-  ?-httpport port? ?-httpsport port? ?-ftpport port? ?-proxyport port? \
-  ?-certfile path? ?-keyfile path? \
-  ?-service protocol:port? ... \
-  ?--docroot path? ?--ftproot path? ?--keepdocroot? \
-  ?-quiet? ?-debug?
+                  ?--host host? \
+                  ?--httpport port? ?--httpsport port? ?--ftpport port? ?--proxyport port? \
+                  ?--certfile path? ?--keyfile path? \
+                  ?--service protocol:port? ... \
+                  ?--docroot path? ?--ftproot path? ?--keepdocroot? \
+                  ?--startservers protocol[,protocol,...]|all? \
+                  ?--quiet? ?--debug?
 ```
 
 By default, `testservers/testserver.tcl` starts four services:
@@ -80,22 +81,26 @@ is:
 
 ```text
 tclsh tests/all.tcl \
-  ?-httpserver path/to/server.tcl? \
-  ?-httpport port? ?-httpsport port? ?-ftpport port? ?-proxyport port? \
-  ?-exitserver? ?-debug? \
-  ?-file pattern? ?-notfile pattern? ?-match pattern? ?-skip pattern? \
-  ?-verbose level...?
+                  ?--httpserver path/to/server.tcl? \
+                  ?--httpport port? ?--httpsport port? ?--ftpport port? ?--proxyport port? \
+                  ?--exitserver? ?--debug? \
+                  ?--file pattern? ?--notfile pattern? ?--match pattern? ?--skip pattern? \
+                  ?--verbose level...?
 ```
 
 When the Tcl HTTP test server is wired in, the server script path precedence is:
 
-- `-httpserver /path/to/server.tcl`
+- `--httpserver /path/to/server.tcl`
 - `TCLCURL_TEST_HTTP_SERVER_SCRIPT`
 - `testservers/testserver.tcl`
 
-Both `testservers/testserver.tcl` and `tests/all.tcl` accept the options
-`-httpport`, `-httpsport`, `-ftpport`, and `-proxyport` to override the
-default ports `8990`, `9443`, `8991`, and `8992`.
+`testservers/testserver.tcl` accepts `--httpport`, `--httpsport`,
+`--ftpport`, and `--proxyport` to override the default ports `8990`,
+`9443`, `8991`, and `8992`.
+
+`tests/all.tcl` accepts the same double-dash options `--httpport`,
+`--httpsport`, `--ftpport`, and `--proxyport`. When you need both entry
+points to target the same services, pass matching port values to each script.
 
 The Tcl test support layer uses protocol-specific base URLs. You can override them before running `make test` or `tclsh tests/all.tcl`:
 
@@ -116,7 +121,7 @@ In order to test the https series of tests you have to create a self-signed pair
 
 If you want to keep the credentials elsewhere, either:
 
-- start `testservers/testserver.tcl` with `-certfile /path/to/server.crt -keyfile /path/to/server.key`
+- start `testservers/testserver.tcl` with `--certfile /path/to/server.crt --keyfile /path/to/server.key`
 - or export `TCLCURL_TEST_HTTPS_CERT_FILE` and `TCLCURL_TEST_HTTPS_KEY_FILE`
 
 ```
@@ -215,7 +220,7 @@ The HTTPS server requires:
 
 You can override those paths:
 
-- for direct server runs, with `-certfile /path/to/server.crt -keyfile /path/to/server.key`
+- for direct server runs, with `--certfile /path/to/server.crt --keyfile /path/to/server.key`
 - for the test suite, with `TCLCURL_TEST_HTTPS_CERT_FILE` and `TCLCURL_TEST_HTTPS_KEY_FILE`
 
 These files are intentionally not required to live in the repository. When they are missing, HTTPS-backed tests are skipped.

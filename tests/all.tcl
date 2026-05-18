@@ -46,6 +46,13 @@ proc ::tclcurl::test::rewrite_base_url_port {url default_scheme default_host def
     return "${scheme}://${host}:${default_port}${path}"
 }
 
+proc ::tclcurl::test::normalize_tcltest_arg {arg} {
+    if {[string length $arg] >= 2 && [string range $arg 0 1] eq "--"} {
+        return "-[string range $arg 2 end]"
+    }
+    return $arg
+}
+
 set tcltestArgv {}
 set exitServer 0
 set debug 0
@@ -54,58 +61,58 @@ array set port_overrides {}
 for {set i 0} {$i < [llength $argv]} {incr i} {
     set arg [lindex $argv $i]
     switch -- $arg {
-        -httpserver {
+        --httpserver {
             incr i
             if {$i >= [llength $argv]} {
-                error "missing path after -httpserver"
+                error "missing path after --httpserver"
             }
             set configuredHttpServer [lindex $argv $i]
         }
-        -httpport -
-        -httpsport -
-        -ftpport -
-        -proxyport {
+        --httpport -
+        --httpsport -
+        --ftpport -
+        --proxyport {
             incr i
             if {$i >= [llength $argv]} {
                 error "missing value after $arg"
             }
             set port_overrides($arg) [::tclcurl::test::parse_port_value $arg [lindex $argv $i]]
         }
-        -exitserver {
+        --exitserver {
             set exitServer 1
         }
-        -debug {
+        --debug {
             set debug 1
         }
         default {
-            lappend tcltestArgv $arg
+            lappend tcltestArgv [::tclcurl::test::normalize_tcltest_arg $arg]
         }
     }
 }
 
-if {[info exists port_overrides(-httpport)]} {
+if {[info exists port_overrides(--httpport)]} {
     set ::env(TCLCURL_TEST_HTTP_BASE_URL) \
         [::tclcurl::test::rewrite_base_url_port \
             [expr {[info exists ::env(TCLCURL_TEST_HTTP_BASE_URL)] ? $::env(TCLCURL_TEST_HTTP_BASE_URL) : {}}] \
-            http 127.0.0.1 $port_overrides(-httpport)]
+            http 127.0.0.1 $port_overrides(--httpport)]
 }
-if {[info exists port_overrides(-httpsport)]} {
+if {[info exists port_overrides(--httpsport)]} {
     set ::env(TCLCURL_TEST_HTTPS_BASE_URL) \
         [::tclcurl::test::rewrite_base_url_port \
             [expr {[info exists ::env(TCLCURL_TEST_HTTPS_BASE_URL)] ? $::env(TCLCURL_TEST_HTTPS_BASE_URL) : {}}] \
-            https 127.0.0.1 $port_overrides(-httpsport)]
+            https 127.0.0.1 $port_overrides(--httpsport)]
 }
-if {[info exists port_overrides(-ftpport)]} {
+if {[info exists port_overrides(--ftpport)]} {
     set ::env(TCLCURL_TEST_FTP_BASE_URL) \
         [::tclcurl::test::rewrite_base_url_port \
             [expr {[info exists ::env(TCLCURL_TEST_FTP_BASE_URL)] ? $::env(TCLCURL_TEST_FTP_BASE_URL) : {}}] \
-            ftp 127.0.0.1 $port_overrides(-ftpport)]
+            ftp 127.0.0.1 $port_overrides(--ftpport)]
 }
-if {[info exists port_overrides(-proxyport)]} {
+if {[info exists port_overrides(--proxyport)]} {
     set ::env(TCLCURL_TEST_PROXY_BASE_URL) \
         [::tclcurl::test::rewrite_base_url_port \
             [expr {[info exists ::env(TCLCURL_TEST_PROXY_BASE_URL)] ? $::env(TCLCURL_TEST_PROXY_BASE_URL) : {}}] \
-            http 127.0.0.1 $port_overrides(-proxyport)]
+            http 127.0.0.1 $port_overrides(--proxyport)]
 }
 
 ::tcltest::configure -testdir [file dirname [file normalize [info script]]]
