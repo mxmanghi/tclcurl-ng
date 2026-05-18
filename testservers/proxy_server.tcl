@@ -210,6 +210,7 @@ oo::class create ::tclcurl::testserver::proxy_service {
         if {[catch {set upstream [socket $host $port]} socket_error]} {
             ::tclcurl::test::msgoutput \
                 "proxy tunnel connect failed chan=$chan error=$socket_error"
+            my log_request "method=CONNECT status=502 target=[::tclcurl::testserver::log_value $host:$port]"
             my proxy_response $chan 502 "Bad Gateway" "proxy-error=$socket_error\n" {}
             return
         }
@@ -230,6 +231,8 @@ oo::class create ::tclcurl::testserver::proxy_service {
             my close_tunnel $chan
             return
         }
+
+        my log_request "method=CONNECT status=200 target=[::tclcurl::testserver::log_value $host:$port]"
 
         chan copy $chan $upstream -command \
             [list [self] tunnel_copy_done $chan $upstream client_to_upstream]
@@ -256,8 +259,8 @@ oo::class create ::tclcurl::testserver::proxy_service {
         if {$request_info eq {}} {
             ::tclcurl::test::msgoutput \
                 "proxy bad request chan=$chan reason=request-line-parse-failed"
-            dict with [my bad_request_response] {}
-            my proxy_response $chan $status $reason $body $headers
+            my log_request "method=? status=400 target=?"
+            my proxy_response $chan 400 "Bad Request" "bad proxy request\n" {}
             return
         }
 
@@ -270,8 +273,8 @@ oo::class create ::tclcurl::testserver::proxy_service {
             if {[catch {set connect_info [my parse_connect_target $target]} connect_error]} {
                 ::tclcurl::test::msgoutput \
                     "proxy bad connect target chan=$chan target=$target error=$connect_error"
-                dict with [my bad_request_response] {}
-                my proxy_response $chan $status $reason $body $headers
+                my log_request "method=$method status=400 target=[::tclcurl::testserver::log_value $target]"
+                my proxy_response $chan 400 "Bad Request" "bad proxy request\n" {}
                 return
             }
             my start_tunnel $chan [dict get $connect_info host] [dict get $connect_info port]
@@ -288,6 +291,8 @@ oo::class create ::tclcurl::testserver::proxy_service {
             ::tclcurl::test::msgoutput \
                 "proxy auth chan=$chan path=$path status=$auth_status"
             if {$auth_status ne "ok"} {
+                my log_request \
+                    "method=$method status=407 target=[::tclcurl::testserver::log_value $path]"
                 my proxy_response $chan 407 \
                     "Proxy Authentication Required" "proxy-auth=$auth_status\n" \
                     [list "Proxy-Authenticate: Basic realm=\"TclCurl Proxy Test\""]
@@ -303,6 +308,8 @@ oo::class create ::tclcurl::testserver::proxy_service {
         if {[catch {set upstream [socket $host $port]} socket_error]} {
             ::tclcurl::test::msgoutput \
                 "proxy connect failed chan=$chan error=$socket_error"
+            my log_request \
+                "method=$method status=502 target=[::tclcurl::testserver::log_value $origin_path]"
             my proxy_response $chan 502 "Bad Gateway" "proxy-error=$socket_error\n" {}
             return
         }
@@ -342,6 +349,13 @@ oo::class create ::tclcurl::testserver::proxy_service {
                 "proxy upstream close chan=$chan upstream=$upstream"
             catch {close $upstream}
         }
+
+        set upstream_status ?
+        if {[regexp {^HTTP/[0-9.]+\s+([0-9]+)} $response -> parsed_status]} {
+            set upstream_status $parsed_status
+        }
+        my log_request \
+            "method=$method status=$upstream_status target=[::tclcurl::testserver::log_value $origin_path]"
 
         catch {
             ::tclcurl::test::msgoutput \

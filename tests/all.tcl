@@ -57,6 +57,8 @@ set tcltestArgv {}
 set exitServer 0
 set debug 0
 set configuredHttpServer {}
+array set root_overrides {}
+array set https_credential_overrides {}
 array set port_overrides {}
 for {set i 0} {$i < [llength $argv]} {incr i} {
     set arg [lindex $argv $i]
@@ -77,6 +79,22 @@ for {set i 0} {$i < [llength $argv]} {incr i} {
                 error "missing value after $arg"
             }
             set port_overrides($arg) [::tclcurl::test::parse_port_value $arg [lindex $argv $i]]
+        }
+        --docroot -
+        --ftproot {
+            incr i
+            if {$i >= [llength $argv]} {
+                error "missing value after $arg"
+            }
+            set root_overrides($arg) [file normalize [lindex $argv $i]]
+        }
+        --certfile -
+        --keyfile {
+            incr i
+            if {$i >= [llength $argv]} {
+                error "missing value after $arg"
+            }
+            set https_credential_overrides($arg) [file normalize [lindex $argv $i]]
         }
         --exitserver {
             set exitServer 1
@@ -113,6 +131,18 @@ if {[info exists port_overrides(--proxyport)]} {
         [::tclcurl::test::rewrite_base_url_port \
             [expr {[info exists ::env(TCLCURL_TEST_PROXY_BASE_URL)] ? $::env(TCLCURL_TEST_PROXY_BASE_URL) : {}}] \
             http 127.0.0.1 $port_overrides(--proxyport)]
+}
+if {[info exists root_overrides(--docroot)]} {
+    set ::env(TCLCURL_TEST_DOC_ROOT) $root_overrides(--docroot)
+}
+if {[info exists root_overrides(--ftproot)]} {
+    set ::env(TCLCURL_TEST_FTP_ROOT) $root_overrides(--ftproot)
+}
+if {[info exists https_credential_overrides(--certfile)]} {
+    set ::env(TCLCURL_TEST_HTTPS_CERT_FILE) $https_credential_overrides(--certfile)
+}
+if {[info exists https_credential_overrides(--keyfile)]} {
+    set ::env(TCLCURL_TEST_HTTPS_KEY_FILE) $https_credential_overrides(--keyfile)
 }
 
 ::tcltest::configure -testdir [file dirname [file normalize [info script]]]

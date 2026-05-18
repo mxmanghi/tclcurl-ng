@@ -259,6 +259,7 @@ oo::class create ::tclcurl::testserver::http_service {
     method handle_request {chan request} {
         set request_info [my parse_request_line $request]
         if {$request_info eq {}} {
+            my log_request "method=? status=400 path=?"
             my send_response $chan [my bad_request_response]
             return
         }
@@ -270,6 +271,7 @@ oo::class create ::tclcurl::testserver::http_service {
         set response [my route_request $method $path $target $version $headers $request]
         dict set response head_only [expr {$method eq "HEAD"}]
         set response [my build_response_dict $response]
+        my log_request "method=$method status=[dict get $response status] path=[::tclcurl::testserver::log_value $path]"
         if {[dict exists $response delay_ms]} {
             set callback [list [self] send_response $chan $response]
             if {[dict exists $response close_only] && [dict get $response close_only]} {

@@ -1,3 +1,7 @@
+---
+title: Tclcurl tiny web server
+---
+
 # TclCurl Test Suite
 
 The repository now has two distinct kinds of files under `tests/`:
@@ -54,6 +58,7 @@ tclsh testservers/testserver.tcl \
                   ?--certfile path? ?--keyfile path? \
                   ?--service protocol:port? ... \
                   ?--docroot path? ?--ftproot path? ?--keepdocroot? \
+                  ?--logfile path? \
                   ?--startservers protocol[,protocol,...]|all? \
                   ?--quiet? ?--debug?
 ```
@@ -73,6 +78,10 @@ file serving rooted at `TCLCURL_TEST_DOC_ROOT` or `--docroot`.
 Unless `--keepdocroot` is given, the server removes the configured document
 root when it shuts down.
 
+The server framework appends timestamped per-request log lines to
+`/tmp/tclcurl.log` by default. Override that path with `--logfile` when you
+want to keep the request log elsewhere.
+
 ## `tests/all.tcl`
 
 `tests/all.tcl` accepts a small set of TclCurl-specific options together with
@@ -83,6 +92,8 @@ is:
 tclsh tests/all.tcl \
                   ?--httpserver path/to/server.tcl? \
                   ?--httpport port? ?--httpsport port? ?--ftpport port? ?--proxyport port? \
+                  ?--docroot path? ?--ftproot path? \
+                  ?--certfile path? ?--keyfile path? \
                   ?--exitserver? ?--debug? \
                   ?--file pattern? ?--notfile pattern? ?--match pattern? ?--skip pattern? \
                   ?--verbose level...?
@@ -99,8 +110,11 @@ When the Tcl HTTP test server is wired in, the server script path precedence is:
 `9443`, `8991`, and `8992`.
 
 `tests/all.tcl` accepts the same double-dash options `--httpport`,
-`--httpsport`, `--ftpport`, and `--proxyport`. When you need both entry
-points to target the same services, pass matching port values to each script.
+`--httpsport`, `--ftpport`, and `--proxyport`. It also accepts `--docroot`,
+`--ftproot`, `--certfile`, and `--keyfile`, and maps them to the corresponding
+`TCLCURL_TEST_*` environment overrides used by the test support layer. When
+you need both entry points to target the same services, pass matching values to
+each script.
 
 The Tcl test support layer uses protocol-specific base URLs. You can override them before running `make test` or `tclsh tests/all.tcl`:
 
@@ -122,6 +136,7 @@ In order to test the https series of tests you have to create a self-signed pair
 If you want to keep the credentials elsewhere, either:
 
 - start `testservers/testserver.tcl` with `--certfile /path/to/server.crt --keyfile /path/to/server.key`
+- or run `tests/all.tcl --certfile /path/to/server.crt --keyfile /path/to/server.key`
 - or export `TCLCURL_TEST_HTTPS_CERT_FILE` and `TCLCURL_TEST_HTTPS_KEY_FILE`
 
 ```

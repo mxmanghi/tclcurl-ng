@@ -54,7 +54,9 @@ oo::class create ::tclcurl::testserver::ftp_service {
                                          data_chan {} \
                                          pending_action {} \
                                          restart_offset 0 \
-                                         rename_from {}]
+                                         rename_from {} \
+                                         last_command {} \
+                                         last_argument {}]
         my send_reply $chan 220 "TclCurl FTP test server ready"
         chan event $chan readable [list [self] read_command $chan]
     }
@@ -78,6 +80,8 @@ oo::class create ::tclcurl::testserver::ftp_service {
 
         set command [string toupper [lindex [split $line] 0]]
         set argument [string trim [string range $line [string length $command] end]]
+        dict set sessions($chan) last_command $command
+        dict set sessions($chan) last_argument $argument
         my handle_command $chan $command $argument
     }
 
@@ -105,6 +109,7 @@ oo::class create ::tclcurl::testserver::ftp_service {
                 puts $chan " MDTM"
                 puts $chan "211 End"
                 flush $chan
+                my log_request "command=FEAT status=211 path=[dict get $sessions($chan) cwd]"
             }
             PWD -
             XPWD {
@@ -238,6 +243,18 @@ oo::class create ::tclcurl::testserver::ftp_service {
             flush $chan
         }]} {
             my close_session $chan
+            return
+        }
+
+        if {[info exists sessions($chan)]} {
+            set command [dict get $sessions($chan) last_command]
+            if {$command eq {}} {
+                return
+            }
+            set argument [dict get $sessions($chan) last_argument]
+            set path [expr {$argument eq {} ? [dict get $sessions($chan) cwd] : $argument}]
+            my log_request \
+                "command=$command status=$code path=[::tclcurl::testserver::log_value $path]"
         }
     }
 

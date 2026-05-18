@@ -21,11 +21,12 @@ unset ::argv_saved_for_testserver
 namespace eval ::tclcurl::testserver {
     variable next_service_id 0
     variable service_classes
+    variable logger_logchan {}
     array set service_classes {}
 }
 
 oo::class create ::tclcurl::testserver::service {
-    variable protocol host port quiet listener
+    variable protocol host port quiet listener logfile
 
     constructor args {
         array set options {
@@ -33,6 +34,7 @@ oo::class create ::tclcurl::testserver::service {
             -host 127.0.0.1
             -port {}
             -quiet 0
+            -logfile {}
         }
 
         foreach {name value} $args {
@@ -53,6 +55,7 @@ oo::class create ::tclcurl::testserver::service {
         set host        $options(-host)
         set port        $options(-port)
         set quiet       $options(-quiet)
+        set logfile     $options(-logfile)
         set listener    {}
     }
 
@@ -90,6 +93,19 @@ oo::class create ::tclcurl::testserver::service {
         }
     }
 
+    method log_request {message} {
+        if {$logfile eq {}} {
+            return
+        }
+
+        if {[catch {
+            ::tclcurl::testserver::write_log_line "[my protocol] $message"
+        } log_error]} {
+            ::tclcurl::test::msgoutput \
+                "request log failed protocol=$protocol error=$log_error"
+        }
+    }
+
     method set_listener {chan} {
         set listener $chan
         return $listener
@@ -104,6 +120,42 @@ oo::class create ::tclcurl::testserver::service {
 
     method start {} {
         error "start must be implemented by subclasses"
+    }
+}
+
+proc ::tclcurl::testserver::timestamp {} {
+    return [clock format [clock seconds] -format "%Y-%m-%d %H:%M:%S"]
+}
+
+proc ::tclcurl::testserver::log_value {value} {
+    return [string map [list "\\" "\\\\" "\n" "\\n" "\r" "\\r" "\t" "\\t"] $value]
+}
+
+proc ::tclcurl::testserver::write_log_line {line} {
+    variable logger_logchan
+
+    set stamped_line "[timestamp] $line"
+    puts $logger_logchan $stamped_line
+    flush $logger_logchan
+}
+
+proc ::tclcurl::testserver::start_logfile {config} {
+    variable logger_logchan
+
+    set logfile [dict get $config logfile]
+
+    file mkdir [file dirname $logfile]
+
+    set logger_logchan [open $logfile a]
+    chan configure $logger_logchan -buffering line -translation lf -encoding utf-8
+}
+
+proc ::tclcurl::testserver::stop_logfile {} {
+    variable logger_logchan
+
+    if {$logger_logchan ne {}} {
+        catch {close $logger_logchan}
+        set logger_logchan {}
     }
 }
 
@@ -139,6 +191,9 @@ proc ::tclcurl::testserver::usage {} {
     puts stderr "      Root directory exposed by the FTP server."
     puts stderr "  --keepdocroot"
     puts stderr "      Leave the generated document root on disk after exit."
+    puts stderr "  --logfile <path>"
+    puts stderr "      File where request log lines are appended."
+    puts stderr "      Default: /tmp/tclcurl.log"
     puts stderr "  --quiet"
     puts stderr "      Suppress listener startup messages."
     puts stderr "  --debug"
@@ -221,6 +276,7 @@ proc ::tclcurl::testserver::parse_args {argv} {
     set ftproot [::tclcurl::test::ftp_root]
     set certfile {}
     set keyfile {}
+    set logfile [file normalize /tmp/tclcurl.log]
     set ftproot_follows_docroot [expr {$ftproot eq $docroot}]
     set keepdocroot 0
     array set default_ports {
@@ -313,6 +369,13 @@ proc ::tclcurl::testserver::parse_args {argv} {
             --keepdocroot {
                 set keepdocroot 1
             }
+            --logfile {
+                incr i
+                if {$i >= [llength $argv]} {
+                    error "missing value after --logfile"
+                }
+                set logfile [file normalize [lindex $argv $i]]
+            }
             --service {
                 incr i
                 if {$i >= [llength $argv]} {
@@ -357,7 +420,8 @@ proc ::tclcurl::testserver::parse_args {argv} {
 
     return [dict create host $host quiet $quiet debug $debug \
         docroot $docroot ftproot $ftproot certfile $certfile keyfile $keyfile \
-        keepdocroot $keepdocroot services $services startservers $startservers]
+        keepdocroot $keepdocroot logfile $logfile \
+        services $services startservers $startservers]
 }
 
 proc ::tclcurl::testserver::configure_roots {config} {
@@ -427,7 +491,7 @@ proc ::tclcurl::testserver::cleanup_doc_root {config} {
     catch {file delete -force $docroot}
 }
 
-proc ::tclcurl::testserver::create_service {protocol host port quiet} {
+proc ::tclcurl::testserver::create_service {protocol host port quiet logfile} {
     variable next_service_id
 
     set class_name [service_class $protocol]
@@ -437,18 +501,20 @@ proc ::tclcurl::testserver::create_service {protocol host port quiet} {
                                 -protocol $protocol \
                                 -host     $host \
                                 -port     $port \
-                                -quiet    $quiet]
+                                -quiet    $quiet \
+                                -logfile  $logfile]
 }
 
 proc ::tclcurl::testserver::start_services {config} {
     set host [dict get $config host]
     set quiet [dict get $config quiet]
+    set logfile [dict get $config logfile]
     set instances {}
 
     foreach service_spec [dict get $config services] {
         set protocol [dict get $service_spec protocol]
         set port [dict get $service_spec port]
-        set service [create_service $protocol $host $port $quiet]
+        set service [create_service $protocol $host $port $quiet $logfile]
         $service start
         lappend instances $service
     }
@@ -467,11 +533,13 @@ proc ::tclcurl::testserver::run {argv} {
     ::tclcurl::test::configure_debug_output [dict get $config debug]
     configure_roots $config
     configure_https_credentials $config
+    start_logfile $config
     set services [start_services $config]
     try {
         vwait ::tclcurl::testserver::forever
     } finally {
         stop_services $services
+        stop_logfile
         cleanup_doc_root $config
     }
 }
@@ -482,6 +550,7 @@ proc ::tclcurl::testserver::command_map {} {
         configure_https_credentials ::tclcurl::testserver::configure_https_credentials \
         configure_roots ::tclcurl::testserver::configure_roots \
         create_service ::tclcurl::testserver::create_service \
+        log_value ::tclcurl::testserver::log_value \
         manual_html_source ::tclcurl::testserver::manual_html_source \
         parse_args ::tclcurl::testserver::parse_args \
         parse_service_spec ::tclcurl::testserver::parse_service_spec \
@@ -490,7 +559,11 @@ proc ::tclcurl::testserver::command_map {} {
         seed_doc_root ::tclcurl::testserver::seed_doc_root \
         service_class ::tclcurl::testserver::service_class \
         start_services ::tclcurl::testserver::start_services \
+        start_logfile ::tclcurl::testserver::start_logfile \
         stop_services ::tclcurl::testserver::stop_services \
+        stop_logfile ::tclcurl::testserver::stop_logfile \
+        timestamp ::tclcurl::testserver::timestamp \
+        write_log_line ::tclcurl::testserver::write_log_line \
         usage ::tclcurl::testserver::usage]
 }
 
