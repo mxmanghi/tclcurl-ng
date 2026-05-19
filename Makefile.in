@@ -214,9 +214,10 @@ scripts: $(TCLCURL_SCRIPTS)
 # end user machine when building from source.
 #========================================================================
 
-doc: doc/tclcurl.n doc/tclcurl.html
+doc: doc/tclcurl.n doc/tclcurl.html doc/tclcurl_share.n doc/tclcurl_share.html doc/tclcurl_multi.n doc/tclcurl_multi.html
 
 doc/tclcurl.n: doc/tclcurl.n.md
+	@echo "Generating doc/tclcurl.n"; 
 	@if test -z "$(TCLCURL_DOC_GEN)"; then \
 	    echo "Warning: no markdown-to-man converter available; skipping doc/tclcurl.n"; \
 	else \
@@ -224,10 +225,43 @@ doc/tclcurl.n: doc/tclcurl.n.md
 	fi
 
 doc/tclcurl.html: doc/tclcurl.n.md
+	@echo "Generating doc/tclcurl.html";
 	@if test -z "$(TCLCURL_HTML_GEN)"; then \
 	    echo "Warning: no markdown-to-html converter available; skipping doc/tclcurl.html"; \
 	else \
 	    $(TCLCURL_HTML_GEN) doc/tclcurl.html doc/tclcurl.n.md; \
+	fi
+
+doc/tclcurl_share.n: doc/tclcurl_share.n.md
+	@echo "Generating doc/tclcurl_share.n";
+	@if test -z "$(TCLCURL_DOC_GEN)"; then \
+	    echo "Warning: no markdown-to-man converter available; skipping doc/tclcurl_share.n"; \
+	else \
+	    $(TCLCURL_DOC_GEN) doc/tclcurl_share.n doc/tclcurl_share.n.md; \
+	fi
+
+doc/tclcurl_share.html: doc/tclcurl_share.n.md
+	@echo "Generating doc/tclcurl_share.html";
+	@if test -z "$(TCLCURL_HTML_GEN)"; then \
+	    echo "Warning: no markdown-to-html converter available; skipping doc/tclcurl_share.html"; \
+	else \
+	    $(TCLCURL_HTML_GEN) doc/tclcurl_share.html doc/tclcurl_share.n.md; \
+	fi
+
+doc/tclcurl_multi.n: doc/tclcurl_multi.n.md
+	@echo "Generating doc/tclcurl_multi.n";
+	@if test -z "$(TCLCURL_DOC_GEN)"; then \
+	    echo "Warning: no markdown-to-man converter available; skipping doc/tclcurl_multi.n"; \
+	else \
+	    $(TCLCURL_DOC_GEN) doc/tclcurl_multi.n doc/tclcurl_multi.n.md; \
+	fi
+
+doc/tclcurl_multi.html: doc/tclcurl_multi.n.md
+	@echo "Generating doc/tclcurl_multi.html";
+	@if test -z "$(TCLCURL_HTML_GEN)"; then \
+	    echo "Warning: no markdown-to-html converter available; skipping doc/tclcurl_multi.html"; \
+	else \
+	    $(TCLCURL_HTML_GEN) doc/tclcurl_multi.html doc/tclcurl_multi.n.md; \
 	fi
 
 install: all install-binaries install-scripts install-libraries install-doc

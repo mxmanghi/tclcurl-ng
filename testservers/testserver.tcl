@@ -460,11 +460,32 @@ proc ::tclcurl::testserver::manual_html_source {} {
     return {}
 }
 
+proc ::tclcurl::testserver::manual_html_files {} {
+    set repo_root [::tclcurl::test::repo_root]
+    set manuals {}
+
+    foreach name [list tclcurl.html tclcurl_multi.html tclcurl_share.html] {
+        set source_path [file join $repo_root doc $name]
+        if {[file exists $source_path]} {
+            dict set manuals $name $source_path
+        }
+    }
+
+    return $manuals
+}
+
 proc ::tclcurl::testserver::seed_doc_root {docroot} {
     set index_source [file join [::tclcurl::test::repo_root] testservers index.html]
     set index_target [file join $docroot index.html]
     if {[file exists $index_source] && ![file exists $index_target]} {
         file copy $index_source $index_target
+    }
+
+    dict for {target_name source_path} [manual_html_files] {
+        set target_path [file join $docroot $target_name]
+        if {![file exists $target_path]} {
+            file copy $source_path $target_path
+        }
     }
 
     set manual_source [manual_html_source]
@@ -551,6 +572,7 @@ proc ::tclcurl::testserver::command_map {} {
         configure_roots ::tclcurl::testserver::configure_roots \
         create_service ::tclcurl::testserver::create_service \
         log_value ::tclcurl::testserver::log_value \
+        manual_html_files ::tclcurl::testserver::manual_html_files \
         manual_html_source ::tclcurl::testserver::manual_html_source \
         parse_args ::tclcurl::testserver::parse_args \
         parse_service_spec ::tclcurl::testserver::parse_service_spec \

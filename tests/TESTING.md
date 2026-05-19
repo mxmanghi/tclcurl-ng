@@ -47,6 +47,14 @@ tclsh tests/all.tcl -exitserver
 If one of the configured protocol endpoints is not reachable, the
 corresponding server-backed tests are skipped.
 
+## Related Manual Pages
+
+The generated HTML manuals for TclCurl are available at:
+
+- [tclcurl.html](tclcurl.html)
+- [tclcurl_multi.html](tclcurl_multi.html)
+- [tclcurl_share.html](tclcurl_share.html)
+
 ## `testservers/testserver.tcl`
 
 The local server framework accepts the following general command form:

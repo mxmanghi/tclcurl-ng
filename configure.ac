@@ -419,5 +419,5 @@ CURL_ENABLE_DEPRECATED_CODE
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-AC_CONFIG_FILES([Makefile pkgIndex.tcl doc/tclcurl.n.md doc/tclcurl_share.n])
+AC_CONFIG_FILES([Makefile pkgIndex.tcl doc/tclcurl.n.md doc/tclcurl_share.n.md doc/tclcurl_multi.n.md])
 AC_OUTPUT

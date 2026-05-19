@@ -9669,7 +9669,7 @@ printf "%s\n" "$as_me: deprecated curl code enabled for: $curl_depr_enabled" >&6
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-ac_config_files="$ac_config_files Makefile pkgIndex.tcl doc/tclcurl.n.md doc/tclcurl_share.n"
+ac_config_files="$ac_config_files Makefile pkgIndex.tcl doc/tclcurl.n.md doc/tclcurl_share.n.md doc/tclcurl_multi.n.md"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -10363,7 +10363,8 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "pkgIndex.tcl") CONFIG_FILES="$CONFIG_FILES pkgIndex.tcl" ;;
     "doc/tclcurl.n.md") CONFIG_FILES="$CONFIG_FILES doc/tclcurl.n.md" ;;
-    "doc/tclcurl_share.n") CONFIG_FILES="$CONFIG_FILES doc/tclcurl_share.n" ;;
+    "doc/tclcurl_share.n.md") CONFIG_FILES="$CONFIG_FILES doc/tclcurl_share.n.md" ;;
+    "doc/tclcurl_multi.n.md") CONFIG_FILES="$CONFIG_FILES doc/tclcurl_multi.n.md" ;;
 
   *) as_fn_error $? "invalid argument: '$ac_config_target'" "$LINENO" 5;;
   esac
@@ -10944,5 +10945,4 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: unrecognized options: $ac_unrecognized_opts" >&5
 printf "%s\n" "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
-
 

@@ -1,3 +1,11 @@
+2026-05-19 Massimo Manghi <massimo.manghi@rivetweb.org>
+	* configure.ac: Now generating also doc/tclcurl_multi.n.md and doc/tclcurl_share.n.md from
+	theirs .in sources
+	* doc/*.n.md.in: Complete revision of documentation now entirely in MD format
+	* testservers/: Now test servers available. The HTTP server can also work as
+	a basic general purpose HTTP server able to server HTML and other file types
+	properly
+
 2026-04-24 Massimo Manghi <massimo.manghi@rivetweb.org>
 	* Makefile.in: add support for script handling
 	* pkgIndex.tcl.in: extending the model proposed by Tcl's sampleextension to
