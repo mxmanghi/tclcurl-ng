@@ -1,16 +1,17 @@
 # TclCurl - get a URL with FTP, TELNET, LDAP, DICT, FILE, HTTP or HTTPS syntax.
 
 This project was forked from the [flightaware/tclcurl-fa](https://github.com/flightaware/tclcurl-fa)
-repository and the contitued as independed development effort since the upstream maintainers
-apparently stopped accepting or reacting to PR. 
+repository and then continued as an independent development effort since the upstream maintainers
+apparently stopped accepting or reacting to PRs.
 
 The current project status supports most options of the legacy tclcurl. Some options (see below)
-can be included in the build even though they might have no effect, since recent version
-of libcurl discontinued support for them
+can be included in the build even though they might have no effect, since recent versions
+of libcurl discontinued removed their functionalities
 
 Some portions of this project were developed with AI-assisted drafting/editing
 tools under human direction, supervision, review, and approval. All accepted changes
-were selected, verified, and integrated by the human maintainer.
+were selected, verified, and integrated by the human maintainer, who anyway instructed the AI-assistant
+on how code had to be reorganized
 
 ## Introduction
 
@@ -69,26 +70,20 @@ is currently tested only on Linux/Unix*
 ## Usage
 
     package require TclCurl
-
-    set curlHandle [curl::init]
-
-    $curlHandle perform
-
-    $curlHandle getinfo curlinfo_option
-
-    $curlHandle duphandle
-
-    $curlHandle cleanup
-
     curl::transfer
-
     curl::version
-
     curl::escape $url
-
     curl::unescape $url
-
     curl::curlConfig option
+    set curlHandle [curl::init]
+    
+### Curl Handle methods
+
+    $curlHandle configure
+    $curlHandle perform
+    $curlHandle getinfo curlinfo_option
+    $curlHandle duphandle
+    $curlHandle cleanup
 
 Check the man page for details.
 
@@ -98,7 +93,7 @@ Check the man page for details.
 - Cloned from a repo by Steve Havelka once at:  https://bitbucket.org/smh377/tclcurl/ (now broken 2026-04-07)
 - Code refactored and test suite developed by Massimo Manghi (massimo.manghi@rivetweb.org). Some parts were 
 written with the help of the OpenAI/Codex assistant but every modification or AI generated code has been
-evaluated by the author (2024-2026)
+evaluated by the author (2024-2026) who directed step-by-step the assistant on how the code had to be reorganized
 
 ## License
 
