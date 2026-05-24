@@ -15,190 +15,10 @@ namespace eval ::tclcurl::testserver {}
 package require sha256
 package require zlib
 package require base64
+package require uri
 
-proc ::tclcurl::testserver::http_header_lines {header_block} {
-    return [regexp -all -inline {[^\r\n]+} $header_block]
-}
-
-proc ::tclcurl::testserver::escape_response_value {value} {
-    return [string map [list "\\" "\\\\" "\n" "\\n" "\r" "\\r"] $value]
-}
-
-proc ::tclcurl::testserver::parse_query {target} {
-    set query_start [string first ? $target]
-    if {$query_start < 0} {
-        return [dict create]
-    }
-
-    set params [dict create]
-    foreach pair [split [string range $target [expr {$query_start + 1}] end] &] {
-        if {$pair eq {}} {
-            continue
-        }
-        set separator [string first = $pair]
-        if {$separator < 0} {
-            dict set params $pair {}
-            continue
-        }
-        dict set params \
-            [string range $pair 0 [expr {$separator - 1}]] \
-            [string range $pair [expr {$separator + 1}] end]
-    }
-
-    return $params
-}
-
-proc ::tclcurl::testserver::guess_content_type {path} {
-    switch -exact -- [string tolower [file extension $path]] {
-        .css  { return "text/css; charset=utf-8" }
-        .gif  { return "image/gif" }
-        .htm -
-        .html { return "text/html; charset=utf-8" }
-        .jpg -
-        .jpeg { return "image/jpeg" }
-        .js   { return "application/javascript; charset=utf-8" }
-        .json { return "application/json; charset=utf-8" }
-        .md   { return "text/markdown; charset=utf-8" }
-        .png  { return "image/png" }
-        .svg  { return "image/svg+xml; charset=utf-8" }
-        .tcl  { return "text/plain; charset=utf-8" }
-        .txt  { return "text/plain; charset=utf-8" }
-        .xml  { return "application/xml; charset=utf-8" }
-        default {
-            return "application/octet-stream"
-        }
-    }
-}
-
-# Shared HTTP connection plumbing for test services that speak HTTP on the
-# client-facing side. Concrete subclasses keep their own request completion
-# details and response behavior, but they all share the same listener setup,
-# per-channel buffering, header parsing and socket cleanup.
-oo::class create ::tclcurl::testserver::http_endpoint_service {
-    superclass ::tclcurl::testserver::service
-
-    variable request_data
-
-    constructor args {
-        array set request_data {}
-        next {*}$args
-    }
-
-    destructor {
-        foreach chan [array names request_data] {
-            catch {close $chan}
-        }
-        next
-    }
-
-    method start {} {
-        set listener [socket -server [list [self] accept] \
-            -myaddr [my host] [my port]]
-        my set_listener $listener
-        my log [my listening_message]
-        return $listener
-    }
-
-    method accept {chan host port} {
-        chan configure $chan -blocking 0 -buffering none -translation binary
-        ::tclcurl::test::msgoutput "accept connection chan=$chan host=$host port=$port"
-        chan event $chan readable [list [self] read_request $chan]
-    }
-
-    method read_request {chan} {
-        if {[eof $chan]} {
-            my close_client $chan
-            return
-        }
-
-        set chunk [read $chan]
-        if {$chunk eq {}} {
-            return
-        }
-
-        append request_data($chan) $chunk
-        set request [my complete_request $request_data($chan)]
-        if {$request eq {}} {
-            return
-        }
-
-        unset request_data($chan)
-        chan event $chan readable {}
-        if {[catch {my handle_request $chan $request} request_error request_options]} {
-            ::tclcurl::test::msgoutput \
-                "request handling failed chan=$chan error=$request_error options=$request_options"
-            my close_client $chan
-        }
-    }
-
-    # Default request framing for simple HTTP services: a complete header block
-    # plus an optional fixed-size body announced by Content-Length.
-    method complete_request {request_data} {
-        set header_end [string first "\r\n\r\n" $request_data]
-        if {$header_end < 0} {
-            return {}
-        }
-
-        set headers [my parse_headers $request_data]
-        set content_length 0
-        if {[dict exists $headers content-length]} {
-            set content_length [dict get $headers content-length]
-        }
-        set request_length [expr {$header_end + 4 + $content_length}]
-        if {[string length $request_data] < $request_length} {
-            return {}
-        }
-
-        return [string range $request_data 0 [expr {$request_length - 1}]]
-    }
-
-    # Parse the header block into a lower-cased dictionary so subclasses can
-    # reason about headers without repeating the same parsing logic.
-    method parse_headers {request} {
-        set header_end [string first "\r\n\r\n" $request]
-        if {$header_end < 0} {
-            return [dict create]
-        }
-
-        set header_block [string range $request 0 [expr {$header_end - 1}]]
-        set header_lines [::tclcurl::testserver::http_header_lines $header_block]
-        set headers [dict create]
-
-        foreach header_line [lrange $header_lines 1 end] {
-            # Example match: "Content-Type: text/plain"
-            if {![regexp {^([^:]+):\s*(.*)$} $header_line -> name value]} {
-                continue
-            }
-            dict set headers [string tolower $name] $value
-        }
-
-        return $headers
-    }
-
-    # Parse the request line and return the method, target and HTTP version in
-    # a dictionary that both origin and proxy handlers can consume.
-    method parse_request_line {request} {
-        set request_line [lindex [split $request "\r\n"] 0]
-        # Example matches:
-        #   "GET /request-inspect HTTP/1.1"
-        #   "GET http://127.0.0.1:8990/proxy-target HTTP/1.1"
-        if {![regexp {^([A-Z]+) ([^ ]+) HTTP/([0-9.]+)$} $request_line -> method target version]} {
-            return {}
-        }
-
-        return [dict create method $method target $target version $version]
-    }
-
-    # Subclasses receive a fully buffered request and are responsible for
-    # producing the service-specific response or forwarding behavior.
-    method handle_request {chan request} {
-        error "handle_request must be implemented by subclasses"
-    }
-
-    method close_client {chan} {
-        catch {unset request_data($chan)}
-        catch {close $chan}
-    }
+if {[info commands ::tclcurl::testserver::http_endpoint_service] eq {}} {
+    source [file join [file dirname [file normalize [info script]]] http_endpoint.tcl]
 }
 
 # HTTP origin service used by the tests. The shared base handles connection
@@ -206,6 +26,71 @@ oo::class create ::tclcurl::testserver::http_endpoint_service {
 # routing and response generation.
 oo::class create ::tclcurl::testserver::http_service {
     superclass ::tclcurl::testserver::http_endpoint_service
+
+    method escape_response_value {value} {
+        return [string map [list "\\" "\\\\" "\n" "\\n" "\r" "\\r"] $value]
+    }
+
+    method decode_query_component {value} {
+        set decoded [string map [list + " "] $value]
+        while {[regexp -indices {%[0-9A-Fa-f][0-9A-Fa-f]} $decoded match]} {
+            lassign $match first last
+            set replacement [format %c 0x[string range $decoded [expr {$first + 1}] $last]]
+            set decoded [string replace $decoded $first $last $replacement]
+        }
+        return $decoded
+    }
+
+    method parse_query {target} {
+        set uri_parts [::uri::split "http://localhost$target"]
+        if {![dict exists $uri_parts query]} {
+            return [dict create]
+        }
+
+        set query [dict get $uri_parts query]
+        if {$query eq {}} {
+            return [dict create]
+        }
+
+        set params [dict create]
+        foreach pair [split $query &] {
+            if {$pair eq {}} {
+                continue
+            }
+            set separator [string first = $pair]
+            if {$separator < 0} {
+                dict set params [my decode_query_component $pair] {}
+                continue
+            }
+            dict set params \
+                [my decode_query_component [string range $pair 0 [expr {$separator - 1}]]] \
+                [my decode_query_component [string range $pair [expr {$separator + 1}] end]]
+        }
+
+        return $params
+    }
+
+    method guess_content_type {path} {
+        switch -exact -- [string tolower [file extension $path]] {
+            .css  { return "text/css; charset=utf-8" }
+            .gif  { return "image/gif" }
+            .htm -
+            .html { return "text/html; charset=utf-8" }
+            .jpg -
+            .jpeg { return "image/jpeg" }
+            .js   { return "application/javascript; charset=utf-8" }
+            .json { return "application/json; charset=utf-8" }
+            .md   { return "text/markdown; charset=utf-8" }
+            .png  { return "image/png" }
+            .svg  { return "image/svg+xml; charset=utf-8" }
+            .tcl  { return "text/plain; charset=utf-8" }
+            .txt  { return "text/plain; charset=utf-8" }
+            .xml  { return "application/xml; charset=utf-8" }
+            default {
+                return "application/octet-stream"
+            }
+        }
+    }
 
     method description {} {
         return "HTTP origin test server"
@@ -369,10 +254,18 @@ oo::class create ::tclcurl::testserver::http_service {
         set body_length [string length $body]
         for {set offset 0} {$offset < $body_length} {incr offset $chunk_size} {
             set chunk [string range $body $offset [expr {$offset + $chunk_size - 1}]]
-            append encoded [format %X [string length $chunk]] "\r\n" $chunk "\r\n"
+            append encoded [my chunk_frame $chunk]
         }
-        append encoded "0\r\n\r\n"
+        append encoded [my chunk_terminator]
         return $encoded
+    }
+
+    method chunk_frame {chunk_data} {
+        return [format %X [string length $chunk_data]]\r\n$chunk_data\r\n
+    }
+
+    method chunk_terminator {} {
+        return "0\r\n\r\n"
     }
 
     method streaming_payload_length {stream_chunks} {
@@ -405,6 +298,14 @@ oo::class create ::tclcurl::testserver::http_service {
 
     method send_stream_chunk {chan transfer_encoding stream_chunks index} {
         if {$index >= [llength $stream_chunks]} {
+            if {$transfer_encoding eq "chunked"} {
+                if {[catch {
+                    puts -nonewline $chan [my chunk_terminator]
+                    flush $chan
+                } write_error]} {
+                    ::tclcurl::test::msgoutput "stream write failed chan=$chan error=$write_error"
+                }
+            }
             my close_client $chan
             return
         }
@@ -416,7 +317,7 @@ oo::class create ::tclcurl::testserver::http_service {
     method write_stream_chunk {chan transfer_encoding stream_chunks index chunk_data} {
         if {[catch {
             if {$transfer_encoding eq "chunked"} {
-                puts -nonewline $chan [my chunk_encode $chunk_data]
+                puts -nonewline $chan [my chunk_frame $chunk_data]
             } else {
                 puts -nonewline $chan $chunk_data
             }
@@ -475,7 +376,7 @@ oo::class create ::tclcurl::testserver::http_service {
             status 200 \
             reason OK \
             body $body \
-            headers [list "Content-Type: [::tclcurl::testserver::guess_content_type $fs_path]"]]
+            headers [list "Content-Type: [my guess_content_type $fs_path]"]]
     }
 
     method byte_range_response {headers full_body} {
@@ -563,7 +464,7 @@ oo::class create ::tclcurl::testserver::http_service {
             if {$wait_unit eq "s"} {
                 set wait_time [expr {$wait_time * 1000}]
             }
-            set query_params [::tclcurl::testserver::parse_query $target]
+            set query_params [my parse_query $target]
             if {[dict exists $query_params reply] && [dict get $query_params reply] eq "none"} {
                 set close_only 1
             }
@@ -731,18 +632,18 @@ oo::class create ::tclcurl::testserver::http_service {
             /request-inspect {
                 set request_body [my request_body $request]
                 set body [join [list \
-                            "method=[::tclcurl::testserver::escape_response_value $method]" \
-                            "path=[::tclcurl::testserver::escape_response_value $path]" \
-                            "target=[::tclcurl::testserver::escape_response_value $target]" \
-                            "request-version=[::tclcurl::testserver::escape_response_value $version]" \
-                            "content-type=[::tclcurl::testserver::escape_response_value [my header_value $headers content-type]]" \
-                            "content-length=[::tclcurl::testserver::escape_response_value [my header_value $headers content-length]]" \
-                            "accept-encoding=[::tclcurl::testserver::escape_response_value [my header_value $headers accept-encoding]]" \
-                            "te=[::tclcurl::testserver::escape_response_value [my header_value $headers te]]" \
-                            "connection=[::tclcurl::testserver::escape_response_value [my header_value $headers connection]]" \
-                            "user-agent=[::tclcurl::testserver::escape_response_value [my header_value $headers user-agent]]" \
-                            "referer=[::tclcurl::testserver::escape_response_value [my header_value $headers referer]]" \
-                            "x-tclcurl-test=[::tclcurl::testserver::escape_response_value [my header_value $headers x-tclcurl-test]]" \
+                            "method=[my escape_response_value $method]" \
+                            "path=[my escape_response_value $path]" \
+                            "target=[my escape_response_value $target]" \
+                            "request-version=[my escape_response_value $version]" \
+                            "content-type=[my escape_response_value [my header_value $headers content-type]]" \
+                            "content-length=[my escape_response_value [my header_value $headers content-length]]" \
+                            "accept-encoding=[my escape_response_value [my header_value $headers accept-encoding]]" \
+                            "te=[my escape_response_value [my header_value $headers te]]" \
+                            "connection=[my escape_response_value [my header_value $headers connection]]" \
+                            "user-agent=[my escape_response_value [my header_value $headers user-agent]]" \
+                            "referer=[my escape_response_value [my header_value $headers referer]]" \
+                            "x-tclcurl-test=[my escape_response_value [my header_value $headers x-tclcurl-test]]" \
                             "body-length=[string length $request_body]" \
                             "body-hex=[binary encode hex $request_body]" \
                             "body-sha256=[::sha2::sha256 -hex $request_body]"] "\n"]
@@ -765,6 +666,18 @@ oo::class create ::tclcurl::testserver::http_service {
                     body $body \
                     headers {} \
                     transfer_encoding chunked]
+            }
+            /slow-chunked-data {
+                set body [::tclcurl::test::negotiation_payload]
+                return [dict create \
+                    status 200 \
+                    reason OK \
+                    body {} \
+                    headers {} \
+                    transfer_encoding chunked \
+                    stream_chunks [list \
+                        [list 0 [string range $body 0 9]] \
+                        [list 50 [string range $body 10 end]]]]
             }
             /slow-body-1 {
                 set body [::tclcurl::test::negotiation_payload]
@@ -841,16 +754,14 @@ oo::class create ::tclcurl::testserver::http_service {
 
         ::tclcurl::test::msgoutput "send response chan=$chan status=$status reason=$reason body-length=[string length $body]"
 
-        set response_headers [list \
-            $status_line \
-            "Connection: close"]
+        set response_headers [list $status_line "Connection: close"]
         if {![regexp -nocase {^Content-Type:} [join $headers "\n"]]} {
             lappend response_headers "Content-Type: text/plain"
         }
-        if {[llength $stream_chunks] > 0} {
-            lappend response_headers "Content-Length: [my streaming_payload_length $stream_chunks]"
-        } elseif {$transfer_encoding eq "chunked"} {
+        if {$transfer_encoding eq "chunked"} {
             lappend response_headers "Transfer-Encoding: chunked"
+        } elseif {[llength $stream_chunks] > 0} {
+            lappend response_headers "Content-Length: [my streaming_payload_length $stream_chunks]"
         } else {
             lappend response_headers "Content-Length: [string length $body]"
         }

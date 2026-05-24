@@ -179,6 +179,32 @@ test http-1.13 {unknown GET paths fall back to files under the configured doc ro
     catch {file delete -force [file join [::tclcurl::test::doc_root] http-static-fixture.txt]}
 } -result {0 200 1 1}
 
+test http-1.14 {static file serving preserves binary response bytes} -constraints http_server -body {
+    set sourcePath [file join [file dirname [file normalize [info script]]] tcl9.png]
+    set fixturePath [file join [::tclcurl::test::doc_root] http-static-fixture.png]
+    file copy -force $sourcePath $fixturePath
+    set fh [open $sourcePath rb]
+    try {
+        set expectedSha [::sha2::sha256 -hex [read $fh]]
+    } finally {
+        close $fh
+    }
+
+    set body {}
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url http-static-fixture.png] \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {[::sha2::sha256 -hex $body] eq $expectedSha}] \
+             [expr {[$handle getinfo contenttype] eq "image/png"}]
+    }
+} -cleanup {
+    catch {file delete -force [file join [::tclcurl::test::doc_root] http-static-fixture.png]}
+} -result {0 200 1 1}
+
 test http-2.1.0 {-post with -postfields sends application/x-www-form-urlencoded data} -constraints http_server -body {
     set payload "firstName=Massimo&lastName=Manghi&city=Parma+Italy"
     ::tclcurl::test::transport_postfields ::tclcurl::test::server::base_url {} $payload

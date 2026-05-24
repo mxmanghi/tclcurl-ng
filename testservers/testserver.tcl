@@ -280,10 +280,10 @@ proc ::tclcurl::testserver::parse_args {argv} {
     set ftproot_follows_docroot [expr {$ftproot eq $docroot}]
     set keepdocroot 0
     array set default_ports {
-        http 8990
-        https 9443
-        ftp 8991
-        proxy 8992
+        http        8990
+        https       9443
+        ftp         8991
+        proxy       8992
     }
     set startservers [implemented_protocols]
     set services {}
@@ -418,10 +418,11 @@ proc ::tclcurl::testserver::parse_args {argv} {
         set services $filtered_services
     }
 
-    return [dict create host $host quiet $quiet debug $debug \
-        docroot $docroot ftproot $ftproot certfile $certfile keyfile $keyfile \
-        keepdocroot $keepdocroot logfile $logfile \
-        services $services startservers $startservers]
+    return [dict create host $host quiet $quiet debug $debug        \
+                        docroot $docroot ftproot $ftproot           \
+                        certfile $certfile keyfile $keyfile         \
+                        keepdocroot $keepdocroot logfile $logfile   \
+                        services $services startservers $startservers]
 }
 
 proc ::tclcurl::testserver::configure_roots {config} {
@@ -436,8 +437,8 @@ proc ::tclcurl::testserver::configure_roots {config} {
 }
 
 proc ::tclcurl::testserver::configure_https_credentials {config} {
-    set certfile [dict get $config certfile]
-    set keyfile [dict get $config keyfile]
+    set certfile    [dict get $config certfile]
+    set keyfile     [dict get $config keyfile]
 
     if {$certfile ne {}} {
         ::tclcurl::test::set_https_cert_file $certfile
@@ -591,6 +592,7 @@ proc ::tclcurl::testserver::command_map {} {
 
 namespace ensemble create -command ::tclcurl::testserver -map [::tclcurl::testserver::command_map]
 
+source [file join [file dirname [file normalize [info script]]] http_endpoint.tcl]
 source [file join [file dirname [file normalize [info script]]] http_server.tcl]
 source [file join [file dirname [file normalize [info script]]] https_server.tcl]
 source [file join [file dirname [file normalize [info script]]] ftp_server.tcl]

@@ -1,66 +1,62 @@
-.\" You can view this file with:
-.\" nroff -man [file]
-.\" Adapted from libcurl docs by fandom@telefonica.net
-.\" Reworked and refactored by massimo.manghi@rivetweb.org
-.TH TclCurl 3 "1 April 2026" "TclCurl 8.0.1 "TclCurl Easy Interface"
+.\" -*- mode: troff; coding: utf-8 -*-
+.TH "TclCurl Share" "n" "19-05-2026" "TclCurl 8.0.1" "TclCurl Easy Interface"
 .SH NAME
-TclCurl: - get  a  URL with FTP, FTPS, HTTP, HTTPS, SCP, SFTP, TFTP, TELNET, DICT, FILE, LDAP,
-LDAPS, IMAP, IMAPS, POP, POP3, SMTP, SMTPS and gopher syntax.
+.LP
+TclCurl - Share selected data between multiple easy handles.
 .SH SYNOPSIS
-.BI "curl::shareinit"
-.sp
-.IB shareHandle " share " "?data?"
-.sp
-.IB shareHandle " unshare " "?data?"
-.sp
-.IB shareHandle " cleanup"
-.sp
-.BI "curl::sharestrerror " errorCode
-
-
+.LP
+.EX
+curl::shareinit
+curl::sharestrerror errorCode
+.EE
+.LP
+.EX
+shareHandle share ?data?
+shareHandle unshare ?data?
+shareHandle cleanup
+.EE
 .SH DESCRIPTION
-
-With the share API, you can have two or more 'easy' handles sharing data
-among them, so far they can only share cookies and DNS data.
-
+.LP
+The share API allows two or more easy handles to share selected kinds of data.
+At present, TclCurl supports sharing cookie data and DNS cache data.
 .SH curl::shareinit
-This procedure must be the first one to call, it returns a \fBshareHandle\fP
-that you need to use to share data among handles using the \fB-share\fP option
-to the \fBconfigure\fP command. The init MUST have a corresponding call to
-\fBcleanup\fP when the operation is completed.
-
-.B RETURN VALUE
-.sp
-\fBshareHandle\fP to use.
-
+.LP
+This procedure must be called first. It returns a \f(CRshareHandle\fR, which you use
+to share data between easy handles through the \f(CR-share\fR option of the
+\f(CRconfigure\fR command. Each call to \f(CRshareinit\fR MUST have a corresponding call
+to \f(CRcleanup\fR when the operation is complete.
+.PP
+\fBRETURN VALUE\fR
+.PP
+The \f(CRshareHandle\fR to use.
 .SH shareHandle share ?data?
-
-The parameter specifies a type of data that should be shared. This may be set
-to one of the values described below:
-
-.RS
-.TP 5
-.B cookies
-Cookie data will be shared across the easy handles using this shared object.
-
-.TP
-.B dns
-Cached DNS hosts will be shared across the easy handles using this shared object.
-Note that when you use the multi interface, all easy handles added to the same multi
-handle will share DNS cache by default without this having to be used!
-.RE
-
+.LP
+This parameter specifies the kind of data to be shared. It may be set to one
+of the values described below:
+.TP 3
+\f(CRcookies\fR
+Cookie data is shared between the easy handles associated with this shared
+object.
+.TP 3
+\f(CRdns\fR
+Cached DNS entries are shared between the easy handles associated with
+this shared object.
+.IP
+Note that when you use the multi interface, all easy handles added to the
+same multi handle share DNS cache by default, without requiring this
+setting.
 .SH shareHandle unshare ?data?
-This command does the opposite of \fBshare\fP. The specified parameter will no
-longer be shared. Valid values are the same as those for \fBshare\fP.
-
-.SH sharehandle cleanup
-
-Deletes a shared object. The share handle cannot be used anymore after this
-function has been called.
-
+.LP
+This command does the opposite of \f(CRshare\fR. The specified data type will no
+longer be shared. Valid values are the same as for \f(CRshare\fR.
+.SH shareHandle cleanup
+.LP
+Deletes a shared object. After this command has been called, the share handle
+can no longer be used.
 .SH curl::sharestrerror errorCode
-Returns a string describing the error code passed in the argument.
-
-.SH "SEE ALSO"
-.I curl, TclCurl
+.LP
+This procedure returns a string describing the error code passed in the
+argument.
+.SH SEE ALSO
+.LP
+curl, TclCurl

@@ -33,6 +33,15 @@ proc ::tclcurl::test::chunk_encode_fixture {body {chunkSize 16}} {
     return $encoded
 }
 
+proc ::tclcurl::test::chunk_encode_segments_fixture {segments} {
+    set encoded {}
+    foreach chunk $segments {
+        append encoded [format %X [string length $chunk]] "\r\n" $chunk "\r\n"
+    }
+    append encoded "0\r\n\r\n"
+    return $encoded
+}
+
 test negotiation-1.1 {-httpversion 1.0 sends an HTTP/1.0 request} -constraints http_server -body {
     set body {}
     ::tclcurl::test::with_easy_handle handle {
@@ -211,6 +220,39 @@ test negotiation-5.2 {-transferdecoding 0 preserves chunk framing} -constraints 
     set chunked [::tclcurl::test::chunk_encode_fixture $payload]
     ::tclcurl::test::with_easy_handle handle {
         $handle configure -url [::tclcurl::test::server::base_url chunked-data] \
+                          -transferdecoding 0 \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {$body eq $chunked}]
+    }
+} -result {0 200 1}
+
+test negotiation-5.3 {-transferdecoding decodes streamed chunked response bodies} -constraints http_server -body {
+    set body {}
+    set payload [::tclcurl::test::negotiation_payload]
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url slow-chunked-data] \
+                          -transferdecoding 1 \
+                          -bodyvar body \
+                          -noprogress 1
+        set rc [$handle perform]
+        list $rc \
+             [$handle getinfo responsecode] \
+             [expr {$body eq $payload}]
+    }
+} -result {0 200 1}
+
+test negotiation-5.4 {-transferdecoding 0 preserves streamed chunk framing} -constraints http_server -body {
+    set body {}
+    set payload [::tclcurl::test::negotiation_payload]
+    set chunked [::tclcurl::test::chunk_encode_segments_fixture [list \
+        [string range $payload 0 9] \
+        [string range $payload 10 end]]]
+    ::tclcurl::test::with_easy_handle handle {
+        $handle configure -url [::tclcurl::test::server::base_url slow-chunked-data] \
                           -transferdecoding 0 \
                           -bodyvar body \
                           -noprogress 1

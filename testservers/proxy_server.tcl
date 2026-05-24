@@ -14,6 +14,10 @@ namespace eval ::tclcurl::testserver {}
 
 package require base64
 
+if {[info commands ::tclcurl::testserver::http_endpoint_service] eq {}} {
+    source [file join [file dirname [file normalize [info script]]] http_endpoint.tcl]
+}
+
 # HTTP proxy test service. The shared HTTP endpoint superclass owns the
 # listener/buffering/header-parsing mechanics; this class only implements proxy
 # target resolution, proxy authentication and upstream forwarding.
