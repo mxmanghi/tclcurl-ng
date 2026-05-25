@@ -2,14 +2,22 @@
 #
 #
 
+package require TclOO
 
 set thread_script {
     namespace eval :: {
         source [file join [file dirname [file normalize [info script]]] http_application.tcl]
         source [file join [file dirname [file normalize [info script]]] logger.tcl]
 
+        oo::class create ::tclcurl::testserver::CMockApplication {
+            superclass ::tclcurl::testserver::CApplication
+        
+        }
+
         set logger [::tclcurl::logger new]
-        set app [::tclcurl::testserver::CTestApplication new]
+        #set app [::tclcurl::testserver::CTestApplication new]
+        set app [::tclcurl::testserver::CMockApplication new]
+
 
         ::oo::class create ::tclcurl::ApplicationController {
             variable application

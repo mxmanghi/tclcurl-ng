@@ -18,6 +18,9 @@ if {[info commands ::tclcurl::testserver::http_endpoint_service] eq {}} {
 if {[info commands ::tclcurl::testserver::CApplication] eq {}} {
     source [file join [file dirname [file normalize [info script]]] http_application.tcl]
 }
+if {[info commands ::tclcurl::testserver::CTestApplication] eq {}} {
+    source [file join [file dirname [file normalize [info script]]] http_test_application.tcl]
+}
 
 # HTTP origin service used by the tests. The shared base handles connection
 # lifecycle and buffering; this class adds origin-specific request framing,
@@ -63,7 +66,7 @@ oo::class create ::tclcurl::testserver::http_service {
         set header_end [string first "\r\n\r\n" $request_data]
         if {$header_end < 0} { return {} }
 
-        set headers [my parse_headers $request_data]
+        set headers [[my application] parse_headers $request_data]
         if {[string tolower [my header_value $headers transfer-encoding]] eq "chunked"} {
             return [my complete_chunked_request $request_data $header_end]
         }

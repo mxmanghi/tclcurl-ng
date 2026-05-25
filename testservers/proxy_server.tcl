@@ -17,16 +17,20 @@ package require base64
 if {[info commands ::tclcurl::testserver::http_endpoint_service] eq {}} {
     source [file join [file dirname [file normalize [info script]]] http_endpoint.tcl]
 }
+if {[info commands ::tclcurl::testserver::CApplication] eq {}} {
+    source [file join [file dirname [file normalize [info script]]] http_application.tcl]
+}
 
 # HTTP proxy test service. The shared HTTP endpoint superclass owns the
-# listener/buffering/header-parsing mechanics; this class only implements proxy
+# listener/buffering mechanics; this class only implements proxy
 # target resolution, proxy authentication and upstream forwarding.
 oo::class create ::tclcurl::testserver::proxy_service {
     superclass ::tclcurl::testserver::http_endpoint_service
 
-    variable tunnel_peer tunnel_root tunnel_pending
+    variable application tunnel_peer tunnel_root tunnel_pending
 
     constructor args {
+        set application [::tclcurl::testserver::CApplication new]
         array set tunnel_peer {}
         array set tunnel_root {}
         array set tunnel_pending {}
@@ -34,10 +38,17 @@ oo::class create ::tclcurl::testserver::proxy_service {
     }
 
     destructor {
+        if {[info exists application] && $application ne {}} {
+            catch {$application destroy}
+        }
         foreach chan [array names tunnel_peer] {
             catch {close $chan}
         }
         next
+    }
+
+    method application {} {
+        return $application
     }
 
     method description {} {
@@ -259,7 +270,7 @@ oo::class create ::tclcurl::testserver::proxy_service {
     method handle_request {chan request} {
         ::tclcurl::test::msgoutput \
             "proxy handle_request chan=$chan request-bytes=[string length $request]"
-        set request_info [my parse_request_line $request]
+        set request_info [$application parse_request_line $request]
         if {$request_info eq {}} {
             ::tclcurl::test::msgoutput \
                 "proxy bad request chan=$chan reason=request-line-parse-failed"
@@ -271,7 +282,7 @@ oo::class create ::tclcurl::testserver::proxy_service {
         dict with request_info {}
         ::tclcurl::test::msgoutput \
             "proxy request-line chan=$chan method=$method target=$target version=$version"
-        set headers [my parse_headers $request]
+        set headers [$application parse_headers $request]
 
         if {$method eq "CONNECT"} {
             if {[catch {set connect_info [my parse_connect_target $target]} connect_error]} {

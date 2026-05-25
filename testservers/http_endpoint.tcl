@@ -16,8 +16,7 @@ if {[info commands ::tclcurl::testserver::http_endpoint_service] eq {}} {
     # Shared HTTP connection plumbing for test services that speak HTTP on the
     # client-facing side. Concrete subclasses keep their own request
     # completion details and response behavior, but they all share the same
-    # listener setup, per-channel buffering, header parsing and socket
-    # cleanup.
+    # listener setup, per-channel buffering and socket cleanup.
     oo::class create ::tclcurl::testserver::http_endpoint_service {
         superclass ::tclcurl::testserver::service
 
@@ -82,7 +81,7 @@ if {[info commands ::tclcurl::testserver::http_endpoint_service] eq {}} {
                 return {}
             }
 
-            set headers [my parse_headers $request_data]
+            set headers [[my application] parse_headers $request_data]
             set content_length 0
             if {[dict exists $headers content-length]} {
                 set content_length [dict get $headers content-length]
@@ -93,47 +92,6 @@ if {[info commands ::tclcurl::testserver::http_endpoint_service] eq {}} {
             }
 
             return [string range $request_data 0 [expr {$request_length - 1}]]
-        }
-
-        method header_lines {header_block} {
-            return [regexp -all -inline {[^\r\n]+} $header_block]
-        }
-
-        # Parse the header block into a lower-cased dictionary so subclasses
-        # can reason about headers without repeating the same parsing logic.
-        method parse_headers {request} {
-            set header_end [string first "\r\n\r\n" $request]
-            if {$header_end < 0} {
-                return [dict create]
-            }
-
-            set header_block [string range $request 0 [expr {$header_end - 1}]]
-            set header_lines [my header_lines $header_block]
-            set headers [dict create]
-
-            foreach header_line [lrange $header_lines 1 end] {
-                # Example match: "Content-Type: text/plain"
-                if {![regexp {^([^:]+):\s*(.*)$} $header_line -> name value]} {
-                    continue
-                }
-                dict set headers [string tolower $name] $value
-            }
-
-            return $headers
-        }
-
-        # Parse the request line and return the method, target and HTTP version
-        # in a dictionary that both origin and proxy handlers can consume.
-        method parse_request_line {request} {
-            set request_line [lindex [split $request "\r\n"] 0]
-            # Example matches:
-            #   "GET /request-inspect HTTP/1.1"
-            #   "GET http://127.0.0.1:8990/proxy-target HTTP/1.1"
-            if {![regexp {^([A-Z]+) ([^ ]+) HTTP/([0-9.]+)$} $request_line -> method target version]} {
-                return {}
-            }
-
-            return [dict create method $method target $target version $version]
         }
 
         # Subclasses receive a fully buffered request and are responsible for

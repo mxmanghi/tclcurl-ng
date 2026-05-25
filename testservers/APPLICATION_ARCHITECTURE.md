@@ -9,7 +9,8 @@ The server stack is currently divided into three layers:
 
 - `http_endpoint_service` in [http_endpoint.tcl](./http_endpoint.tcl)
 - `http_service` in [http_server.tcl](./http_server.tcl)
-- `CApplication` and `CTestApplication` in [http_application.tcl](./http_application.tcl)
+- `CApplication` in [http_application.tcl](./http_application.tcl)
+- `CTestApplication` in [http_test_application.tcl](./http_test_application.tcl)
 
 ### `http_endpoint_service`
 
@@ -19,12 +20,9 @@ This class owns the client-facing socket infrastructure:
 - client acceptance
 - nonblocking reads
 - per-channel request buffering
-- request completion detection
+- request completion detection, using the application request parser where
+  header inspection is needed
 - low-level client channel cleanup
-
-At the moment it also still provides some HTTP parsing helpers such as
-`parse_request_line` and `parse_headers`. Those helpers may later move to the
-application side when worker-thread handoff is introduced.
 
 ### `http_service`
 
@@ -51,13 +49,14 @@ request to the configured application object through:
 Today this remains synchronous. Later the same boundary can become the
 channel-handoff point to a worker thread.
 
-### `CApplication` and `CTestApplication`
+### `CApplication`
 
 `CApplication` is the abstract model for server applications.
 `CTestApplication` is the current concrete implementation for the TclCurl test
 suite.
 
-These classes now own the request interpretation and route-specific behavior.
+`CApplication` owns request interpretation and common application helpers.
+`CTestApplication` owns the route-specific behavior used by the test suite.
 
 ## Application Methods
 
@@ -76,7 +75,7 @@ It currently performs:
 
 - request-line validation
 - request path extraction
-- header parsing through the service object
+- header parsing
 - route dispatch
 - delayed-response scheduling
 - final delegation back to the service for response emission
@@ -153,14 +152,25 @@ currently used by `static_file_response`.
 This helper escapes special characters when request metadata is reflected into
 diagnostic response bodies such as `/request-inspect`.
 
+### `parse_request_line {request}`
+
+This helper parses the buffered request line into method, target and HTTP
+version fields.
+
+### `parse_headers {request}`
+
+This helper parses the buffered request headers into a lower-cased dictionary.
+
+### `header_lines {header_block}`
+
+This helper extracts non-empty header lines from the raw header block.
+
 ## Methods Still Kept in the Service Layer
 
 The following methods are still on the service side even though they may later
 move closer to the worker/application boundary:
 
-- `parse_request_line`
-- `parse_headers`
-- `header_lines`
+- `header_value`
 
 For the current step they remain there to minimize behavior changes while the
 delegation architecture is introduced.
@@ -170,11 +180,9 @@ delegation architecture is introduced.
 If the next goal is to make worker threads perform the whole request/response
 cycle, the likely next move is:
 
-1. Move request parsing helpers such as `parse_request_line` and
-   `parse_headers` into `CApplication`.
-2. Keep connection acceptance and request buffering in
+1. Keep connection acceptance and request buffering in
    `http_endpoint_service`.
-3. Keep response I/O on the worker side by turning `service_request` into the
+2. Keep response I/O on the worker side by turning `service_request` into the
    real threaded execution entrypoint.
 
 That would leave the endpoint service as a lightweight accept/buffer layer and
