@@ -15,12 +15,14 @@ namespace eval ::tclcurl::testserver {}
 package require uri
 
 if {[info commands ::tclcurl::testserver::CApplication] eq {}} {
+
     # Abstract application model for HTTP origin services. The service keeps
     # ownership of connection acceptance and low-level socket operations,
     # while application objects decide how a fully buffered request should be
-    # interpreted and what response should be generated. The current
-    # `service_request` entry point is synchronous, but it already matches the
-    # future worker-thread handoff boundary.
+    # interpreted and what response should be generated.
+    # The current `service_request` entry point is synchronous, but it already
+    # matches the future worker-thread handoff boundary.
+
     oo::class create ::tclcurl::testserver::CApplication {
         method header_lines {header_block} {
             return [regexp -all -inline {[^\r\n]+} $header_block]
@@ -132,31 +134,37 @@ if {[info commands ::tclcurl::testserver::CApplication] eq {}} {
         # request here today; later the same method can move the channel and
         # buffered bytes to a worker thread.
         method service_request {service chan request} {
-            set request_info [my parse_request_line $request]
-            if {$request_info eq {}} {
+
+            # parsing the main HTTP request line. In case of
+            # well formed request returns a dictionary
+            # with the keys 'method','target' and 'version'
+
+            set request_info_d [my parse_request_line $request]
+            if {[dict size $request_info_d] == 0} {
                 $service log_request "method=? status=400 path=?"
                 $service send_response $chan [$service bad_request_response]
                 return
             }
 
-            dict with request_info {}
-            set path [lindex [split $target ?] 0]
-            ::tclcurl::test::msgoutput "route request method=$method path=$path"
-            set headers [my parse_headers $request]
-            set response [my route_request $service $method $path $target $version $headers $request]
-            dict set response head_only [expr {$method eq "HEAD"}]
-            set response [$service build_response_dict $response]
-            $service log_request \
-                "method=$method status=[dict get $response status] path=[::tclcurl::testserver::log_value $path]"
-            if {[dict exists $response delay_ms]} {
-                set callback [list $service send_response $chan $response]
-                if {[dict exists $response close_only] && [dict get $response close_only]} {
-                    set callback [list $service close_client $chan]
+            dict with request_info_d {
+                set path [lindex [split $target ?] 0]
+                ::tclcurl::test::msgoutput "route request method=$method path=$path"
+                set headers [my parse_headers $request]
+                set response [my route_request $service $method $path $target $version $headers $request]
+                dict set response head_only [expr {$method eq "HEAD"}]
+                set response [$service build_response_dict $response]
+                $service log_request \
+                    "method=$method status=[dict get $response status] path=[::tclcurl::testserver::log_value $path]"
+                if {[dict exists $response delay_ms]} {
+                    set callback [list $service send_response $chan $response]
+                    if {[dict exists $response close_only] && [dict get $response close_only]} {
+                        set callback [list $service close_client $chan]
+                    }
+                    after [dict get $response delay_ms] $callback
+                    return
                 }
-                after [dict get $response delay_ms] $callback
-                return
+                $service send_response $chan $response
             }
-            $service send_response $chan $response
         }
 
         method request_body {service request} {
@@ -214,9 +222,9 @@ if {[info commands ::tclcurl::testserver::CApplication] eq {}} {
                 close $fh
             }
 
-            return [dict create status  200 \
-                                reason  OK \
-                                body    $body \
+            return [dict create status  200     \
+                                reason  OK      \
+                                body    $body   \
                                 headers [list "Content-Type: [my guess_content_type $fs_path]"]]
         }
 
@@ -224,9 +232,9 @@ if {[info commands ::tclcurl::testserver::CApplication] eq {}} {
             set total_length [string length $full_body]
             set range_header [$service header_value $headers range]
             if {$range_header eq {}} {
-                return [dict create status 200      \
-                                    reason OK       \
-                                    body $full_body \
+                return [dict create status  200         \
+                                    reason  OK          \
+                                    body    $full_body  \
                                     headers [list "Accept-Ranges: bytes"]]
             }
 
@@ -242,11 +250,10 @@ if {[info commands ::tclcurl::testserver::CApplication] eq {}} {
                 set range_spec [string trim $range_spec]
                 lassign [split $range_spec -] start end
                 if {$start > $end || $end >= $total_length} {
-                    return [dict create \
-                        status 416 \
-                        reason "Range Not Satisfiable" \
-                        body {} \
-                        headers [list "Content-Range: bytes */$total_length"]]
+                    return [dict create status 416 \
+                                        reason "Range Not Satisfiable" \
+                                        body {} \
+                                        headers [list "Content-Range: bytes */$total_length"]]
                 }
                 lappend ranges [list $start $end]
             }
@@ -254,13 +261,11 @@ if {[info commands ::tclcurl::testserver::CApplication] eq {}} {
             if {[llength $ranges] == 1} {
                 lassign [lindex $ranges 0] start end
                 set range_body [string range $full_body $start $end]
-                return [dict create \
-                    status 206 \
-                    reason "Partial Content" \
-                    body $range_body \
-                    headers [list \
-                        "Accept-Ranges: bytes" \
-                        "Content-Range: bytes $start-$end/$total_length"]]
+                return [dict create status 206 \
+                                    reason "Partial Content" \
+                                    body $range_body \
+                                    headers [list "Accept-Ranges: bytes" \
+                                                  "Content-Range: bytes $start-$end/$total_length"]]
             }
 
             set boundary "tclcurl-boundary"
@@ -274,13 +279,11 @@ if {[info commands ::tclcurl::testserver::CApplication] eq {}} {
                 append range_body "\r\n"
             }
             append range_body "--$boundary--\r\n"
-            return [dict create \
-                status 206 \
-                reason "Partial Content" \
-                body $range_body \
-                headers [list \
-                    "Accept-Ranges: bytes" \
-                    "Content-Type: multipart/byteranges; boundary=$boundary"]]
+            return [dict create status  206 \
+                                reason  "Partial Content" \
+                                body    $range_body \
+                                headers [list "Accept-Ranges: bytes" \
+                                              "Content-Type: multipart/byteranges; boundary=$boundary"]]
         }
 
         method route_request {service method path target version headers request} {

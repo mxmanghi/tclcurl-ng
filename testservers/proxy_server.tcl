@@ -24,6 +24,7 @@ if {[info commands ::tclcurl::testserver::CApplication] eq {}} {
 # HTTP proxy test service. The shared HTTP endpoint superclass owns the
 # listener/buffering mechanics; this class only implements proxy
 # target resolution, proxy authentication and upstream forwarding.
+
 oo::class create ::tclcurl::testserver::proxy_service {
     superclass ::tclcurl::testserver::http_endpoint_service
 
@@ -57,6 +58,7 @@ oo::class create ::tclcurl::testserver::proxy_service {
 
     # Convert either an absolute proxy target or an origin-form target plus
     # Host header into the upstream host/port/path tuple the proxy should use.
+
     method parse_target {target headers} {
         # Example match: "http://127.0.0.1:8990/proxy-target"
         if {[regexp {^http://([^/:]+)(?::([0-9]+))?(/.*)?$} $target -> host port path]} {

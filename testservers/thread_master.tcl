@@ -15,38 +15,41 @@
 package require TclOO
 package require Thread
 
-catch {::tclcurl::ThreadMaster destroy }
+catch {::tclwire::ThreadMaster destroy }
 source [file join [file dirname [file normalize [info script]]] logger.tcl]
 
-::oo::class create ::tclcurl::ThreadMaster {
+::oo::class create ::tclwire::ThreadMaster {
     variable max_threads_number
     variable running_threads
     variable idle_threads_list
-
-    # to be moved into a logger class?
-    variable log_command
-    variable msg_num
+    variable accounting
 
     constructor {{mtn 100}} {
         set max_threads_number      $mtn
         array set running_threads   {}
-
-        set msg_num 0
+        set accounting ::tclwire::accounting
     }
 
     destructor {
     }
 
+    # -- start_worker_thread <thread-script>
+    #
+    # Central method for starting new threads executing the 
+    # script stored in the procedure only argument
+    # 
+    # Returns: thread_id
+    #
+
     method start_worker_thread {thread_script} {
 
         set thread_id [thread::create $thread_script]
-
         thread::preserve $thread_id
 
-        # we allow worker->master thread communication through the ::thread::send
+        $accounting AddNewThread $thread_id
 
+        # we allow worker->master thread communication through the ::thread::send
         ::thread::send $thread_id [list set ::master_thread_id [::thread::id]]
-        lappend idle_threads_list $thread_id
         return $thread_id
 
     }
@@ -108,5 +111,5 @@ source [file join [file dirname [file normalize [info script]]] logger.tcl]
     }
 
 }
-package provide tclcurl::threads 2.0
+package provide tclwire::threads 2.0
 

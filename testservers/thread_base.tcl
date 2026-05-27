@@ -5,19 +5,24 @@
 package require TclOO
 
 set thread_script {
+
     namespace eval :: {
-        source [file join [file dirname [file normalize [info script]]] http_application.tcl]
+        source [file join [file dirname [file normalize [info script]]] threads_shared_db.tcl]
+        # source [file join [file dirname [file normalize [info script]]] http_application.tcl]
         source [file join [file dirname [file normalize [info script]]] logger.tcl]
 
         oo::class create ::tclcurl::testserver::CMockApplication {
             superclass ::tclcurl::testserver::CApplication
-        
+
+            method request_handling {args} {
+                puts "args: $args"
+            }
+
         }
 
         set logger [::tclcurl::logger new]
         #set app [::tclcurl::testserver::CTestApplication new]
         set app [::tclcurl::testserver::CMockApplication new]
-
 
         ::oo::class create ::tclcurl::ApplicationController {
             variable application
@@ -27,6 +32,9 @@ set thread_script {
             }
 
             method exec_method {method args} {
+                
+                ::
+
                 $app $method {*}$args
             }
 

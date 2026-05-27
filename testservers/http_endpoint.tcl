@@ -17,6 +17,12 @@ if {[info commands ::tclcurl::testserver::http_endpoint_service] eq {}} {
     # client-facing side. Concrete subclasses keep their own request
     # completion details and response behavior, but they all share the same
     # listener setup, per-channel buffering and socket cleanup.
+
+    # current services subclassing 'http_endpoint_service' are
+    #
+    #   * ::tclcurl::testserver::http_server
+    #   * ::tclcurl::testserver::proxy_service
+
     oo::class create ::tclcurl::testserver::http_endpoint_service {
         superclass ::tclcurl::testserver::service
 
@@ -60,9 +66,7 @@ if {[info commands ::tclcurl::testserver::http_endpoint_service] eq {}} {
 
             append request_data($chan) $chunk
             set request [my complete_request $request_data($chan)]
-            if {$request eq {}} {
-                return
-            }
+            if {$request eq {}} { return }
 
             unset request_data($chan)
             chan event $chan readable {}
@@ -75,6 +79,7 @@ if {[info commands ::tclcurl::testserver::http_endpoint_service] eq {}} {
 
         # Default request framing for simple HTTP services: a complete header
         # block plus an optional fixed-size body announced by Content-Length.
+
         method complete_request {request_data} {
             set header_end [string first "\r\n\r\n" $request_data]
             if {$header_end < 0} {
@@ -96,6 +101,7 @@ if {[info commands ::tclcurl::testserver::http_endpoint_service] eq {}} {
 
         # Subclasses receive a fully buffered request and are responsible for
         # producing the service-specific response or forwarding behavior.
+
         method handle_request {chan request} {
             error "handle_request must be implemented by subclasses"
         }
