@@ -2,15 +2,20 @@
 #
 #
 
+package require TclOO
 catch {package require syslog}
 ::oo::class create ::tclcurl::logger {
-    if {[catch {package present syslog}]} {
-        set log_command "puts"
-    } else {
-        if {[info exists ::tcl_interactive] && $::tcl_interactive} {
-            set log_command [list syslog -perror -ident snig -facility user]
+    variable log_command
+
+    constructor {} {
+        if {[catch {package present syslog}]} {
+            set log_command "puts"
         } else {
-            set log_command [list syslog -ident snig -facility user]
+            if {[info exists ::tcl_interactive] && $::tcl_interactive} {
+                set log_command [list syslog -perror -ident snig -facility user]
+            } else {
+                set log_command [list syslog -ident snig -facility user]
+            }
         }
     }
 

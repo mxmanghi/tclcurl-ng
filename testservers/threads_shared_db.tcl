@@ -30,11 +30,8 @@ namespace eval ::tclwire::accounting {
             ::tsv::set tclwire timestamp [clock format [clock seconds]]
         }
         if {![::tsv::exists tclwire idle_threads]} {
-            ::tsv::set tclwire idle {}
+            ::tsv::set tclwire idle_threads {}
         }
-        #if {![::tsv::exists tclwire accounting]} {
-        #    ::tsv::set tclwire accounting {}
-        #}
         if {![array exists running_threads]} {
             array set running_threads {}
         }
@@ -59,18 +56,20 @@ namespace eval ::tclwire::accounting {
         ::tsv::keylset tclwire accounting $tid $th_d
     }
 
-    proc GetIdleThread {} {
+    proc get_idle_thread {} {
         return [::tsv::lpop tclwire idle_threads]
     }
 
-    proc SwitchThreadStatus {tid newstatus} {
+    proc change_thread_status {tid newstatus} {
         variable running_threads
 
         ::tsv::lock tclwire {
             if {[::tsv::keylget tclwire accounting $tid thread_d] == ""} {
                 error "Thread $tid account doesn't exists"
             }
+
             dict with thread_d {
+                set current_status $status
                 set status $newstatus
                 switch $newstatus {
                     running {
@@ -81,6 +80,8 @@ namespace eval ::tclwire::accounting {
                         if {[info exists running_threads($tid)]} {
                             unset running_threads($tid)
                         }
+                        set last_run_end [clock seconds]
+                        if {$current_status == "running"} { incr nruns }
                         ::tsv::lpush tclwire idle_threads $tid end
                     }
                 }
@@ -108,14 +109,17 @@ namespace eval ::tclwire::accounting {
         return ""
     }
 
-
-    proc ThreadAccountingLists {} {
-        variable running_threads
-        variable idle_threads
-
+    proc num_running_threads {} {
         ::tsv::lock tclwire {
-            set running_threads_list [array names running_threads]
+            return [llength [concat {*}[[namespace current]::per_status_lists]]]
         }
+    }
+
+    proc per_status_lists {} {
+        variable running_threads
+
+        set running_threads_list [array names running_threads]
+        set idle_threads [::tsv::get tclwire idle_threads]  
 
         return [list $running_threads_list $idle_threads]
     }
@@ -155,7 +159,19 @@ namespace eval ::tclwire::accounting {
 
     }
 
-    namespace export *
+    set ns_commands [lmap c [info commands [namespace current]::*] {
+        set c [namespace tail $c]
+        if {[regexp {[A-Z].*} $c]} {
+            continue
+        } else {
+            set c
+        }}
+    ]
+
+    namespace export {*}$ns_commands
     namespace ensemble create
+
+    unset ns_commands
+    unset c
 }
-package provide tclwire::accounting 1.0
+package provide tclwire::accounting 1.1

@@ -16,18 +16,18 @@ package require TclOO
 package require Thread
 
 catch {::tclwire::ThreadMaster destroy }
+source [file join [file dirname [file normalize [info script]]] threads_shared_db.tcl]
 source [file join [file dirname [file normalize [info script]]] logger.tcl]
 
 ::oo::class create ::tclwire::ThreadMaster {
     variable max_threads_number
-    variable running_threads
-    variable idle_threads_list
     variable accounting
+    variable thread_script
 
-    constructor {{mtn 100}} {
-        set max_threads_number      $mtn
-        array set running_threads   {}
+    constructor {tscript {mtn 100}} {
+        set max_threads_number $mtn
         set accounting ::tclwire::accounting
+        set thread_script $tscript
     }
 
     destructor {
@@ -41,57 +41,40 @@ source [file join [file dirname [file normalize [info script]]] logger.tcl]
     # Returns: thread_id
     #
 
-    method start_worker_thread {thread_script} {
+    method start_worker_thread {} {
 
         set thread_id [thread::create $thread_script]
         thread::preserve $thread_id
 
-        $accounting AddNewThread $thread_id
-
         # we allow worker->master thread communication through the ::thread::send
-        ::thread::send $thread_id [list set ::master_thread_id [::thread::id]]
+        ::thread::send -async $thread_id [list set ::master_thread_id [::thread::id]]
         return $thread_id
 
     }
 
-    method thread_is_available {} {
-        if {[llength $idle_threads_list] > 0} { return true }
-        if {[llength $running_threads_list] < $max_threads_number} { return true }
+    method get_available_thread {thread_id_v} {
+        upvar 1 $thread_id_v thread_id
+
+        set thread_id [$accounting get_idle_thread]
+        if {$thread_id != ""} { return true }
+        ::tsv::lock tclwire {
+            if {[$accounting num_running_threads] < $max_threads_number} { 
+                set thread_id [[self] start_worker_thread]
+                $accounting add_new_thread $thread_id
+                return true
+            } 
+        }
         return false
     }
 
-    method get_available_thread {} {
-        set running_threads_list [array names running_threads]
-        my log "[llength $running_threads_list] running, [llength $idle_threads_list] idle threads" debug
-        if {[llength $idle_threads_list] == 0} {
-    
-            if {[llength $running_threads_list] < $max_threads_number} {
-                set thread_id [my start_worker_thread]
-                my log "---> '$thread_id' <---" debug
-            } else {
-                set m "Internal server error: running threads number exceeds max_threads_number"
-
-                my log $m
-                return -code 1 -errorcode thread_not_available $m
-            }
-
-        } else {
-            set thread_id [lindex $idle_threads_list 0]
-        }
-
-        return $thread_id
-    }
-
-    method running_threads {} {
-        return [array names running_threads]
-    }
-
-    method idle_threads {} {
-        return $idle_threads_list
+    method ListThreads {} {
+        return [concat {*}[$accounting per_status_list]]
     }
 
     method broadcast {cmd} {
-        foreach rt [my running_threads] { thread::send -async $rt $cmd }
+        ::tsv::lock tclwire {
+            foreach rt [my ListThreads] { thread::send -async $rt $cmd }
+        }
     }
 
     method stop_threads {} {
