@@ -26,7 +26,7 @@ This class owns the client-facing socket infrastructure:
 
 ### `http_service`
 
-This class is still transport-oriented. It extends the shared endpoint layer
+This class is transport-oriented. It extends the shared endpoint layer
 with HTTP-specific mechanics:
 
 - chunked request-body completion

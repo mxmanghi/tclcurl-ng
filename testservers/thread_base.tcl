@@ -14,18 +14,34 @@ set thread_script {
         # source [file join [file dirname [file normalize [info script]]] http_application.tcl]
         source [file join [pwd] testservers logger.tcl]
 
+        namespace eval ::tclcurl::testserver {}
+
         oo::class create ::tclcurl::testserver::CMockApplication {
             superclass ::tclcurl::testserver::CApplication
 
-            method request_handling {args} {
-                puts "args: $args"
+            variable logger
+
+            constructor {l} {
+                set logger $l
+            }
+
+            destructor {
+                $logger destroy
+            }
+
+            method request_handling {logger args} {
+                $logger "args: $args"
             }
 
         }
 
-        set logger [::tclcurl::logger new]
+        set logger [::tclwire::logger new]
         #set app [::tclcurl::testserver::CTestApplication new]
-        set app [::tclcurl::testserver::CMockApplication new]
+        set app [::tclcurl::testserver::CMockApplication new $logger]
+
+
+        $logger log "CMockApplication created as $app"
+        
 
         ::oo::class create ::tclcurl::ApplicationController {
             variable application
@@ -45,9 +61,10 @@ set thread_script {
         }
 
         set app_controller [::tclcurl::ApplicationController new $app]
+        $logger log "CApplicationController created as $app_controller"
 
         set master_thread_id ""
-        set ::auto_path [concat [file dirname [info script]] $::auto_path]
+        set ::auto_path [concat [file join [pwd] testservers] $::auto_path]
 
         proc stop_thread {} {
             ::thread::release [::thread::id]

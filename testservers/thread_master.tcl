@@ -16,21 +16,24 @@ package require TclOO
 package require Thread
 
 catch {::tclwire::ThreadMaster destroy }
-source [file join [file dirname [file normalize [info script]]] threads_shared_db.tcl]
-source [file join [file dirname [file normalize [info script]]] logger.tcl]
+#source [file join [file dirname [file normalize [info script]]] threads_shared_db.tcl]
+#source [file join [file dirname [file normalize [info script]]] logger.tcl]
 
 ::oo::class create ::tclwire::ThreadMaster {
     variable max_threads_number
     variable accounting
     variable thread_script
+    variable logger
 
     constructor {tscript {mtn 100}} {
         set max_threads_number $mtn
         set accounting ::tclwire::accounting
         set thread_script $tscript
+        set logger [::tclwire::logger new]
     }
 
     destructor {
+        $logger destroy
     }
 
     # -- start_worker_thread <thread-script>
@@ -87,12 +90,12 @@ source [file join [file dirname [file normalize [info script]]] logger.tcl]
     }
 
     method terminate_idle_threads {} {
-        my log "[llength $idle_threads_list] threads on the idle list" debug
+        logger "[llength $idle_threads_list] threads on the idle list" debug
         foreach thread_id $idle_threads_list {
             thread::release $thread_id
         }
     }
 
 }
-package provide tclwire::threads 2.0
+package provide tclwire::threadpool 2.0
 

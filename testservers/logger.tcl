@@ -4,7 +4,7 @@
 
 package require TclOO
 catch {package require syslog}
-::oo::class create ::tclcurl::logger {
+::oo::class create ::tclwire::logger {
     variable log_command
 
     constructor {} {
@@ -20,7 +20,7 @@ catch {package require syslog}
     }
 
     method log {msg {severity info}} {
-        eval $log_command $severity "[incr msg_num] - $msg"
+        eval [list {*}$log_command $severity "[incr msg_num] - $msg"]
     }
 
 }

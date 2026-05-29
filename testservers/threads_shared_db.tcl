@@ -23,7 +23,6 @@
 package require Thread
 
 namespace eval ::tclwire::accounting {
-    variable running_threads
 
     ::tsv::lock tclwire {
         if {![::tsv::exists tclwire timestamp]} {
@@ -31,9 +30,6 @@ namespace eval ::tclwire::accounting {
         }
         if {![::tsv::exists tclwire idle_threads]} {
             ::tsv::set tclwire idle_threads {}
-        }
-        if {![array exists running_threads]} {
-            array set running_threads {}
         }
     }
 
@@ -61,8 +57,6 @@ namespace eval ::tclwire::accounting {
     }
 
     proc change_thread_status {tid newstatus} {
-        variable running_threads
-
         ::tsv::lock tclwire {
             if {[::tsv::keylget tclwire accounting $tid thread_d] == ""} {
                 error "Thread $tid account doesn't exists"
@@ -74,12 +68,10 @@ namespace eval ::tclwire::accounting {
                 switch $newstatus {
                     running {
                         set last_run_start [clock seconds]
-                        set running_threads($tid) $last_run_start
+                        ::tsv::keylset tclwire running_threads $tid $last_run_start
                     }
                     idle {
-                        if {[info exists running_threads($tid)]} {
-                            unset running_threads($tid)
-                        }
+                        ::tsv::keyldel tclwire running_threads $tid
                         set last_run_end [clock seconds]
                         if {$current_status == "running"} { incr nruns }
                         ::tsv::lpush tclwire idle_threads $tid end
@@ -91,15 +83,17 @@ namespace eval ::tclwire::accounting {
     }
 
     proc RemoveThread {tid} {
-        variable running_threads
         variable idle_threads
 
-        ::tsv::keyldel tclwire accounting $tid
         ::tsv::lock tclwire {
-            if {[info exists running_threads($tid)]} {
-                unset running_thread($tid)
-            }
+
+            set th_d [get_thread_account $tid]
+            dict with th_d {
+                if {$status == "running"
+
         }
+        ::tsv::keyldel tclwire accounting $tid
+        ::tsv::keyldel tclwire running_threads
     }
 
     proc get_thread_account {tid} {
