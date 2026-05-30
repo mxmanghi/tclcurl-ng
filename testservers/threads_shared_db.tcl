@@ -27,6 +27,7 @@ namespace eval ::tclwire::accounting {
     ::tsv::lock tclwire {
         if {![::tsv::exists tclwire timestamp]} {
             ::tsv::set tclwire timestamp [clock format [clock seconds]]
+            ::tsv::set tclwire accounting {}
         }
     }
 
@@ -39,7 +40,8 @@ namespace eval ::tclwire::accounting {
             ::tsv::keylset tclwire accounting $tid [list nruns           0 \
                                                          last_run_start  0 \
                                                          last_run_end    0 \
-                                                         status  	     idle]
+                                                         created_on      [clock seconds] \
+                                                         status  	     created]
 
             ::tsv::lpush tclwire idle_threads $tid end
         }
@@ -50,8 +52,9 @@ namespace eval ::tclwire::accounting {
         ::tsv::lock tclwire {
             foreach tid [::tsv::keylkeys tclwire accounting] {
                 ::tsv::keylget tclwire accounting $tid thd_d
-                if {[dict get $thd_d status == "idle"} {
+                if {[dict get $thd_d status] == "idle"} {
                     set idle_thread $tid
+                    change_thread_status $tid "allocated"
                     break
                 }
             }
@@ -76,6 +79,9 @@ namespace eval ::tclwire::accounting {
                     idle {
                         set last_run_end [clock seconds]
                         if {$current_status == "running"} { incr nruns }
+                    }
+                    allocated {
+
                     }
                 }
             }
@@ -134,8 +140,9 @@ namespace eval ::tclwire::accounting {
     # the call must be within a '::tsv::lock tclwire' block
 
     proc per_status_lists {} {
-        set threads_acc_d [get_threads_database]
-        dict for {tid th_d} {
+        set running_threads_list {}
+        set idle_threads_list    {}
+        dict for {tid th_d} [get_threads_database] {
             dict with th_d {
                 lappend ${status}_threads_list $tid
             }

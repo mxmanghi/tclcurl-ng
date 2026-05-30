@@ -7,6 +7,7 @@ set thread_script {
     namespace eval :: {
 
         package require TclOO
+        package require Thread
 
         source [file join [pwd] testservers http_application.tcl]
         source [file join [pwd] testservers threads_shared_db.tcl]
@@ -29,8 +30,14 @@ set thread_script {
                 $logger destroy
             }
 
-            method request_handling {logger args} {
+            method request_handling {args} {
                 $logger "args: $args"
+            }
+
+            method wait_for_nsecs {n} {
+                $logger log "[::thread::id] starts sleeping"
+                after [expr 1000*$n]
+                $logger log "[::thread::id] awakes"
             }
 
         }
@@ -39,9 +46,7 @@ set thread_script {
         #set app [::tclcurl::testserver::CTestApplication new]
         set app [::tclcurl::testserver::CMockApplication new $logger]
 
-
         $logger log "CMockApplication created as $app"
-        
 
         ::oo::class create ::tclcurl::ApplicationController {
             variable application
@@ -54,7 +59,7 @@ set thread_script {
 
             method exec_method {method args} {
                 $accounting change_thread_status [::thread::id] running
-                $app $method {*}$args
+                $application $method {*}$args
                 $accounting change_thread_status [::thread::id] idle
             }
 

@@ -55,7 +55,7 @@ catch {::tclwire::ThreadMaster destroy }
 
     }
 
-    method get_available_thread {thread_id_v} {
+    method allocate_thread {thread_id_v} {
         upvar 1 $thread_id_v thread_id
 
         set thread_id [$accounting get_idle_thread]
