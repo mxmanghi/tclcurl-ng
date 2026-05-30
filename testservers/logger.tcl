@@ -12,9 +12,9 @@ catch {package require syslog}
             set log_command "puts"
         } else {
             if {[info exists ::tcl_interactive] && $::tcl_interactive} {
-                set log_command [list syslog -perror -ident snig -facility user]
+                set log_command [list syslog -perror -ident tclwire -facility user]
             } else {
-                set log_command [list syslog -ident snig -facility user]
+                set log_command [list syslog -ident tclwire -facility user]
             }
         }
     }

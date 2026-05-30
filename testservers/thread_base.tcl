@@ -41,37 +41,49 @@ set thread_script {
             }
 
         }
+        #set app [::tclcurl::testserver::CTestApplication new]
 
         set logger [::tclwire::logger new]
-        #set app [::tclcurl::testserver::CTestApplication new]
-        set app [::tclcurl::testserver::CMockApplication new $logger]
+        variable application [::tclcurl::testserver::CMockApplication new $logger]
+        variable accounting ::tclwire::accounting
 
-        $logger log "CMockApplication created as $app"
+        $logger log "CMockApplication created as $application"
 
-        ::oo::class create ::tclcurl::ApplicationController {
-            variable application
+        #::oo::class create ::tclcurl::ApplicationController {
+        #    variable application
+        #    variable accounting
+        #
+        #    constructor {app} {
+        #        set accounting ::tclwire::accounting
+        #        set application $app
+        #    }
+        #
+        #   method exec_method {method args} {
+        #        $accounting change_thread_status [::thread::id] running
+        #        $application $method {*}$args
+        #        $accounting change_thread_status [::thread::id] idle
+        #    }
+        #}
+
+        proc exec_method {method args} {
             variable accounting
+            variable application
 
-            constructor {app} {
-                set accounting ::tclwire::accounting
-                set application $app
-            }
+            $accounting change_thread_status [::thread::id] running [concat $method {*}$args]
 
-            method exec_method {method args} {
-                $accounting change_thread_status [::thread::id] running
-                $application $method {*}$args
-                $accounting change_thread_status [::thread::id] idle
-            }
-
+            $application $method {*}$args
+            $accounting change_thread_status [::thread::id] idle   
         }
 
-        set app_controller [::tclcurl::ApplicationController new $app]
-        $logger log "CApplicationController created as $app_controller"
+        #variable app_controller [::tclcurl::ApplicationController new $app]
+        #$logger log "CApplicationController created as $app_controller"
 
         set master_thread_id ""
         set ::auto_path [concat [file join [pwd] testservers] $::auto_path]
 
-        proc stop_thread {} {
+        proc demand_thread_exit {} {
+            variable accounting
+            $accounting change_thread_status [::thread::id] terminating
             ::thread::release [::thread::id]
         }
         $logger log "thread [::thread::id] created"
@@ -80,6 +92,8 @@ set thread_script {
 
         $logger log "thread [::thread::id] terminating"
         $logger destroy
+
+        $accounting remove_thread [::thread::id]
     }
 
 };#

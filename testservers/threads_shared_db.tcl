@@ -41,6 +41,7 @@ namespace eval ::tclwire::accounting {
                                                          last_run_start  0 \
                                                          last_run_end    0 \
                                                          created_on      [clock seconds] \
+                                                         command         "" \
                                                          status  	     created]
 
             ::tsv::lpush tclwire idle_threads $tid end
@@ -62,7 +63,7 @@ namespace eval ::tclwire::accounting {
         return $idle_thread
     }
 
-    proc change_thread_status {tid newstatus} {
+    proc change_thread_status {tid newstatus {tcl_command ""}} {
         ::tsv::lock tclwire {
             if {[::tsv::keylget tclwire accounting $tid thread_d] == ""} {
                 error "Thread $tid account doesn't exists"
@@ -74,7 +75,8 @@ namespace eval ::tclwire::accounting {
                 switch $newstatus {
                     running {
                         set last_run_start [clock seconds]
-                        ::tsv::keylset tclwire running_threads $tid $last_run_start
+                        set command        $tcl_command
+                        #::tsv::keylset tclwire running_threads $tid $last_run_start
                     }
                     idle {
                         set last_run_end [clock seconds]
@@ -112,7 +114,6 @@ namespace eval ::tclwire::accounting {
                         if {($status == "idle") && \
                             (($nruns > 10) || (([clock seconds] - $last_run_end) > 60))} {
                             lappend to_be_terminated $tid
-                            set status exiting
                         }
                     }
                     ::tsv::keylset tclwire accounting $tid $thread_d

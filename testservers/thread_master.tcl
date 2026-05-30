@@ -81,11 +81,12 @@ catch {::tclwire::ThreadMaster destroy }
     }
 
     method stop_threads {} {
-        set threads_list [my running_threads]
-        foreach running_thread $threads_list {
-            thread::send -async $running_thread stop_thread
+        ::tsv::lock tclwire {
+            set threads_list [thread::keylkeys tclwire accounting]
+            foreach running_thread $threads_list {
+                thread::send -async $running_thread demand_thread_exit
+            }
         }
-
         return [llength $threads_list]
     }
 
