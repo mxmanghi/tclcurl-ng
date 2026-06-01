@@ -58,7 +58,7 @@ catch {::tclwire::ThreadMaster destroy }
     method allocate_thread {thread_id_v} {
         upvar 1 $thread_id_v thread_id
 
-        set thread_id [$accounting get_idle_thread]
+        set thread_id [$accounting allocate_idle_thread]
         if {$thread_id != ""} { return true }
         ::tsv::lock tclwire {
             if {[$accounting num_running_threads] < $max_threads_number} { 
@@ -70,32 +70,22 @@ catch {::tclwire::ThreadMaster destroy }
         return false
     }
 
-    method ListThreads {} {
-        return [concat {*}[$accounting per_status_list]]
-    }
-
-    method broadcast {cmd} {
+    method broadcast {cmd filter} {
         ::tsv::lock tclwire {
-            foreach rt [my ListThreads] { thread::send -async $rt $cmd }
-        }
-    }
-
-    method stop_threads {} {
-        ::tsv::lock tclwire {
-            set threads_list [thread::keylkeys tclwire accounting]
-            foreach running_thread $threads_list {
-                thread::send -async $running_thread demand_thread_exit
+            dict for {status tids_l} [$accounting per_status_lists] {
+                if {($status == "all") || ($status == $filter)} {
+                    foreach tid $tids_l {
+                        thread::send -async $tid $cmd
+                    }
+                }
             }
         }
-        return [llength $threads_list]
     }
 
-    method terminate_idle_threads {} {
-        logger "[llength $idle_threads_list] threads on the idle list" debug
-        foreach thread_id $idle_threads_list {
-            thread::release $thread_id
-        }
+    method stop_threads {{filter all}} {
+        [self] broadcast demand_thread_exit $filter
     }
+
 
 }
 package provide tclwire::threadpool 2.0

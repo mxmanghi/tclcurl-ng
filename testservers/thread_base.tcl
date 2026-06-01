@@ -17,7 +17,7 @@ set thread_script {
 
         namespace eval ::tclcurl::testserver {}
 
-        oo::class create ::tclcurl::testserver::CMockApplication {
+        oo::class create ::tclcurl::testserver::CMockUpApplication {
             superclass ::tclcurl::testserver::CApplication
 
             variable logger
@@ -44,10 +44,10 @@ set thread_script {
         #set app [::tclcurl::testserver::CTestApplication new]
 
         set logger [::tclwire::logger new]
-        variable application [::tclcurl::testserver::CMockApplication new $logger]
+        variable application [::tclcurl::testserver::CMockUpApplication new $logger]
         variable accounting ::tclwire::accounting
 
-        $logger log "CMockApplication created as $application"
+        $logger log "CMockUpApplication created as $application"
 
         #::oo::class create ::tclcurl::ApplicationController {
         #    variable application

@@ -48,7 +48,7 @@ namespace eval ::tclwire::accounting {
         }
     }
 
-    proc get_idle_thread {} {
+    proc allocate_idle_thread {} {
         set idle_thread ""
         ::tsv::lock tclwire {
             foreach tid [::tsv::keylkeys tclwire accounting] {
@@ -102,7 +102,6 @@ namespace eval ::tclwire::accounting {
         return ""
     }
 
-
     proc release_stale_threads {} {
         set to_be_terminated {}
         
@@ -141,14 +140,14 @@ namespace eval ::tclwire::accounting {
     # the call must be within a '::tsv::lock tclwire' block
 
     proc per_status_lists {} {
-        set running_threads_list {}
-        set idle_threads_list    {}
+        set per_status_db [dict create created {} idle {} running {} terminating {}]
+
         dict for {tid th_d} [get_threads_database] {
             dict with th_d {
-                lappend ${status}_threads_list $tid
+                dict lappend per_status_db $status $tid
             }
         }
-        return [list $running_threads_list $idle_threads_list]
+        return $per_status_db
     }
 
     # -- num_running_threads
@@ -157,8 +156,11 @@ namespace eval ::tclwire::accounting {
     # the call must be within a '::tsv::lock tclwire' block
 
     proc num_running_threads {} {
-        lassign [per_status_lists] running_threads
-        return [llength $running_threads]
+        set threads_db [per_status_lists]
+        if {[dict exists $threads_db running]} {
+            return [llength [dict get $threads_db running]]
+        }
+        return 0
     }
 
     set ns_commands [lmap c [info commands [namespace current]::*] {
