@@ -259,15 +259,14 @@ oo::class create ::tclcurl::testserver::http_service {
     # Normalize partially specified route results into a complete response
     # dictionary so sending code can follow one path.
     method build_response_dict {response} {
-        set completed_response [dict create \
-            status 200 \
-            reason OK \
-            body {} \
-            head_only 0 \
-            headers {} \
-            status_line {} \
-            transfer_encoding {} \
-            stream_chunks {}]
+        set completed_response [dict create status 200 \
+                                            reason OK \
+                                            body {} \
+                                            head_only 0 \
+                                            headers {} \
+                                            status_line {} \
+                                            transfer_encoding {} \
+                                            stream_chunks {}]
 
         dict for {key value} $response {
             dict set completed_response $key $value

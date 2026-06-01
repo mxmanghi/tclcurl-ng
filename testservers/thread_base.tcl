@@ -11,7 +11,6 @@ set thread_script {
 
         source [file join [pwd] testservers http_application.tcl]
         source [file join [pwd] testservers threads_shared_db.tcl]
-        source [file join [pwd] testservers http_application.tcl]
         # source [file join [file dirname [file normalize [info script]]] http_application.tcl]
         source [file join [pwd] testservers logger.tcl]
 

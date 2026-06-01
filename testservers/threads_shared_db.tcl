@@ -1,14 +1,14 @@
 # -- threads_accounting_db.tcl
 #
-# if we want to venture into a accounting memory model of thread status management,
-# procedures and accounting state must have code common to threads
+# Shared thread accounting space. ThreadMaster owns pool policy; this namespace
+# provides the shared ledger used by ThreadMaster, workers and inspectors.
 #
 # the accounting database is named `tclwire`
 #
 #  sections:
 #
 #   - timestamp: timestamp stored when accounting space is instantiated
-#   - accounting <thread-id> <thread acconting>
+#   - accounting <thread-id> <thread accounting>
 #
 #  thread accounting:
 #
@@ -17,12 +17,15 @@
 #	- nruns: number of tasks carried out by the thread
 #	- last_run_start: initial time of the last run performed
 #	- last_run_end: ending time of the last run performed
-#	- status: current status (created, idle, running)
+#	- created_on: timestamp at which the accounting entry was created
+#	- command: command currently or most recently run by the thread
+#	- status: current status (created, allocated, idle, running, terminating)
 #
 
 package require Thread
 
 namespace eval ::tclwire::accounting {
+    variable valid_thread_statuses {created allocated idle running terminating}
 
     ::tsv::lock tclwire {
         if {![::tsv::exists tclwire timestamp]} {
@@ -31,20 +34,26 @@ namespace eval ::tclwire::accounting {
         }
     }
 
+    proc new_thread_account {{status created}} {
+        variable valid_thread_statuses
+        if {$status ni $valid_thread_statuses} {
+            error "Unknown thread status '$status'"
+        }
+
+        return [list nruns           0 \
+                     last_run_start  0 \
+                     last_run_end    0 \
+                     created_on      [clock seconds] \
+                     command         "" \
+                     status          $status]
+    }
+
     proc add_new_thread {tid} {
         ::tsv::lock tclwire {
-            #::tsv::keylget tclwire accounting $tid thread_d
-            #if {[dict size $thread_d] > 0} {
-            #    error "Thread $tid entry exists"
-            #}
-            ::tsv::keylset tclwire accounting $tid [list nruns           0 \
-                                                         last_run_start  0 \
-                                                         last_run_end    0 \
-                                                         created_on      [clock seconds] \
-                                                         command         "" \
-                                                         status  	     created]
-
-            ::tsv::lpush tclwire idle_threads $tid end
+            if {[::tsv::keylget tclwire accounting $tid thread_d]} {
+                error "Thread $tid account already exists"
+            }
+            ::tsv::keylset tclwire accounting $tid [new_thread_account]
         }
     }
 
@@ -55,7 +64,8 @@ namespace eval ::tclwire::accounting {
                 ::tsv::keylget tclwire accounting $tid thd_d
                 if {[dict get $thd_d status] == "idle"} {
                     set idle_thread $tid
-                    change_thread_status $tid "allocated"
+                    dict set thd_d status allocated
+                    ::tsv::keylset tclwire accounting $tid $thd_d
                     break
                 }
             }
@@ -64,9 +74,14 @@ namespace eval ::tclwire::accounting {
     }
 
     proc change_thread_status {tid newstatus {tcl_command ""}} {
+        variable valid_thread_statuses
+        if {$newstatus ni $valid_thread_statuses} {
+            error "Unknown thread status '$newstatus'"
+        }
+
         ::tsv::lock tclwire {
-            if {[::tsv::keylget tclwire accounting $tid thread_d] == ""} {
-                error "Thread $tid account doesn't exists"
+            if {![::tsv::keylget tclwire accounting $tid thread_d]} {
+                error "Thread $tid account doesn't exist"
             }
 
             dict with thread_d {
@@ -76,14 +91,10 @@ namespace eval ::tclwire::accounting {
                     running {
                         set last_run_start [clock seconds]
                         set command        $tcl_command
-                        #::tsv::keylset tclwire running_threads $tid $last_run_start
                     }
                     idle {
                         set last_run_end [clock seconds]
                         if {$current_status == "running"} { incr nruns }
-                    }
-                    allocated {
-
                     }
                 }
             }
@@ -92,36 +103,18 @@ namespace eval ::tclwire::accounting {
     }
 
     proc remove_thread {tid} {
-        ::tsv::keyldel tclwire accounting $tid
+        ::tsv::lock tclwire {
+            ::tsv::keyldel tclwire accounting $tid
+        }
     }
 
     proc get_thread_account {tid} {
-        if {[::tsv::keylget tclwire accounting $tid th_d]} {
-            return $th_d
+        ::tsv::lock tclwire {
+            if {[::tsv::keylget tclwire accounting $tid thread_d]} {
+                return $thread_d
+            }
         }
         return ""
-    }
-
-    proc release_stale_threads {} {
-        set to_be_terminated {}
-        
-        ::tsv::lock tclwire {
-            if {[::tsv::exists tclwire accounting]} {
-                foreach tid [::tsv::keylkeys tclwire accounting] {
-                    set thread_d [::tsv::keylget tclwire accounting $tid]
-                    dict with thread_d {
-                        if {($status == "idle") && \
-                            (($nruns > 10) || (([clock seconds] - $last_run_end) > 60))} {
-                            lappend to_be_terminated $tid
-                        }
-                    }
-                    ::tsv::keylset tclwire accounting $tid $thread_d
-                }
-            }
-            foreach thread_id $to_be_terminated {
-                ::thread::send -async $thread_id { demand_thread_exit }
-            }
-        }
     }
 
     proc get_threads_database {} {
@@ -134,33 +127,20 @@ namespace eval ::tclwire::accounting {
         return $threads_acc_d
     }
 
-    # -- per_status_list
-    #
-    # in case the caller needs to have atomic access to the database
-    # the call must be within a '::tsv::lock tclwire' block
-
     proc per_status_lists {} {
-        set per_status_db [dict create created {} idle {} running {} terminating {}]
+        variable valid_thread_statuses
+        set per_status_db [dict create created {} allocated {} idle {} running {} terminating {}]
 
         dict for {tid th_d} [get_threads_database] {
             dict with th_d {
+                if {$status ni $valid_thread_statuses} {
+                    dict lappend per_status_db unknown $tid
+                    continue
+                }
                 dict lappend per_status_db $status $tid
             }
         }
         return $per_status_db
-    }
-
-    # -- num_running_threads
-    #
-    # in case the caller needs to have atomic access to the database
-    # the call must be within a '::tsv::lock tclwire' block
-
-    proc num_running_threads {} {
-        set threads_db [per_status_lists]
-        if {[dict exists $threads_db running]} {
-            return [llength [dict get $threads_db running]]
-        }
-        return 0
     }
 
     set ns_commands [lmap c [info commands [namespace current]::*] {
