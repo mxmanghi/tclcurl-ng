@@ -1,5 +1,5 @@
 .\" -*- mode: troff; coding: utf-8 -*-
-.TH "TclCurl" "n" "15 May 2026" "TclCurl 8.0.1" "TclCurl Easy Interface"
+.TH "TclCurl" "n" "15 May 2026" "TclCurl 8.0.2" "TclCurl Easy Interface"
 .SH NAME
 .LP
 TclCurl - Transfer data to and from URLs using FTP, FTPS, HTTP, HTTPS, SCP,

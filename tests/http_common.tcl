@@ -48,11 +48,10 @@ proc ::tclcurl::test::transport_url {base_url_proc {path {}}} {
 proc ::tclcurl::test::transport_basic_get {base_url_proc extra_opts} {
     set body {}
     ::tclcurl::test::with_easy_handle handle {
-        $handle configure -url [::tclcurl::test::transport_url $base_url_proc] \
-                          {*}$extra_opts \
+        $handle configure -url [::tclcurl::test::transport_url $base_url_proc] {*}$extra_opts \
                           -bodyvar body \
                           -noprogress 1
-        set rc [$handle perform]
+        set   rc [$handle perform]
         list $rc [$handle getinfo responsecode] [expr {[string length $body] > 0}]
     }
 }
@@ -60,13 +59,12 @@ proc ::tclcurl::test::transport_basic_get {base_url_proc extra_opts} {
 proc ::tclcurl::test::transport_head {base_url_proc extra_opts} {
     catch {unset headers}
     ::tclcurl::test::with_easy_handle handle {
-        $handle configure -url [::tclcurl::test::transport_url $base_url_proc] \
-                          {*}$extra_opts \
+        $handle configure -url [::tclcurl::test::transport_url $base_url_proc] {*}$extra_opts \
                           -nobody 1 \
                           -header 1 \
                           -headervar headers \
                           -noprogress 1
-        set rc [$handle perform]
+        set   rc [$handle perform]
         list $rc [$handle getinfo responsecode] [expr {[array size headers] > 0}]
     }
 }
