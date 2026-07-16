@@ -14,7 +14,9 @@
 # under the direction and review of Massimo Manghi
 
 package require tcltest
-package require zlib
+if {[info commands zlib] eq {}} {
+    package require zlib
+}
 namespace import ::tcltest::*
 
 source [file join [file dirname [file normalize [info script]]] support.tcl]

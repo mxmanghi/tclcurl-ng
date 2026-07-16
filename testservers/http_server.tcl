@@ -13,7 +13,9 @@
 namespace eval ::tclcurl::testserver {}
 
 package require sha256
-package require zlib
+if {[info commands zlib] eq {}} {
+    package require zlib
+}
 package require base64
 package require uri
 
