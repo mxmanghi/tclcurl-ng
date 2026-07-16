@@ -45,21 +45,46 @@ struct curlEvent {
     struct curlMultiObjData *curlMultiData;
 };
 
-const static char *multiCommandTable[] = {
-    "addhandle",
-    "removehandle",
-    "perform",
-    "cleanup",
-    "getinfo",
-    "active",
-    "auto",
-    "configure",
-    (char *) NULL
+#define TCLCURL_MULTI_COMMAND_LIST(X) \
+    X(TCLCURL_MULTI_CMD_ADDHANDLE, "addhandle", TclCurl_MultiDispatchAddHandle) \
+    X(TCLCURL_MULTI_CMD_REMOVEHANDLE, "removehandle", TclCurl_MultiDispatchRemoveHandle) \
+    X(TCLCURL_MULTI_CMD_PERFORM, "perform", TclCurl_MultiDispatchPerform) \
+    X(TCLCURL_MULTI_CMD_CLEANUP, "cleanup", TclCurl_MultiDispatchCleanup) \
+    X(TCLCURL_MULTI_CMD_GETINFO, "getinfo", TclCurl_MultiDispatchGetInfo) \
+    X(TCLCURL_MULTI_CMD_ACTIVE, "active", TclCurl_MultiDispatchActive) \
+    X(TCLCURL_MULTI_CMD_AUTO, "auto", TclCurl_MultiDispatchAuto) \
+    X(TCLCURL_MULTI_CMD_CONFIGURE, "configure", TclCurl_MultiDispatchConfigure)
+
+typedef enum {
+#define TCLCURL_MULTI_COMMAND_ENUM_ENTRY(name, label, proc) name,
+    TCLCURL_MULTI_COMMAND_LIST(TCLCURL_MULTI_COMMAND_ENUM_ENTRY)
+#undef TCLCURL_MULTI_COMMAND_ENUM_ENTRY
+    TCLCURL_MULTI_CMD_COUNT
+} TclCurlMultiCommandId;
+
+const static char *multiCommandTable[TCLCURL_MULTI_CMD_COUNT + 1] = {
+#define TCLCURL_MULTI_COMMAND_TABLE_ENTRY(name, label, proc) [name] = label,
+    TCLCURL_MULTI_COMMAND_LIST(TCLCURL_MULTI_COMMAND_TABLE_ENTRY)
+#undef TCLCURL_MULTI_COMMAND_TABLE_ENTRY
+    NULL
 };
 
-const static char *multiConfigTable[] = {
-    "-pipelining", "-maxconnects",
-    (char *)NULL
+#define TCLCURL_MULTI_CONFIG_LIST(X) \
+    X(TCLCURL_MULTI_CONFIG_PIPELINING, "-pipelining", CURLMOPT_PIPELINING, SetMultiOptLong) \
+    X(TCLCURL_MULTI_CONFIG_MAXCONNECTS, "-maxconnects", CURLMOPT_MAXCONNECTS, SetMultiOptLong)
+
+typedef enum {
+#define TCLCURL_MULTI_CONFIG_ENUM_ENTRY(name, label, opt, proc) name,
+    TCLCURL_MULTI_CONFIG_LIST(TCLCURL_MULTI_CONFIG_ENUM_ENTRY)
+#undef TCLCURL_MULTI_CONFIG_ENUM_ENTRY
+    TCLCURL_MULTI_CONFIG_COUNT
+} TclCurlMultiConfigId;
+
+const static char *multiConfigTable[TCLCURL_MULTI_CONFIG_COUNT + 1] = {
+#define TCLCURL_MULTI_CONFIG_TABLE_ENTRY(name, label, opt, proc) [name] = label,
+    TCLCURL_MULTI_CONFIG_LIST(TCLCURL_MULTI_CONFIG_TABLE_ENTRY)
+#undef TCLCURL_MULTI_CONFIG_TABLE_ENTRY
+    NULL
 };
 
 char *curlCreateMultiObjCmd (Tcl_Interp *interp,struct curlMultiObjData *curlMultiData);

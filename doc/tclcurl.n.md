@@ -2,7 +2,7 @@
 title: TclCurl
 section: n
 date: 15 May 2026
-source: TclCurl 8.0.1
+source: TclCurl 8.0.3
 volume: TclCurl Easy Interface
 ---
 

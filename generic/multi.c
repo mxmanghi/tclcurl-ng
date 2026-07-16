@@ -18,6 +18,56 @@
 #include <sys/time.h>
 #endif
 
+typedef int (*TclCurlMultiCommandProc)(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]);
+
+typedef int (*TclCurlMultiConfigProc)(Tcl_Interp *interp,
+        CURLM *curlMultiHandle, CURLMoption opt, int tableIndex,
+        Tcl_Obj *tclObj);
+
+struct TclCurlMultiConfigDispatch {
+    CURLMoption              option;
+    TclCurlMultiConfigProc   proc;
+};
+
+static int TclCurl_MultiDispatchAddHandle(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]);
+static int TclCurl_MultiDispatchRemoveHandle(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]);
+static int TclCurl_MultiDispatchPerform(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]);
+static int TclCurl_MultiDispatchCleanup(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]);
+static int TclCurl_MultiDispatchGetInfo(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]);
+static int TclCurl_MultiDispatchActive(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]);
+static int TclCurl_MultiDispatchAuto(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]);
+static int TclCurl_MultiDispatchConfigure(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]);
+
+static const TclCurlMultiCommandProc multiCommandDispatch[TCLCURL_MULTI_CMD_COUNT] = {
+#define TCLCURL_MULTI_COMMAND_DISPATCH_ENTRY(name, label, proc) [name] = proc,
+    TCLCURL_MULTI_COMMAND_LIST(TCLCURL_MULTI_COMMAND_DISPATCH_ENTRY)
+#undef TCLCURL_MULTI_COMMAND_DISPATCH_ENTRY
+};
+
+static const struct TclCurlMultiConfigDispatch multiConfigDispatch[TCLCURL_MULTI_CONFIG_COUNT] = {
+#define TCLCURL_MULTI_CONFIG_DISPATCH_ENTRY(name, label, opt, proc) [name] = { opt, proc },
+    TCLCURL_MULTI_CONFIG_LIST(TCLCURL_MULTI_CONFIG_DISPATCH_ENTRY)
+#undef TCLCURL_MULTI_CONFIG_DISPATCH_ENTRY
+};
+
 /*
  *----------------------------------------------------------------------
  *
@@ -35,7 +85,7 @@ int
 Tclcurl_MultiInit (Tcl_Interp *interp) {
 
     Tcl_CreateObjCommand (interp,"::curl::multiinit",curlInitMultiObjCmd,
-            (ClientData)NULL,(Tcl_CmdDeleteProc *)NULL);
+                         (ClientData)NULL,(Tcl_CmdDeleteProc *)NULL);
 
     return TCL_OK;
 }
@@ -70,14 +120,13 @@ curlCreateMultiObjCmd (Tcl_Interp *interp,struct curlMultiObjData *curlMultiData
         sprintf(handleName,"mcurl%d",i);
         if (!Tcl_GetCommandInfo(interp,handleName,&info)) {
             cmdToken=Tcl_CreateObjCommand(interp,handleName,curlMultiObjCmd,
-                                (ClientData)curlMultiData, 
-                                (Tcl_CmdDeleteProc *)curlMultiDeleteCmd);
+                                            (ClientData)curlMultiData,
+                                            (Tcl_CmdDeleteProc *)curlMultiDeleteCmd);
             break;
         }
     }
 
     curlMultiData->token=cmdToken;
-
     return handleName;
 }
 
@@ -155,7 +204,6 @@ curlMultiObjCmd (ClientData clientData, Tcl_Interp *interp,
     int objc,Tcl_Obj *const objv[]) {
 
     struct curlMultiObjData    *curlMultiData=(struct curlMultiObjData *)clientData;
-    CURLMcode                   errorCode;
     int                         tableIndex;
 
     if (objc<2) {
@@ -166,43 +214,73 @@ curlMultiObjCmd (ClientData clientData, Tcl_Interp *interp,
             TCL_EXACT,&tableIndex)==TCL_ERROR) {
         return TCL_ERROR;
     }
-    switch(tableIndex) {
-        case 0:
-/*            fprintf(stdout,"Multi add handle\n"); */
-            errorCode=curlAddMultiHandle(interp,curlMultiData->mcurl,objv[2]);
-            return curlReturnCURLMcode(interp,errorCode);
-            break;
-        case 1:
-/*            fprintf(stdout,"Multi remove handle\n"); */
-            errorCode=curlRemoveMultiHandle(interp,curlMultiData->mcurl,objv[2]);
-            return curlReturnCURLMcode(interp,errorCode);
-            break;
-        case 2:
-/*            fprintf(stdout,"Multi perform\n"); */
-            errorCode=curlMultiPerform(interp,curlMultiData->mcurl);
-            return errorCode;
-            break;
-        case 3:
-/*            fprintf(stdout,"Multi cleanup\n"); */
-            Tcl_DeleteCommandFromToken(interp,curlMultiData->token);
-            break;
-        case 4:
-/*            fprintf(stdout,"Multi getInfo\n"); */
-            curlMultiGetInfo(interp,curlMultiData->mcurl);
-            break;
-        case 5:
-/*            fprintf(stdout,"Multi activeTransfers\n"); */
-            curlMultiActiveTransfers(interp,curlMultiData);
-            break;
-        case 6:
-/*            fprintf(stdout,"Multi auto transfer\n");*/
-            curlMultiAutoTransfer(interp,curlMultiData,objc,objv);
-            break;
-        case 7:
-/*            fprintf(stdout,"Multi configure\n");*/
-            curlMultiConfigTransfer(interp,curlMultiData,objc,objv);
-            break;            
-    }
+    return multiCommandDispatch[tableIndex](interp,curlMultiData,objc,objv);
+}
+
+static int
+TclCurl_MultiDispatchAddHandle(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]) {
+    CURLMcode errorCode;
+
+    errorCode=curlAddMultiHandle(interp,curlMultiData->mcurl,objv[2]);
+    return curlReturnCURLMcode(interp,errorCode);
+}
+
+static int
+TclCurl_MultiDispatchRemoveHandle(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]) {
+    CURLMcode errorCode;
+
+    errorCode=curlRemoveMultiHandle(interp,curlMultiData->mcurl,objv[2]);
+    return curlReturnCURLMcode(interp,errorCode);
+}
+
+static int
+TclCurl_MultiDispatchPerform(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]) {
+    return curlMultiPerform(interp,curlMultiData->mcurl);
+}
+
+static int
+TclCurl_MultiDispatchCleanup(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]) {
+    Tcl_DeleteCommandFromToken(interp,curlMultiData->token);
+    return TCL_OK;
+}
+
+static int
+TclCurl_MultiDispatchGetInfo(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]) {
+    curlMultiGetInfo(interp,curlMultiData->mcurl);
+    return TCL_OK;
+}
+
+static int
+TclCurl_MultiDispatchActive(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]) {
+    curlMultiActiveTransfers(interp,curlMultiData);
+    return TCL_OK;
+}
+
+static int
+TclCurl_MultiDispatchAuto(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]) {
+    curlMultiAutoTransfer(interp,curlMultiData,objc,objv);
+    return TCL_OK;
+}
+
+static int
+TclCurl_MultiDispatchConfigure(Tcl_Interp *interp,
+        struct curlMultiObjData *curlMultiData, int objc,
+        Tcl_Obj *const objv[]) {
+    curlMultiConfigTransfer(interp,curlMultiData,objc,objv);
     return TCL_OK;
 }
 
@@ -758,19 +836,9 @@ int
 curlMultiSetOpts(Tcl_Interp *interp, struct curlMultiObjData *curlMultiData,
         Tcl_Obj *const objv,int tableIndex) {
 
-    switch(tableIndex) {
-        case 0:
-            if (SetMultiOptLong(interp,curlMultiData->mcurl,
-                    CURLMOPT_PIPELINING,tableIndex,objv)) {
-                return TCL_ERROR;
-            }
-            break;
-        case 1:
-            if (SetMultiOptLong(interp,curlMultiData->mcurl,
-                    CURLMOPT_MAXCONNECTS,tableIndex,objv)) {
-                return TCL_ERROR;
-            }
-            break;
+    if (multiConfigDispatch[tableIndex].proc(interp,curlMultiData->mcurl,
+            multiConfigDispatch[tableIndex].option,tableIndex,objv)) {
+        return TCL_ERROR;
     }
     return TCL_OK;
 }
@@ -906,5 +974,3 @@ curlEventProc(Tcl_Event *evPtr,int flags) {
     }
     return 1;
 }
-
-

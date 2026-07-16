@@ -1,5 +1,5 @@
 .\" -*- mode: troff; coding: utf-8 -*-
-.TH "TclCurl Multi Interface" "n" "19-05-2026" "TclCurl 8.0.1" "TclCurl Easy Interface"
+.TH "TclCurl Multi Interface" "n" "19-05-2026" "TclCurl 8.0.3" "TclCurl Easy Interface"
 .SH NAME
 .LP
 TclCurl - Perform multiple simultaneous URL transfers with the TclCurl multi interface.

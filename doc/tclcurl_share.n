@@ -1,5 +1,5 @@
 .\" -*- mode: troff; coding: utf-8 -*-
-.TH "TclCurl Share" "n" "19-05-2026" "TclCurl 8.0.1" "TclCurl Easy Interface"
+.TH "TclCurl Share" "n" "19-05-2026" "TclCurl 8.0.3" "TclCurl Easy Interface"
 .SH NAME
 .LP
 TclCurl - Share selected data between multiple easy handles.
