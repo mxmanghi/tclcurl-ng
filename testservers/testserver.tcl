@@ -12,6 +12,33 @@
 # for information on usage and redistribution of this file, and for the
 # complete disclaimer of warranties and limitation of liability.
 
+set tcl_conf_path [file join [file dirname [file dirname [file normalize [info script]]]] tests tcl_conf.tcl]
+if {[file exists $tcl_conf_path]} {
+    source $tcl_conf_path
+    set configured_tclsh $::tclcurl::test::conf::tclsh_prog
+    if {$configured_tclsh ne {} &&
+        [file normalize [info nameofexecutable]] ne [file normalize $configured_tclsh]} {
+        if {[info exists ::env(TCLCURL_TEST_REEXEC)] && $::env(TCLCURL_TEST_REEXEC) eq $configured_tclsh} {
+            error "configured Tcl shell re-exec loop detected: $configured_tclsh"
+        }
+        set ::env(TCLCURL_TEST_REEXEC) $configured_tclsh
+        set reexec_code [catch {
+            exec $configured_tclsh [file normalize [info script]] {*}$argv >@ stdout 2>@ stderr
+        } reexec_result reexec_options]
+        if {$reexec_code == 0} {
+            exit 0
+        }
+        if {[dict get $reexec_options -errorcode] ni {{} NONE}} {
+            set error_code [dict get $reexec_options -errorcode]
+            if {[lindex $error_code 0] eq "CHILDSTATUS"} {
+                exit [lindex $error_code 2]
+            }
+        }
+        return -options $reexec_options $reexec_result
+    }
+}
+unset -nocomplain tcl_conf_path configured_tclsh
+
 set ::argv_saved_for_testserver $argv
 set argv {}
 source [file join [file dirname [file dirname [file normalize [info script]]]] tests support.tcl]

@@ -1,7 +1,9 @@
 2026-07-16 Massimo Manghi <massimo.manghi@rivetweb.org>
-    * VERSION: bumping to version 8.0.3
-    * generic/multi.[c|h]: introduced X macro controlling internal command dispatch
-    * doc/: update version in docs
+	* VERSION: bumping to version 8.0.3
+	* generic/multi.[c|h]: introduced X macro controlling internal command dispatch
+	* doc/: update version in docs
+	* tests/tcl_conf.tcl.in: configure input file to be filled with Tcl informations
+	needed by the testserver and tests/all.tcl
 
 2026-05-19 Massimo Manghi <massimo.manghi@rivetweb.org>
 	* configure.ac: Now generating also doc/tclcurl_multi.n.md and doc/tclcurl_share.n.md from

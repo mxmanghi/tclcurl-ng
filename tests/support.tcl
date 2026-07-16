@@ -6,6 +6,7 @@ package require tcltest
 
 namespace eval ::tclcurl::test {
     variable debug 0
+    variable support_dir [file dirname [file normalize [info script]]]
 }
 
 namespace eval ::tclcurl::test::server {
@@ -28,7 +29,15 @@ namespace eval ::tclcurl::test::paths {
 }
 
 proc ::tclcurl::test::repo_root {} {
-    return [file dirname [file dirname [file normalize [info script]]]]
+    variable support_dir
+    return [file dirname $support_dir]
+}
+
+proc ::tclcurl::test::load_config {} {
+    set confPath [file join [repo_root] tests tcl_conf.tcl]
+    if {[file exists $confPath]} {
+        source $confPath
+    }
 }
 
 proc ::tclcurl::test::msgoutput_enabled {args} {
@@ -56,10 +65,17 @@ proc ::tclcurl::test::configure_debug_output {{enabled 0}} {
 proc ::tclcurl::test::build_library_candidates {} {
     set root [repo_root]
     lassign [split $::tcl_version "."] tcl_major tcl_minor
+    load_config
 
     if {$tcl_major == 8} {
+        if {[info exists ::tclcurl::test::conf::pkg_lib_file8]} {
+            return [list [file join $root $::tclcurl::test::conf::pkg_lib_file8]]
+        }
         return [glob -nocomplain [file join $root lib*TclCurl*.so]]
     } elseif {$tcl_major == 9} {
+        if {[info exists ::tclcurl::test::conf::pkg_lib_file9]} {
+            return [list [file join $root $::tclcurl::test::conf::pkg_lib_file9]]
+        }
         return [glob -nocomplain [file join $root libtcl9*TclCurl*.so]]
     } else {
         puts "no supported shared library library model found"
@@ -74,9 +90,24 @@ proc ::tclcurl::test::build_library_candidates {} {
     return ""
 }
 
+proc ::tclcurl::test::incompatible_build_libraries {} {
+    set root [repo_root]
+    lassign [split $::tcl_version "."] tcl_major tcl_minor
+
+    if {$tcl_major == 8} {
+        return [glob -nocomplain [file join $root libtcl9*TclCurl*.so]]
+    } elseif {$tcl_major == 9} {
+        return [glob -nocomplain [file join $root libTclCurl*.so]]
+    }
+
+    return ""
+}
+
 proc ::tclcurl::test::load_package {} {
+    set loadErrors {}
+
     foreach libraryPath [build_library_candidates] {
-        if {![catch {load $libraryPath Tclcurl}]} {
+        if {![catch {load $libraryPath Tclcurl} result options]} {
             set scriptPath [file join [repo_root] generic tclcurl.tcl]
             if {[file exists $scriptPath]} {
                 source $scriptPath
@@ -85,11 +116,19 @@ proc ::tclcurl::test::load_package {} {
             package require TclCurl
             return
         }
+        lappend loadErrors "$libraryPath: $result"
     }
 
-    if {![catch {package require TclCurl}]} { return }
+    set incompatibleLibraries [incompatible_build_libraries]
+    if {[llength $incompatibleLibraries] > 0} {
+        error "found TclCurl build-tree libraries for a different Tcl ABI: [join $incompatibleLibraries {, }]. Use the Tcl shell selected by configure (for example, make test) or rebuild for Tcl $::tcl_version."
+    }
 
-    error "unable to load TclCurl from the installed packages or the build tree"
+    if {[llength $loadErrors] > 0} {
+        error "unable to load the locally built TclCurl library: [join $loadErrors {; }]"
+    }
+
+    error "unable to find a locally built TclCurl library for Tcl $::tcl_version in [repo_root]"
 }
 
 proc ::tclcurl::test::env_or_default {name defaultValue} {

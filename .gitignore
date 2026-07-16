@@ -7,6 +7,7 @@ libTclCurl*.so
 libtcl9TclCurl*.so
 *.o
 pkgIndex.tcl
+tests/tcl_conf.tcl
 tags
 *.swp
 autom4te.cache

@@ -52,8 +52,8 @@ corresponding server-backed tests are skipped.
 The generated HTML manuals for TclCurl are available at:
 
 - [tclcurl.html](tclcurl.html)
-- [tclcurl_multi.html](tclcurl_multi.html)
-- [tclcurl_share.html](tclcurl_share.html)
+- [tclcurl\_multi.html](tclcurl_multi.html)
+- [tclcurl\_share.html](tclcurl_share.html)
 
 ## `testservers/testserver.tcl`
 
