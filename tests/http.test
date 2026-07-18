@@ -298,10 +298,9 @@ test http-4.4 {-lowspeedlimit and -lowspeedtime allow a transfer that stays abov
                           -errorbuffer errbuf \
                           -noprogress 1
         set rc [$handle perform]
-        list $rc \
-             [$handle getinfo responsecode] \
-             [expr {$body eq $payload}] \
-             [expr {$errbuf eq {}}]
+        list $rc [$handle getinfo responsecode] \
+                 [expr {$body eq $payload}] \
+                 [expr {$errbuf eq {}}]
     }
 } -result {0 200 1 1}
 
