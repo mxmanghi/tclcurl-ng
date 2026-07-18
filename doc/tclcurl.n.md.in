@@ -2602,13 +2602,35 @@ argument.
 The examples in this section assume you are running from the root of the
 TclCurl source tree.
 
-To start the local HTTP test server used in the examples, run:
+The local HTTP test server used in the examples is a TclWire application.  The
+application is implemented in `tests/tclcurl_test_server.tcl` and loaded by the
+TclWire configuration in `tests/tclwire.toml`.
+
+From a TclWire checkout, start it with:
 
 ```sh
-tclsh testservers/testserver.tcl
+tcl/tclwire.tcl --config /path/to/tclcurl-ng/tests/tclwire.toml \
+  --logfile /tmp/tclwire.log \
+  --dump-multipart-requests \
+  --noftp-user-check \
+  --certfile /tmp/certs/server.crt \
+  --keyfile /tmp/certs/server.key
 ```
 
-By default, this starts an HTTP server on `http://127.0.0.1:8990/`.
+For example, if your working configuration lives in `~/Dropbox/tclcurl/tclwire.toml`:
+
+```sh
+tcl/tclwire.tcl --config ~/Dropbox/tclcurl/tclwire.toml \
+  --logfile /tmp/tclwire.log \
+  --dump-multipart-requests \
+  --noftp-user-check \
+  --certfile /tmp/certs/server.crt \
+  --keyfile /tmp/certs/server.key
+```
+
+By default, the supplied configuration starts HTTP on `http://127.0.0.1:8990/`.
+The `/tmp/certs` paths above are suitable for temporary self-signed
+certificates used by HTTPS and FTPS tests.
 
 The path `http://127.0.0.1:8990/tclcurl-man` returns the HTML version of this
 manual page from `doc/tclcurl.html`, which makes it a convenient target for a

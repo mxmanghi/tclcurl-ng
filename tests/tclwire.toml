@@ -1,0 +1,68 @@
+# TclWire configuration draft
+#
+# Proposed precedence, from highest to lowest:
+#   1. command-line options
+#   2. values in this file
+#   3. runtime defaults
+#
+# A protocol is enabled when its table exists, unless enabled is false.
+# A missing protocol table disables that protocol.  The CLI --startservers
+# option overrides protocol selection, while the protocol-specific CLI port
+# option overrides the port below.
+#
+# Configuration paths are resolved relative to the directory containing this
+# file. Relative application "file" values are searched for under the
+# application's docroot, its effective libdir, and the TclWire installation.
+
+[tclwire]
+    host = "127.0.0.1"
+    quiet = false
+    debug = false
+    debug_connection = false
+    encoding = "utf-8"
+    docroot = "/tmp/tclwire"
+    ftproot = "/tmp/tclwire"
+    ftp_user_check = true
+    logfile = "/tmp/tclwire.log"
+    logerr = "/tmp/tclwire-err.log"
+    log_level = "info"
+    unix_socket = "/tmp/tclwire.sock"
+    conn_max_wait = 1000
+    conn_max_workers = 100
+    max_request_bytes = 16777216
+    max_header_bytes = 65536
+    request_memory_threshold = 1048576
+
+[tclwire]
+    default_application = "default"
+
+[http.default]
+    hosts = "localhost 127.0.0.1"
+    class = "::tclwire::CTestApplication"
+    #package = "tclwire::application"
+    docroot = "/tmp/tclcurl"
+    encoding = "utf-8"
+    file ="tests/tclcurl_test_server.tcl"
+
+[https]
+enabled = true
+port = 9443
+
+[ftp]
+enabled = true
+port = 8991
+root = "/tmp/tclcurl"
+user_check = false
+
+[ftps]
+enabled = false
+port = 990
+root = "/tmp/tclcurl"
+user_check = false
+#certfile = ""
+#keyfile = ""
+
+[proxy]
+enabled = true
+port = 8992
+

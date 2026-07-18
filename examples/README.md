@@ -3,24 +3,33 @@
 This directory contains runnable TclCurl examples extracted from the manual
 page and aligned with the local test infrastructure used by the project.
 
-# Starting the Local HTTP Server
+# Starting the TclWire Test Server
 
-Some examples use the HTTP server implemented for the test suite. To start it,
-run the following command from the root of the TclCurl source tree:
+Some examples use the HTTP routes implemented by the TclCurl test server
+application.  The application lives at `tests/tclcurl_test_server.tcl` and is
+loaded by TclWire through `tests/tclwire.toml`.
 
-```sh
-tclsh testservers/testserver.tcl
-```
-
-To exercise the static-file fallback, you can point the server at a custom
-document root:
+From a TclWire checkout, start the local services with:
 
 ```sh
-tclsh testservers/testserver.tcl --docroot /tmp/tclcurl
+tcl/tclwire.tcl --config /path/to/tclcurl-ng/tests/tclwire.toml \
+  --logfile /tmp/tclwire.log \
+  --dump-multipart-requests \
+  --noftp-user-check \
+  --certfile /tmp/certs/server.crt \
+  --keyfile /tmp/certs/server.key
 ```
 
-By default, the server removes that document root when it shuts down. Pass
-`--keepdocroot` if you want to inspect or reuse its contents after shutdown.
+For example, if you keep the TclCurl configuration in Dropbox:
+
+```sh
+tcl/tclwire.tcl --config ~/Dropbox/tclcurl/tclwire.toml \
+  --logfile /tmp/tclwire.log \
+  --dump-multipart-requests \
+  --noftp-user-check \
+  --certfile /tmp/certs/server.crt \
+  --keyfile /tmp/certs/server.key
+```
 
 By default, this starts several local services, including an HTTP server on:
 
@@ -34,8 +43,11 @@ The HTTP example in this directory uses the path:
 http://127.0.0.1:8990/tclcurl-man
 ```
 
-That path is provided by `testservers/http_server.tcl` and returns the HTML version
+That path is provided by the TclWire application and returns the HTML version
 of the TclCurl manual from `doc/tclcurl.html`.
+
+The older `testservers/` server code remains in the repository as a reference
+implementation of the route behavior expected by the suite.
 
 # Running the Basic HTTP GET Example
 
@@ -82,8 +94,6 @@ as intended.
 # Notes
 
 - The examples assume that TclCurl is available to `package require TclCurl`.
-- The commands above should be run from the repository root so that the test
-  server can find the expected project files.
-- If you start the server with a custom `--docroot`, keep `TCLCURL_TEST_DOC_ROOT`
-  aligned with it when running server-backed tests that create or fetch static
-  fixtures.
+- Keep the document root configured in TclWire aligned with
+  `TCLCURL_TEST_DOC_ROOT` when running server-backed tests that create or fetch
+  static fixtures.

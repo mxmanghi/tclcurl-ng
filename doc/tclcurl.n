@@ -2623,13 +2623,35 @@ argument.
 The examples in this section assume you are running from the root of the
 TclCurl source tree.
 .PP
-To start the local HTTP test server used in the examples, run:
+The local HTTP test server used in the examples is a TclWire application.  The
+application is implemented in \f(CRtests/tclcurl_test_server.tcl\fR and loaded by the
+TclWire configuration in \f(CRtests/tclwire.toml\fR.
+.LP
+From a TclWire checkout, start it with:
 .LP
 .EX
-tclsh testservers/testserver.tcl
+tcl/tclwire.tcl --config /path/to/tclcurl-ng/tests/tclwire.toml \\
+  --logfile /tmp/tclwire.log \\
+  --dump-multipart-requests \\
+  --noftp-user-check \\
+  --certfile /tmp/certs/server.crt \\
+  --keyfile /tmp/certs/server.key
 .EE
 .PP
-By default, this starts an HTTP server on \f(CRhttp://127.0.0.1:8990/\fR.
+For example, if your working configuration lives in \f(CR~/Dropbox/tclcurl/tclwire.toml\fR:
+.LP
+.EX
+tcl/tclwire.tcl --config ~/Dropbox/tclcurl/tclwire.toml \\
+  --logfile /tmp/tclwire.log \\
+  --dump-multipart-requests \\
+  --noftp-user-check \\
+  --certfile /tmp/certs/server.crt \\
+  --keyfile /tmp/certs/server.key
+.EE
+.PP
+By default, the supplied configuration starts HTTP on \f(CRhttp://127.0.0.1:8990/\fR.
+The \f(CR/tmp/certs\fR paths above are suitable for temporary self-signed
+certificates used by HTTPS and FTPS tests.
 .PP
 The path \f(CRhttp://127.0.0.1:8990/tclcurl-man\fR returns the HTML version of this
 manual page from \f(CRdoc/tclcurl.html\fR, which makes it a convenient target for a

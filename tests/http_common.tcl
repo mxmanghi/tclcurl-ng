@@ -282,7 +282,10 @@ proc ::tclcurl::test::transport_postredir_as_get {base_url_proc extra_opts} {
     ::tclcurl::test::with_easy_handle handle {
         $handle configure -url $start_url \
                           {*}$extra_opts \
+                          -timeout 10 \
                           -post 1 \
+                          -postfields {} \
+                          -postfieldsize 0 \
                           -followlocation 1 \
                           -bodyvar body \
                           -noprogress 1
@@ -296,7 +299,10 @@ proc ::tclcurl::test::transport_postredir_keep_post {base_url_proc extra_opts} {
     ::tclcurl::test::with_easy_handle handle {
         $handle configure -url [::tclcurl::test::transport_url $base_url_proc postredir-301] \
                           {*}$extra_opts \
+                          -timeout 10 \
                           -post 1 \
+                          -postfields {} \
+                          -postfieldsize 0 \
                           -followlocation 1 \
                           -postredir 301 \
                           -bodyvar body \

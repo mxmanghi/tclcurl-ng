@@ -1,5 +1,5 @@
 ---
-title: Tclcurl tiny web server
+title: TclCurl test suite
 ---
 
 # TclCurl Test Suite
@@ -9,7 +9,7 @@ The repository now has two distinct kinds of files under `tests/`:
 - `*.test`: real `tcltest` test cases that are executed by `tests/all.tcl`
 - `legacy/*.tcl`: legacy example scripts that are useful as references, but are not part of the automated suite
 
-*Last update: 2026-05-16*
+*Last update: 2026-07-19*
 
 ## Running the suite
 
@@ -17,12 +17,36 @@ The repository now has two distinct kinds of files under `tests/`:
 
 By default, `tests/all.tcl` enables `tcltest`'s `start` verbosity, so each test prints a line when it begins running. You can still override that from the command line with `-verbose`.
 
+The server-backed tests are run against
+[TclWire](https://github.com/mxmanghi/tclwire).  The HTTP behavior expected by
+the TclCurl suite is implemented as a concrete TclWire application in
+`tests/tclcurl_test_server.tcl`, with the supplied runtime configuration in
+`tests/tclwire.toml`.
+
 To run the server-backed suite from a normal working tree, use this sequence:
 
 1. Start the local test servers in one terminal:
 
 ```sh
-tclsh testservers/testserver.tcl
+tcl/tclwire.tcl --config tests/tclwire.toml \
+  --logfile /tmp/tclwire.log \
+  --dump-multipart-requests \
+  --noftp-user-check \
+  --certfile /tmp/certs/server.crt \
+  --keyfile /tmp/certs/server.key
+```
+
+Run that command from a TclWire checkout, or adjust the `tcl/tclwire.tcl` path
+to the location of your TclWire runtime.  For example, if the TclCurl
+configuration lives in `~/Dropbox/tclcurl/tclwire.toml`:
+
+```sh
+tcl/tclwire.tcl --config ~/Dropbox/tclcurl/tclwire.toml \
+  --logfile /tmp/tclwire.log \
+  --dump-multipart-requests \
+  --noftp-user-check \
+  --certfile /tmp/certs/server.crt \
+  --keyfile /tmp/certs/server.key
 ```
 
 2. Run the suite in a second terminal from the repository root:
@@ -37,13 +61,6 @@ tclsh tests/all.tcl
 tclsh tests/all.tcl -file http.test
 ```
 
-4. If you want the test runner to shut down the HTTP test server when it
-   finishes, add `-exitserver`:
-
-```sh
-tclsh tests/all.tcl -exitserver
-```
-
 If one of the configured protocol endpoints is not reachable, the
 corresponding server-backed tests are skipped.
 
@@ -55,9 +72,29 @@ The generated HTML manuals for TclCurl are available at:
 - [tclcurl\_multi.html](tclcurl_multi.html)
 - [tclcurl\_share.html](tclcurl_share.html)
 
-## `testservers/testserver.tcl`
+## TclWire Test Application
 
-The local server framework accepts the following general command form:
+`tests/tclcurl_test_server.tcl` is the test server implementation used by the
+suite.  It is a TclWire application, not a standalone server process.  TclWire
+loads it from the application entry in `tests/tclwire.toml`.
+
+The application provides the dynamic routes used by the suite for redirects,
+request inspection, authentication, cookies, range requests, content and
+transfer decoding, streaming, and multipart upload inspection.  Static file
+fallbacks are rooted at the configured document root, normally `/tmp/tclcurl`.
+
+TclWire itself owns the process lifecycle, listener sockets, TLS setup, FTP and
+FTPS services, proxy service, logging, request body spooling, and console
+control.
+
+## Reference Server
+
+The older `testservers/` implementation remains in the repository as a
+reference implementation of the protocol behavior expected by the tests.  It is
+useful when comparing exact route behavior or debugging the TclWire
+application, but it is no longer the primary server used by the test suite.
+
+`testservers/testserver.tcl` accepts the following general command form:
 
 ```text
 tclsh testservers/testserver.tcl \
@@ -71,14 +108,14 @@ tclsh testservers/testserver.tcl \
                   ?--quiet? ?--debug?
 ```
 
-By default, `testservers/testserver.tcl` starts four services:
+By default, `testservers/testserver.tcl` starts four reference services:
 
 - HTTP on `127.0.0.1:8990`
 - HTTPS on `127.0.0.1:9443`
 - FTP on `127.0.0.1:8991`
 - HTTP proxy on `127.0.0.1:8992`
 
-The HTTP test server keeps its explicit dynamic routes for protocol behaviors
+The reference HTTP server keeps explicit dynamic routes for protocol behaviors
 such as redirects, request inspection, and authentication. For `GET` and
 `HEAD` requests that do not match one of those routes, it falls back to static
 file serving rooted at `TCLCURL_TEST_DOC_ROOT` or `--docroot`.
@@ -107,7 +144,7 @@ tclsh tests/all.tcl \
                   ?--verbose level...?
 ```
 
-When the Tcl HTTP test server is wired in, the server script path precedence is:
+When the reference Tcl HTTP test server is wired in, the server script path precedence is:
 
 - `--httpserver /path/to/server.tcl`
 - `TCLCURL_TEST_HTTP_SERVER_SCRIPT`
@@ -132,29 +169,30 @@ The Tcl test support layer uses protocol-specific base URLs. You can override th
 - `TCLCURL_TEST_PROXY_BASE_URL`: base URL for the running Tcl HTTP proxy test server, default `http://127.0.0.1:8992/`
 - `TCLCURL_TEST_DOC_ROOT`: shared document root used by the Tcl test servers, default `/tmp/tclcurl`
 - `TCLCURL_TEST_FTP_ROOT`: root directory used by the Tcl FTP test server, default `TCLCURL_TEST_DOC_ROOT`
-- `TCLCURL_TEST_HTTPS_CERT_FILE`: path to the certificate file used by the Tcl HTTPS test server, default `tests/certs/server.crt`
-- `TCLCURL_TEST_HTTPS_KEY_FILE`: path to the private key file used by the Tcl HTTPS test server, default `tests/certs/server.key`
-- `TCLCURL_TEST_HTTP_SERVER_SCRIPT`: path to the Tcl test server framework script,
+- `TCLCURL_TEST_HTTPS_CERT_FILE`: path to the certificate file used by the Tcl HTTPS test server, default `/tmp/certs/server.crt`
+- `TCLCURL_TEST_HTTPS_KEY_FILE`: path to the private key file used by the Tcl HTTPS test server, default `/tmp/certs/server.key`
+- `TCLCURL_TEST_HTTP_SERVER_SCRIPT`: path to the reference Tcl test server framework script,
   used when no `-httpserver` CLI override is given; default `testservers/testserver.tcl`
 
 ## Running secure protocol tests
 
-In order to test the https series of tests you have to create a self-signed pair of key/certificate to be stored in tests/certs
+In order to test HTTPS or FTPS, create a temporary self-signed certificate and
+private key.  The examples below use `/tmp/certs`.
 
 If you want to keep the credentials elsewhere, either:
 
-- start `testservers/testserver.tcl` with `--certfile /path/to/server.crt --keyfile /path/to/server.key`
-- or run `tests/all.tcl --certfile /path/to/server.crt --keyfile /path/to/server.key`
+- start TclWire with `--certfile /tmp/certs/server.crt --keyfile /tmp/certs/server.key`
+- or run `tests/all.tcl --certfile /tmp/certs/server.crt --keyfile /tmp/certs/server.key`
 - or export `TCLCURL_TEST_HTTPS_CERT_FILE` and `TCLCURL_TEST_HTTPS_KEY_FILE`
 
 ```
- mkdir -p tests/certs
+mkdir -p /tmp/certs
 
-  openssl req   -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes \
-                -keyout tests/certs/server.key \
-                -out tests/certs/server.crt \
-                -subj "/CN=localhost" \
-                -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+openssl req -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes \
+  -keyout /tmp/certs/server.key \
+  -out /tmp/certs/server.crt \
+  -subj "/CN=localhost" \
+  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
 ```
 
 ## Shared transport scenarios
@@ -215,7 +253,7 @@ Tests that are primarily about easy-handle lifecycle or share-handle lifecycle s
 - expected verification failure when the certificate is not trusted
 - shared transport scenarios reused from `tests/http_common.tcl`
 
-`tests/ftp.test` covers the local Tcl FTP server:
+`tests/ftp.test` covers the local FTP service:
 
 - upload and download of text and binary files
 - directory listing via `LIST` / `NLST`
@@ -234,16 +272,14 @@ Tests that are primarily about easy-handle lifecycle or share-handle lifecycle s
 
 ## HTTPS setup
 
-The HTTPS server requires:
+The HTTPS service requires:
 
 - the Tcl `tls` package
-- a local certificate and private key, by default at:
-  - `tests/certs/server.crt`
-  - `tests/certs/server.key`
+- a local certificate and private key
 
 You can override those paths:
 
-- for direct server runs, with `--certfile /path/to/server.crt --keyfile /path/to/server.key`
+- for direct TclWire runs, with `--certfile /tmp/certs/server.crt --keyfile /tmp/certs/server.key`
 - for the test suite, with `TCLCURL_TEST_HTTPS_CERT_FILE` and `TCLCURL_TEST_HTTPS_KEY_FILE`
 
 These files are intentionally not required to live in the repository. When they are missing, HTTPS-backed tests are skipped.
@@ -251,11 +287,11 @@ These files are intentionally not required to live in the repository. When they 
 One simple way to generate them locally is:
 
 ```bash
-mkdir -p tests/certs
+mkdir -p /tmp/certs
 
 openssl req -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes \
-  -keyout tests/certs/server.key \
-  -out tests/certs/server.crt \
+  -keyout /tmp/certs/server.key \
+  -out /tmp/certs/server.crt \
   -subj "/CN=localhost" \
   -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
 ```
