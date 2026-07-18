@@ -1,19 +1,13 @@
 # mime.test --
 #
-# Tests MIME-based multipart form data submission.
+# TclWire-compatible MIME tests for tclcurl-ng.
 #
-# Copyright (c) 2024-2026 Massimo Manghi
-#
-# SPDX-License-Identifier: TCL
-#
-# See the file "license.terms" at the top level of this distribution
-# for information on usage and redistribution of this file, and for the
-# complete disclaimer of warranties and limitation of liability.
-#
-# Portions of this file were drafted or revised with AI assistance
-# under the direction and review of Massimo Manghi
+# These tests preserve the tclcurl-ng MIME submission semantics while checking
+# the semantic request view exposed by a general-purpose TclWire application
+# server, rather than assuming the server echoes raw multipart wire bytes.
 
 package require tcltest
+package require sha256
 namespace import ::tcltest::*
 
 source [file join [file dirname [file normalize [info script]]] support.tcl]
@@ -51,22 +45,18 @@ test mime-1.1 {-httppost sends mixed textual form data as multipart/form-data} -
                           -noprogress 1
         set rc [$handle perform]
         set response [::tclcurl::test::parse_server_response $body]
-        set payload [binary decode hex [dict get $response body-hex]]
         list \
             $rc \
             [$handle getinfo responsecode] \
             [dict get $response method] \
             [string match "multipart/form-data*" [dict get $response content-type]] \
-            [expr {[string first {name="text_entry"} $payload] >= 0}] \
-            [expr {[string first "TCLCURL" $payload] >= 0}] \
-            [expr {[string first {name="option_selected"} $payload] >= 0}] \
-            [expr {[string first "opt1" $payload] >= 0}] \
-            [expr {[string first {name="result_limit"} $payload] >= 0}] \
-            [expr {[string first "25" $payload] >= 0}] \
-            [expr {[string first {name="submit"} $payload] >= 0}] \
-            [expr {[string first "Search" $payload] >= 0}]
+            [dict get $response form.text_entry] \
+            [dict get $response part.1.content-type] \
+            [dict get $response form.option_selected] \
+            [dict get $response form.result_limit] \
+            [dict get $response form.submit]
     }
-} -result {0 200 POST 1 1 1 1 1 1 1 1 1}
+} -result {0 200 POST 1 TCLCURL text/plain opt1 25 Search}
 
 test mime-1.2 {-httppost can send a binary buffer part} -constraints http_server -body {
     set body {}
@@ -82,24 +72,27 @@ test mime-1.2 {-httppost can send a binary buffer part} -constraints http_server
                           -noprogress 1
         set rc [$handle perform]
         set response [::tclcurl::test::parse_server_response $body]
-        set bodyHex [dict get $response body-hex]
-        set multipartPayload [binary decode hex $bodyHex]
         list \
             $rc \
             [$handle getinfo responsecode] \
             [dict get $response method] \
             [string match "multipart/form-data*" [dict get $response content-type]] \
-            [expr {[string first {name="blob"; filename="blob.bin"} $multipartPayload] >= 0}] \
-            [expr {[string first "application/octet-stream" $multipartPayload] >= 0}] \
-            [expr {[string first $payloadHex $bodyHex] >= 0}] \
-            [expr {[string first {name="metadata"} $multipartPayload] >= 0}] \
-            [expr {[string first "buffer-upload" $multipartPayload] >= 0}]
+            [dict get $response file.blob.filename] \
+            [dict get $response file.blob.content-type] \
+            [expr {[dict get $response file.blob.body-hex] eq $payloadHex}] \
+            [dict get $response form.metadata]
     }
-} -result {0 200 POST 1 1 1 1 1 1}
+} -result {0 200 POST 1 blob.bin application/octet-stream 1 buffer-upload}
 
 test mime-1.3 {-httppost can send a file part from disk} -constraints http_server -body {
     set body {}
     set fixture [file join [file dirname [file normalize [info script]]] tcl9.png]
+    set fh [open $fixture rb]
+    try {
+        set expectedSha [::sha2::sha256 -hex [read $fh]]
+    } finally {
+        close $fh
+    }
     ::tclcurl::test::with_easy_handle handle {
         $handle configure -url [::tclcurl::test::server::base_url request-inspect] \
                           -post 1 \
@@ -110,21 +103,17 @@ test mime-1.3 {-httppost can send a file part from disk} -constraints http_serve
                           -noprogress 1
         set rc [$handle perform]
         set response [::tclcurl::test::parse_server_response $body]
-        set bodyHex [dict get $response body-hex]
-        set multipartPayload [binary decode hex $bodyHex]
         list \
             $rc \
             [$handle getinfo responsecode] \
             [dict get $response method] \
             [string match "multipart/form-data*" [dict get $response content-type]] \
-            [expr {[string first {name="image"; filename="tcl9.png"} $multipartPayload] >= 0}] \
-            [expr {[string first "image/png" $multipartPayload] >= 0}] \
-            [expr {[string first "89504e470d0a1a0a" $bodyHex] >= 0}] \
-            [expr {[string first "49454e44ae426082" $bodyHex] >= 0}] \
-            [expr {[string first {name="description"} $multipartPayload] >= 0}] \
-            [expr {[string first "logo file" $multipartPayload] >= 0}]
+            [dict get $response file.image.filename] \
+            [dict get $response file.image.content-type] \
+            [expr {[dict get $response file.image.body-sha256] eq $expectedSha}] \
+            [dict get $response form.description]
     }
-} -result {0 200 POST 1 1 1 1 1 1 1}
+} -result {0 200 POST 1 tcl9.png image/png 1 {logo file}}
 
 test mime-2.1 {-httppost can attach custom headers to an individual part} -constraints http_server -body {
     set body {}
@@ -141,19 +130,18 @@ test mime-2.1 {-httppost can attach custom headers to an individual part} -const
                           -noprogress 1
         set rc [$handle perform]
         set response [::tclcurl::test::parse_server_response $body]
-        set multipartPayload [binary decode hex [dict get $response body-hex]]
         list \
             $rc \
             [$handle getinfo responsecode] \
             [dict get $response method] \
             [string match "multipart/form-data*" [dict get $response content-type]] \
-            [expr {[string first {name="meta"} $multipartPayload] >= 0}] \
-            [expr {[string first "Content-Type: text/plain" $multipartPayload] >= 0}] \
-            [expr {[string first "X-Part-Test: yes" $multipartPayload] >= 0}] \
-            [expr {[string first "Content-ID: <meta-part>" $multipartPayload] >= 0}] \
-            [expr {[string first "hello" $multipartPayload] >= 0}]
+            [dict get $response part.1.name] \
+            [dict get $response part.1.content-type] \
+            [dict get $response part.1.header.x-part-test] \
+            [dict get $response part.1.header.content-id] \
+            [dict get $response form.meta]
     }
-} -result {0 200 POST 1 1 1 1 1 1}
+} -result {0 200 POST 1 meta text/plain yes <meta-part> hello}
 
 test mime-2.2 {-httppost can override the advertised filename of a file part} -constraints http_server -body {
     set body {}
@@ -172,19 +160,16 @@ test mime-2.2 {-httppost can override the advertised filename of a file part} -c
                           -noprogress 1
         set rc [$handle perform]
         set response [::tclcurl::test::parse_server_response $body]
-        set bodyHex [dict get $response body-hex]
-        set multipartPayload [binary decode hex $bodyHex]
         list \
             $rc \
             [$handle getinfo responsecode] \
             [dict get $response method] \
             [string match "multipart/form-data*" [dict get $response content-type]] \
-            [expr {[string first "filename=\"$advertisedName\"" $multipartPayload] >= 0}] \
-            [expr {[string first {filename="tcl9.png"} $multipartPayload] < 0}] \
-            [expr {[string first "application/octet-stream" $multipartPayload] >= 0}] \
-            [expr {[string first "89504e470d0a1a0a" $bodyHex] >= 0}]
+            [dict get $response file.image.filename] \
+            [dict get $response file.image.content-type] \
+            [expr {[dict get $response file.image.body-length] > 0}]
     }
-} -result {0 200 POST 1 1 1 1 1}
+} -result {0 200 POST 1 custom-image.bin application/octet-stream 1}
 
 test mime-2.3 {-httppost can send file-backed content without using the original filename} -constraints http_server -body {
     set body {}
@@ -209,18 +194,17 @@ test mime-2.3 {-httppost can send file-backed content without using the original
                           -noprogress 1
         set rc [$handle perform]
         set response [::tclcurl::test::parse_server_response $body]
-        set multipartPayload [binary decode hex [dict get $response body-hex]]
         list \
             $rc \
             [$handle getinfo responsecode] \
             [dict get $response method] \
             [string match "multipart/form-data*" [dict get $response content-type]] \
-            [expr {[string first {name="generated"; filename="generated.txt"} $multipartPayload] >= 0}] \
-            [expr {[string first "Content-Type: text/plain" $multipartPayload] >= 0}] \
-            [expr {[string first $generated $multipartPayload] >= 0}]
+            [dict get $response file.generated.filename] \
+            [dict get $response file.generated.content-type] \
+            [expr {[binary decode hex [dict get $response file.generated.body-hex]] eq $generated}]
     }
 } -cleanup {
     catch {file delete -force [file join [::tcltest::temporaryDirectory] mime-filecontent.txt]}
-} -result {0 200 POST 1 1 1 1}
+} -result {0 200 POST 1 generated.txt text/plain 1}
 
 cleanupTests
