@@ -2767,10 +2767,28 @@ argument.</p>
 <h1 id="examples">EXAMPLES</h1>
 <p>The examples in this section assume you are running from the root of the
 TclCurl source tree.</p>
-<p>To start the local HTTP test server used in the examples, run:</p>
-<pre><code class="language-sh">tclsh testservers&#47;testserver.tcl
+<p>The local HTTP test server used in the examples is a TclWire application.  The
+application is implemented in <code>tests&#47;tclcurl_test_server.tcl</code> and loaded by the
+TclWire configuration in <code>tests&#47;tclwire.toml</code>.</p>
+<p>From a TclWire checkout, start it with:</p>
+<pre><code class="language-sh">tcl&#47;tclwire.tcl --config &#47;path&#47;to&#47;tclcurl-ng&#47;tests&#47;tclwire.toml \
+  --logfile &#47;tmp&#47;tclwire.log \
+  --dump-multipart-requests \
+  --noftp-user-check \
+  --certfile &#47;tmp&#47;certs&#47;server.crt \
+  --keyfile &#47;tmp&#47;certs&#47;server.key
 </code></pre>
-<p>By default, this starts an HTTP server on <code>http:&#47;&#47;127.0.0.1:8990&#47;</code>.</p>
+<p>For example, if your working configuration lives in <code>~&#47;Dropbox&#47;tclcurl&#47;tclwire.toml</code>:</p>
+<pre><code class="language-sh">tcl&#47;tclwire.tcl --config ~&#47;Dropbox&#47;tclcurl&#47;tclwire.toml \
+  --logfile &#47;tmp&#47;tclwire.log \
+  --dump-multipart-requests \
+  --noftp-user-check \
+  --certfile &#47;tmp&#47;certs&#47;server.crt \
+  --keyfile &#47;tmp&#47;certs&#47;server.key
+</code></pre>
+<p>By default, the supplied configuration starts HTTP on <code>http:&#47;&#47;127.0.0.1:8990&#47;</code>.
+The <code>&#47;tmp&#47;certs</code> paths above are suitable for temporary self-signed
+certificates used by HTTPS and FTPS tests.</p>
 <p>The path <code>http:&#47;&#47;127.0.0.1:8990&#47;tclcurl-man</code> returns the HTML version of this
 manual page from <code>doc&#47;tclcurl.html</code>, which makes it a convenient target for a
 basic <code>GET</code> example.</p>

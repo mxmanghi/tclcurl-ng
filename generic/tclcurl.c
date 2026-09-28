@@ -152,6 +152,10 @@ curlDetachShareHandle(struct curlObjData *curlData)
  *----------------------------------------------------------------------
  */
 
+
+#define TCLCURL_CREATE_CMD(curlcmd,tclcurlproc) \
+        Tcl_CreateObjCommand (interp,curlcmd,tclcurlproc,(ClientData)NULL,(Tcl_CmdDeleteProc *)NULL);
+
 EXTERN int
 Tclcurl_Init (Tcl_Interp *interp) {
 
@@ -165,24 +169,15 @@ Tclcurl_Init (Tcl_Interp *interp) {
     }
 #endif
 
-    Tcl_CreateObjCommand (interp,"::curl::init",curlInitObjCmd,
-            (ClientData)NULL,(Tcl_CmdDeleteProc *)NULL);
-    Tcl_CreateObjCommand (interp,"::curl::version",curlVersion,
-            (ClientData)NULL,(Tcl_CmdDeleteProc *)NULL);
-    Tcl_CreateObjCommand (interp,"::curl::escape",curlEscape,
-            (ClientData)NULL,(Tcl_CmdDeleteProc *)NULL);
-    Tcl_CreateObjCommand (interp,"::curl::unescape",curlUnescape,
-            (ClientData)NULL,(Tcl_CmdDeleteProc *)NULL);
-    Tcl_CreateObjCommand (interp,"::curl::versioninfo",curlVersionInfo,
-            (ClientData)NULL,(Tcl_CmdDeleteProc *)NULL);
-    Tcl_CreateObjCommand (interp,"::curl::shareinit",curlShareInitObjCmd,
-            (ClientData)NULL,(Tcl_CmdDeleteProc *)NULL);
-    Tcl_CreateObjCommand (interp,"::curl::easystrerror",curlEasyStringError,
-            (ClientData)NULL,(Tcl_CmdDeleteProc *)NULL);
-    Tcl_CreateObjCommand (interp,"::curl::sharestrerror",curlShareStringError,
-            (ClientData)NULL,(Tcl_CmdDeleteProc *)NULL);
-    Tcl_CreateObjCommand (interp,"::curl::multistrerror",curlMultiStringError,
-            (ClientData)NULL,(Tcl_CmdDeleteProc *)NULL);
+    TCLCURL_CREATE_CMD("::curl::init",curlInitObjCmd)
+    TCLCURL_CREATE_CMD("::curl::version",curlVersion)
+    TCLCURL_CREATE_CMD("::curl::escape",curlEscape)
+    TCLCURL_CREATE_CMD("::curl::unescape",curlUnescape)
+    TCLCURL_CREATE_CMD("::curl::versioninfo",curlVersionInfo)
+    TCLCURL_CREATE_CMD("::curl::shareinit",curlShareInitObjCmd)
+    TCLCURL_CREATE_CMD("::curl::easystrerror",curlEasyStringError)
+    TCLCURL_CREATE_CMD("::curl::sharestrerror",curlShareStringError)
+    TCLCURL_CREATE_CMD("::curl::multistrerror",curlMultiStringError)
 
     Tclcurl_MultiInit(interp);
 
@@ -216,7 +211,7 @@ curlCreateObjCmd (Tcl_Interp *interp,struct curlObjData  *curlData) {
     Tcl_Command         cmdToken;
 
     /* We try with curl1, if it already exists with curl2...*/
-    for (i=1;;i++) {
+    for (i=0;;i++) {
         snprintf(handleName,sizeof(handleName),"curl%d",i);
         if (!Tcl_GetCommandInfo(interp,handleName,&info)) {
             cmdToken=Tcl_CreateObjCommand(interp,handleName,curlObjCmd,
