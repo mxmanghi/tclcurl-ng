@@ -652,8 +652,7 @@ curlHeaderReader(void *ptr,size_t size,size_t nmemb,FILE *curlDataPtr) {
         strncpy(httpStatus,startPtr,charLength);
         httpStatus[charLength]=0;
 
-        Tcl_SetVar2(curlData->interp,curlData->headerVar,"http",
-                httpStatus,0);
+        Tcl_SetVar2(curlData->interp,curlData->headerVar,"http",httpStatus,0);
         Tcl_Free(httpStatus);
     }
     return size*nmemb;

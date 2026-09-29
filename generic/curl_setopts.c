@@ -886,19 +886,18 @@ TclCurl_HandleHeaderVar(TclCurlOptsArgs *args)
     if (args->curlData->headerFlag) {
         if (args->curlData->headerHandle!=NULL) {
             fclose(args->curlData->headerHandle);
-            args->curlData->headerHandle=NULL;
+            args->curlData->headerHandle = NULL;
         }
         curl_easy_setopt(curlHandle,CURLOPT_HEADERDATA,NULL);
-        args->curlData->headerFlag=0;
+        args->curlData->headerFlag = 0;
     }
-    if (curl_easy_setopt(curlHandle,CURLOPT_HEADERFUNCTION,
-            curlHeaderReader)) {
+    if (curl_easy_setopt(curlHandle,CURLOPT_HEADERFUNCTION,curlHeaderReader)) {
         return TCL_ERROR;
     }
     Tcl_Free(args->curlData->headerVar);
-    args->curlData->headerVar=curlstrdup(Tcl_GetString(args->objv));
-    if (curl_easy_setopt(curlHandle,CURLOPT_HEADERDATA,
-            (FILE *)args->curlData)) {
+
+    args->curlData->headerVar = curlstrdup(Tcl_GetString(args->objv));
+    if (curl_easy_setopt(curlHandle,CURLOPT_HEADERDATA,(FILE *)args->curlData)) {
         return TCL_ERROR;
     }
     return TCL_OK;
@@ -919,8 +918,7 @@ TclCurl_HandleBodyVar(TclCurlOptsArgs *args)
         curl_easy_setopt(curlHandle,CURLOPT_WRITEDATA,NULL);
     }
     args->curlData->outFlag=0;
-    if (curl_easy_setopt(curlHandle,CURLOPT_WRITEFUNCTION,
-            curlBodyReader)) {
+    if (curl_easy_setopt(curlHandle,CURLOPT_WRITEFUNCTION,curlBodyReader)) {
         return TCL_ERROR;
     }
     if (curl_easy_setopt(curlHandle,CURLOPT_WRITEDATA,args->curlData)) {

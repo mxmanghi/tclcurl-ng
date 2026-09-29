@@ -1,5 +1,5 @@
 .\" -*- mode: troff; coding: utf-8 -*-
-.TH "TclCurl" "n" "15 May 2026" "TclCurl 8.0.3" "TclCurl Easy Interface"
+.TH "TclCurl" "n" "15 May 2026" "TclCurl 8.0.4" "TclCurl Easy Interface"
 .SH NAME
 .LP
 TclCurl - Transfer data to and from URLs using FTP, FTPS, HTTP, HTTPS, SCP,
@@ -2626,26 +2626,26 @@ TclCurl source tree.
 The local HTTP test server used in the examples is a TclWire application.  The
 application is implemented in \f(CRtests/tclcurl_test_server.tcl\fR and loaded by the
 TclWire configuration in \f(CRtests/tclwire.toml\fR.
-.LP
+.PP
 From a TclWire checkout, start it with:
 .LP
 .EX
-tcl/tclwire.tcl --config /path/to/tclcurl-ng/tests/tclwire.toml \\
-  --logfile /tmp/tclwire.log \\
-  --dump-multipart-requests \\
-  --noftp-user-check \\
-  --certfile /tmp/certs/server.crt \\
+tcl/tclwire.tcl --config /path/to/tclcurl-ng/tests/tclwire.toml \e
+  --logfile /tmp/tclwire.log \e
+  --dump-multipart-requests \e
+  --noftp-user-check \e
+  --certfile /tmp/certs/server.crt \e
   --keyfile /tmp/certs/server.key
 .EE
 .PP
-For example, if your working configuration lives in \f(CR~/Dropbox/tclcurl/tclwire.toml\fR:
+For example, if your working configuration lives in \f(CR\(ti/Dropbox/tclcurl/tclwire.toml\fR:
 .LP
 .EX
-tcl/tclwire.tcl --config ~/Dropbox/tclcurl/tclwire.toml \\
-  --logfile /tmp/tclwire.log \\
-  --dump-multipart-requests \\
-  --noftp-user-check \\
-  --certfile /tmp/certs/server.crt \\
+tcl/tclwire.tcl --config \(ti/Dropbox/tclcurl/tclwire.toml \e
+  --logfile /tmp/tclwire.log \e
+  --dump-multipart-requests \e
+  --noftp-user-check \e
+  --certfile /tmp/certs/server.crt \e
   --keyfile /tmp/certs/server.key
 .EE
 .PP
