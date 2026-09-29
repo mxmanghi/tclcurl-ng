@@ -223,7 +223,7 @@ if test "${TEA_PLATFORM}" = "windows" ; then
     AC_DEFINE(BUILD_sample, 1, [Build windows export dll])
     CLEANFILES="$CLEANFILES *.lib *.dll *.exp *.ilk *.pdb vc*.pch"
     #TEA_ADD_SOURCES([win/winFile.c])
-    #TEA_ADD_INCLUDES([-I\"$(${CYGPATH} ${srcdir}/win)\"])
+    #TEA_ADD_INCLUDES([-I\"$(${CYGPATH}${srcdir}/win)\"])
 else
     # Ensure no empty else clauses
     :
@@ -269,6 +269,11 @@ TEA_ENABLE_SHARED
 #--------------------------------------------------------------------
 
 TEA_CONFIG_CFLAGS
+
+# Fix for macOS/Darwin linker issue with Tcl Stubs
+AS_IF([test "`uname -s`" = "Darwin"], [
+    SHLIB_LD_LIBS="${SHLIB_LD_LIBS} -Wl,-undefined,dynamic_lookup"
+])
 
 #--------------------------------------------------------------------
 # Set the default compiler switches based on the --enable-symbols option.

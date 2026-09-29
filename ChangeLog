@@ -1,3 +1,10 @@
+2026-09-29 Massimo Manghi <massimo.manghi@rivetweb.org>
+	* VERSION: bumping to version 8.0.4
+	* generic/tclcurl.c: searching handles starting from curl0, define macro for
+	new commands creation
+	* configure.ac: Add linking option specific to MacOS/Darwin (patch
+	contributed by Luc Mouliner (luc.moulinier@unistra.fr)
+
 2026-07-16 Massimo Manghi <massimo.manghi@rivetweb.org>
 	* VERSION: bumping to version 8.0.3
 	* generic/multi.[c|h]: introduced X macro controlling internal command dispatch
