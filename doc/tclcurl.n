@@ -633,6 +633,10 @@ method specified with \fB-tlsauthtype\fR. This option requires
 Pass a string containing the password to use for the TLS authentication
 method specified with \fB-tlsauthtype\fR. This option requires
 \fB-tlsauthusername\fR to be set as well.
+.IP
+Note that \fB-tlsauthtype\fR,\fBtlsauthusername\fR and \fB-tlsauthpassword\fR
+are by default disabled because removed from libcurl starting with version 8.22.0.
+To enable this option build tclcurl with \(enwith-deprecated-code=v8.22.0
 .TP 3
 \fB-proxyauth\fR
 Use this option to tell TclCurl which authentication method to use for

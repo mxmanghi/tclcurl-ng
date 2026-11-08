@@ -1,3 +1,10 @@
+2026-11-08 Massimo Manghi <massimo.manghi@rivetweb.org>
+    * configure.ac:
+    * generic/curl_setopts.[hc]: Add support for more deprecate code control (after
+    libcurl 8.22.0 dropped support of various TLS related options)
+    * doc/tclcurl.n.md.in: Documenting the macro to control inclusion of code
+    deprecated after 8.22.0
+
 2026-09-29 Massimo Manghi <massimo.manghi@rivetweb.org>
 	* VERSION: bumping to version 8.0.4
 	* generic/tclcurl.c: searching handles starting from curl0, define macro for

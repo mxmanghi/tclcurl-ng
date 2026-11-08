@@ -624,6 +624,9 @@ method specified with <strong>-tlsauthtype</strong>. This option requires
 <p>Pass a string containing the password to use for the TLS authentication
 method specified with <strong>-tlsauthtype</strong>. This option requires
 <strong>-tlsauthusername</strong> to be set as well.</p>
+<p>Note that <strong>-tlsauthtype</strong>,<strong>tlsauthusername</strong> and <strong>-tlsauthpassword</strong>
+are by default disabled because removed from libcurl starting with version 8.22.0.
+To enable this option build tclcurl with &#8211;with-deprecated-code=v8.22.0</p>
 </dd>
 <dt><strong>-proxyauth</strong></dt>
 <dd>

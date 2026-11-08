@@ -633,6 +633,10 @@ default with **curlHandle reset**.
     method specified with **-tlsauthtype**. This option requires
     **-tlsauthusername** to be set as well.
 
+  Note that **-tlsauthtype**,**tlsauthusername** and **-tlsauthpassword**
+  are by default disabled because removed from libcurl starting with version 8.22.0.
+  To enable this option build tclcurl with --with-deprecated-code=v8.22.0
+
 **-proxyauth**
 :   Use this option to tell TclCurl which authentication method to use for
     proxy authentication. For some methods, this causes an extra network

@@ -15,6 +15,9 @@
 /* Define to 1 to enable deprecated code for CURL versions prior to 8.17.0. */
 #undef CURL_PRE_8_17_0_DEPR
 
+/* Define to 1 to enable deprecated code for CURL versions prior to 8.22.0. */
+#undef CURL_PRE_8_22_0_DEPR
+
 /* Defined when cygwin/mingw does not support EXCEPTION DISPOSITION */
 #undef EXCEPTION_DISPOSITION
 

@@ -684,7 +684,7 @@ size_t
 curlBodyReader(void *ptr,size_t size,size_t nmemb,FILE *curlDataPtr) {
 
     register int realsize = size * nmemb;
-    struct MemoryStruct *mem=&(((struct curlObjData *)curlDataPtr)->bodyVar);
+    struct MemoryStruct *mem = &(((struct curlObjData *)curlDataPtr)->bodyVar);
 
     mem->memory = (char *)Tcl_Realloc(mem->memory,mem->size + realsize);
     if (mem->memory) {
@@ -1735,21 +1735,19 @@ int
 curlOpenFiles(Tcl_Interp *interp,struct curlObjData *curlData) {
 
     if (curlData->outFlag) {
-        if (curlOpenFile(interp,curlData->outFile,&(curlData->outHandle),1,
-                curlData->transferText)) {
+        if (curlOpenFile(interp,curlData->outFile,&(curlData->outHandle),1,curlData->transferText)) {
             return 1;
         }
         curl_easy_setopt(curlData->curl,CURLOPT_WRITEDATA,curlData->outHandle);
     }
     if (curlData->inFlag) {
-        if (curlOpenFile(interp,curlData->inFile,&(curlData->inHandle),0,
-                curlData->transferText)) {
+        if (curlOpenFile(interp,curlData->inFile,&(curlData->inHandle),0,curlData->transferText)) {
             return 1;
         }
         curl_easy_setopt(curlData->curl,CURLOPT_READDATA,curlData->inHandle);
         if (curlData->anyAuthFlag) {
-            curl_easy_setopt(curlData->curl, CURLOPT_SEEKFUNCTION, (curl_seek_callback)curlseek);
-            curl_easy_setopt(curlData->curl, CURLOPT_SEEKDATA, curlData->inHandle);
+            curl_easy_setopt(curlData->curl,CURLOPT_SEEKFUNCTION,(curl_seek_callback)curlseek);
+            curl_easy_setopt(curlData->curl,CURLOPT_SEEKDATA,curlData->inHandle);
         }
     }
     if (curlData->headerFlag) {
@@ -1765,6 +1763,7 @@ curlOpenFiles(Tcl_Interp *interp,struct curlObjData *curlData) {
         curl_easy_setopt(curlData->curl,CURLOPT_STDERR,curlData->stderrHandle);
     }
     return 0;
+
 }
 
 /*----------------------------------------------------------------------
@@ -1816,11 +1815,11 @@ curlCloseFiles(struct curlObjData *curlData) {
  */
 int
 curlOpenFile(Tcl_Interp *interp,char *fileName, FILE **handle, int writing, int text) {
-    Tcl_Obj        *resultObjPtr;
+    Tcl_Obj *resultObjPtr;
 
 #ifdef _WIN32
-    Tcl_DString     nativeString;
-    TCHAR          *nativeFile=Tcl_WinUtfToTChar(fileName,-1,&nativeString);
+    Tcl_DString  nativeString;
+    TCHAR       *nativeFile=Tcl_WinUtfToTChar(fileName,-1,&nativeString);
 #endif
 
     if (*handle!=NULL) {
@@ -1864,7 +1863,8 @@ curlOpenFile(Tcl_Interp *interp,char *fileName, FILE **handle, int writing, int 
  */
 void
 curlSetBodyVarName(Tcl_Interp *interp,struct curlObjData *curlDataPtr) {
-    Tcl_Obj    *bodyVarNameObjPtr, *bodyVarObjPtr;
+    Tcl_Obj* bodyVarNameObjPtr;
+    Tcl_Obj* bodyVarObjPtr;
 
     bodyVarNameObjPtr=Tcl_NewStringObj(curlDataPtr->bodyVarName,-1);
     bodyVarObjPtr=Tcl_NewByteArrayObj((unsigned char *)curlDataPtr->bodyVar.memory,
@@ -1873,8 +1873,8 @@ curlSetBodyVarName(Tcl_Interp *interp,struct curlObjData *curlDataPtr) {
     Tcl_ObjSetVar2(interp,bodyVarNameObjPtr,(Tcl_Obj *)NULL,bodyVarObjPtr,0);
 
     Tcl_Free(curlDataPtr->bodyVar.memory);
-    curlDataPtr->bodyVar.memory=NULL;
-    curlDataPtr->bodyVar.size=0;
+    curlDataPtr->bodyVar.memory = NULL;
+    curlDataPtr->bodyVar.size = 0;
 }
 
 /*----------------------------------------------------------------------

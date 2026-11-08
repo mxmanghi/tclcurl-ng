@@ -45,10 +45,6 @@ const static char *gssapidelegation[] = {
     "flag", "policyflag", (char *) NULL
 };
 
-const static char *tlsauth[] = {
-    "none", "srp", (char *)NULL
-};
-
 const static char *postredir[] = {
     "301", "302", "all", (char *)NULL
 };
@@ -470,11 +466,19 @@ static int TCLCURL_OPT_HANDLER(TclCurl_HandleChunkBgnVar)
 static int TCLCURL_OPT_HANDLER(TclCurl_HandleChunkEndProc)
 static int TCLCURL_OPT_HANDLER(TclCurl_HandleFnmatchProc)
 static int TCLCURL_OPT_HANDLER(TclCurl_HandleResolveList)
-static int TCLCURL_OPT_HANDLER(TclCurl_HandleTlsAuthType)
 static int TCLCURL_OPT_HANDLER(TclCurl_HandleGssApiDelegation)
 static int TCLCURL_OPT_HANDLER(TclCurl_HandleTelnetOptions)
 static int TCLCURL_OPT_HANDLER(TclCurl_HandleCainfoBlob)
        int TCLCURL_OPT_HANDLER(TclCurl_HandleHttpPost)
+
+#ifdef CURL_PRE_8_22_0_DEPR
+const static char *tlsauth[] = {
+    "none", "srp", (char *)NULL
+};
+
+static int TCLCURL_OPT_HANDLER(TclCurl_HandleTlsAuthType)
+#endif
+
 
 #undef TCLCURL_OPT_HANDLER
 
@@ -602,19 +606,19 @@ TclCurl_HandleOutFile(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
 
     Tcl_Free(args->curlData->outFile);
-    args->curlData->outFile=curlstrdup(Tcl_GetString(args->objv));
+    args->curlData->outFile = curlstrdup(Tcl_GetString(args->objv));
     if (args->curlData->outFlag) {
-        if (args->curlData->outHandle!=NULL) {
+        if (args->curlData->outHandle != NULL) {
             fclose(args->curlData->outHandle);
-            args->curlData->outHandle=NULL;
+            args->curlData->outHandle = NULL;
         }
     }
-    if ((strcmp(args->curlData->outFile,""))&&(strcmp(args->curlData->outFile,"stdout"))) {
-        args->curlData->outFlag=1;
+    if (strcmp(args->curlData->outFile,"") && strcmp(args->curlData->outFile,"stdout")) {
+        args->curlData->outFlag = 1;
     } else {
-        args->curlData->outFlag=0;
+        args->curlData->outFlag = 0;
         curl_easy_setopt(curlHandle,CURLOPT_WRITEDATA,stdout);
-        args->curlData->outFile=NULL;
+        args->curlData->outFile = NULL;
     }
     curl_easy_setopt(curlHandle,CURLOPT_WRITEFUNCTION,NULL);
     return TCL_OK;
@@ -626,19 +630,19 @@ TclCurl_HandleReadData(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
 
     Tcl_Free(args->curlData->inFile);
-    args->curlData->inFile=curlstrdup(Tcl_GetString(args->objv));
+    args->curlData->inFile = curlstrdup(Tcl_GetString(args->objv));
     if (args->curlData->inFlag) {
-        if (args->curlData->inHandle!=NULL) {
+        if (args->curlData->inHandle != NULL) {
             fclose(args->curlData->inHandle);
-            args->curlData->inHandle=NULL;
+            args->curlData->inHandle = NULL;
         }
     }
-    if ((strcmp(args->curlData->inFile,""))&&(strcmp(args->curlData->inFile,"stdin"))) {
+    if (strcmp(args->curlData->inFile,"") && strcmp(args->curlData->inFile,"stdin")) {
         args->curlData->inFlag=1;
     } else {
         curl_easy_setopt(curlHandle,CURLOPT_READDATA,stdin);
-        args->curlData->inFlag=0;
-        args->curlData->inFile=NULL;
+        args->curlData->inFlag = 0;
+        args->curlData->inFile = NULL;
     }
     curl_easy_setopt(curlHandle,CURLOPT_READFUNCTION,NULL);
     return TCL_OK;
@@ -650,8 +654,7 @@ TclCurl_HandleNetrc(TclCurlOptsArgs *args)
     CURL *curlHandle = args->curlData->curl;
     int  netrcIndex;
 
-    if (Tcl_GetIndexFromObj(args->interp, args->objv, netrcTable,
-            "netrc option",TCL_EXACT,&netrcIndex)==TCL_ERROR) {
+    if (Tcl_GetIndexFromObj(args->interp,args->objv,netrcTable,"netrc option",TCL_EXACT,&netrcIndex) == TCL_ERROR) {
         return TCL_ERROR;
     }
     if (curl_easy_setopt(curlHandle,CURLOPT_NETRC,netrcIndex)) {
@@ -917,7 +920,7 @@ TclCurl_HandleBodyVar(TclCurlOptsArgs *args)
         }
         curl_easy_setopt(curlHandle,CURLOPT_WRITEDATA,NULL);
     }
-    args->curlData->outFlag=0;
+    args->curlData->outFlag = 0;
     if (curl_easy_setopt(curlHandle,CURLOPT_WRITEFUNCTION,curlBodyReader)) {
         return TCL_ERROR;
     }
@@ -1638,6 +1641,7 @@ TclCurl_HandleResolveList(TclCurlOptsArgs *args)
     return TCL_OK;
 }
 
+#ifdef CURL_PRE_8_22_0_DEPR
 static int
 TclCurl_HandleTlsAuthType(TclCurlOptsArgs *args)
 {
@@ -1667,6 +1671,7 @@ TclCurl_HandleTlsAuthType(TclCurlOptsArgs *args)
     Tcl_DecrRefCount(tmpObjPtr);
     return TCL_OK;
 }
+#endif
 
 static int
 TclCurl_HandleGssApiDelegation(TclCurlOptsArgs *args)
