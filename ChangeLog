@@ -1,4 +1,5 @@
 2026-11-08 Massimo Manghi <massimo.manghi@rivetweb.org>
+	* Release as tclcurl-ng 8.0.4
     * configure.ac:
     * generic/curl_setopts.[hc]: Add support for more deprecate code control (after
     libcurl 8.22.0 dropped support of various TLS related options)
