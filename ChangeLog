@@ -1,6 +1,6 @@
 2026-11-08 Massimo Manghi <massimo.manghi@rivetweb.org>
 	* Release as tclcurl-ng 8.0.4
-    * configure.ac:
+    * configure.ac: Add macro CURL_PRE_8_22_0_DEPR
     * generic/curl_setopts.[hc]: Add support for more deprecate code control (after
     libcurl 8.22.0 dropped support of various TLS related options)
     * doc/tclcurl.n.md.in: Documenting the macro to control inclusion of code
