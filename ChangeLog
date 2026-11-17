@@ -1,3 +1,7 @@
+2026-11-16 Massimo Manghi <massimo.manghi@rivetweb.org>
+    * packages/: Removed obsolete files in packages/ and ReadMe32.txt. Consolidate
+    at the same time still valid and useful information into README.md
+
 2026-11-08 Massimo Manghi <massimo.manghi@rivetweb.org>
 	* Release as tclcurl-ng 8.0.4
     * configure.ac: Add macro CURL_PRE_8_22_0_DEPR
